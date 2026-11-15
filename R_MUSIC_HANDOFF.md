@@ -192,5 +192,5 @@ Still to do, in this order (he said: finish the handoff list, THEN the final rel
 2. Notification card with the cobra-head progress bar and a top-right close button (design image docs/reference/notification-design-cobra.jpg, plan in the section "Notification design" above).
 3. App icon picker (alternate launcher icons), artist info page, lyrics translation + romanization (Korean), progress bar styles, mini-player oval, lyrics auto-fetch / Wi-Fi-only setting, lag check on the fast APK.
 4. FINAL RELEASE: release build type with own package id and app name "R Music", ONE permanent signing key kept in GitHub Secrets (never in the repo; today APKs are signed with the public shared-debug.keystore), maybe Baseline Profile and the fdroid flavor, then give him the APK.
-5. He still has to change the default branch of R-Music from `R_MUSIC_HANDOFF.md` to `dev` and delete the old public fork `RetroMusicPlayer`.
+5. He still has to change the default branch of R-Music from `R_MUSIC_HANDOFF.md` to `dev`.
 Working rules: reply in short Egyptian Arabic; wait for "go" before a step (he often says it in the same message as the request); pushes only with the session proxy or a temporary token that is never stored; he interrupts long sleep loops, so poll CI in short calls.
