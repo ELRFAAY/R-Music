@@ -628,5 +628,5 @@
     <string name="edit_artist_name">Artist name</string>
     <string name="edit_artist_change_image">Change picture</string>
     <string name="edit_artist_remove_image">Remove picture</string>
-    <string name="edit_artist_name_note">Changing the name rewrites the artist tag in all of this artist's files.</string>
+    <string name="edit_artist_name_note">Changing the name rewrites the artist tag in all of this artist\'s files.</string>
 </resources>
