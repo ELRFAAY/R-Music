@@ -136,63 +136,104 @@
             app:lrcTextSize="24sp"
             app:lrcTimelineColor="@color/transparent" />
 
+        <code.name.monkey.retromusic.views.SeekSectorView
+            android:id="@+id/seekSector"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <!-- Volume: white pill in the middle of the cover; white = level, grey = rest -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/volumeOverlay"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="top|center_horizontal"
-            android:layout_marginTop="32dp"
+            android:layout_width="44dp"
+            android:layout_height="170dp"
+            android:layout_gravity="center"
             android:visibility="gone"
-            app:cardBackgroundColor="#CC000000"
-            app:cardCornerRadius="24dp"
+            app:cardBackgroundColor="#B3808080"
+            app:cardCornerRadius="22dp"
             app:cardElevation="0dp"
             tools:visibility="visible">
 
-            <LinearLayout
+            <View
+                android:id="@+id/volumeFill"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:layout_gravity="bottom"
+                android:background="@color/md_white_1000" />
+
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="16dp"
-                android:paddingTop="12dp"
-                android:paddingEnd="20dp"
-                android:paddingBottom="12dp">
+                android:layout_gravity="top|center_horizontal"
+                android:layout_marginTop="8dp"
+                app:cardBackgroundColor="@color/md_white_1000"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="0dp">
 
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:importantForAccessibility="no"
-                    android:src="@drawable/ic_volume_up"
-                    app:tint="@android:color/white" />
-
-                <com.google.android.material.progressindicator.LinearProgressIndicator
-                    android:id="@+id/volumeBar"
-                    android:layout_width="120dp"
+                <TextView
+                    android:id="@+id/volumeValue"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:max="100"
-                    android:progress="50" />
-            </LinearLayout>
+                    android:paddingHorizontal="6dp"
+                    android:paddingVertical="2dp"
+                    android:textColor="@color/md_black_1000"
+                    android:textSize="13sp"
+                    tools:text="71" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="bottom|center_horizontal"
+                android:layout_marginBottom="10dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_volume_up"
+                app:tint="#808080" />
         </com.google.android.material.card.MaterialCardView>
+    </code.name.monkey.retromusic.views.CoverGestureLayout>
+
+    <!-- Row shown under the lyrics: fullscreen, search, edit, font size, close -->
+    <LinearLayout
+        android:id="@+id/lyricsTools"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/progressRing">
+
+        <ImageView
+            android:id="@+id/lyricsFullscreen"
+            style="@style/RingLyricsToolIcon"
+            android:contentDescription="@string/ring_lyrics_fullscreen"
+            android:src="@drawable/ic_fullscreen" />
 
         <TextView
-            android:id="@+id/seekFeedback"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical|end"
-            android:layout_margin="24dp"
-            android:background="#CC000000"
-            android:paddingStart="16dp"
-            android:paddingTop="8dp"
-            android:paddingEnd="16dp"
-            android:paddingBottom="8dp"
-            android:textColor="@android:color/white"
-            android:textSize="20sp"
+            android:id="@+id/lyricsSearch"
+            style="@style/RingLyricsToolText"
+            android:text="@string/ring_lyrics_search" />
+
+        <TextView
+            android:id="@+id/lyricsEdit"
+            style="@style/RingLyricsToolText"
+            android:text="@string/ring_lyrics_edit" />
+
+        <TextView
+            android:id="@+id/lyricsFont"
+            style="@style/RingLyricsToolText"
+            android:contentDescription="@string/ring_lyrics_font_size"
+            android:text="A"
             android:textStyle="bold"
-            android:visibility="gone"
-            tools:text="+10s"
-            tools:visibility="visible" />
-    </code.name.monkey.retromusic.views.CoverGestureLayout>
+            tools:ignore="HardcodedText" />
+
+        <ImageView
+            android:id="@+id/lyricsClose"
+            style="@style/RingLyricsToolIcon"
+            android:contentDescription="@string/ring_lyrics_close"
+            android:src="@drawable/ic_close" />
+    </LinearLayout>
 
     <ImageButton
         android:id="@+id/queueButton"

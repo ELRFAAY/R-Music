@@ -613,4 +613,10 @@
     <string name="unmerge_artist_all">Split all</string>
     <string name="unmerge_artist_none">No artists are grouped under this one</string>
     <string name="artist_groups_data">Artist groups</string>
+    <string name="ring_lyrics_search">Search</string>
+    <string name="ring_lyrics_edit">Edit</string>
+    <string name="ring_lyrics_fullscreen">Fullscreen lyrics</string>
+    <string name="ring_lyrics_font_size">Text size</string>
+    <string name="ring_lyrics_close">Close lyrics</string>
+    <string name="ring_seek_seconds">10 seconds</string>
 </resources>

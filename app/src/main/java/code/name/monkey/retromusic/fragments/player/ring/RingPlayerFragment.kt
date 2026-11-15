@@ -38,6 +38,7 @@ import code.name.monkey.retromusic.glide.RetroGlideExtension.simpleSongCoverOpti
 import code.name.monkey.retromusic.glide.crossfadeListener
 import code.name.monkey.retromusic.helper.MusicPlayerRemote
 import code.name.monkey.retromusic.helper.MusicProgressViewUpdateHelper
+import code.name.monkey.retromusic.fragments.lyrics.LyricsSheetFragment
 import code.name.monkey.retromusic.helper.PlayPauseButtonOnClickHandler
 import code.name.monkey.retromusic.service.MusicService
 import code.name.monkey.retromusic.util.LyricUtil
@@ -149,6 +150,7 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         binding.ringCover.setOnTouchListener { _, event -> coverGestures.onTouchEvent(event) }
         binding.lyricsChip.setOnClickListener { setLyricsVisible(!showingLyrics) }
         setupGestures()
+        setupLyricsTools()
         binding.ringLyrics.apply {
             setCurrentColor(Color.WHITE)
             setNormalColor(Color.argb(140, 255, 255, 255))
@@ -165,16 +167,20 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
     }
 
     private val hideVolume = Runnable { _binding?.volumeOverlay?.isVisible = false }
-    private val hideSeekFeedback = Runnable { _binding?.seekFeedback?.isVisible = false }
+    private var lyricsScaleIndex = 0
+    private val lyricsScales = floatArrayOf(1f, 1.25f, 1.5f, 0.85f)
 
     /** Drag up/down on the cover = volume, double tap right/left half = -/+10 seconds. */
     private fun setupGestures() {
+        val pillHeight = 170 * resources.displayMetrics.density
         binding.ringCoverArea.apply {
             onVolumeChanged = { fraction ->
                 _binding?.let {
                     it.volumeOverlay.removeCallbacks(hideVolume)
                     it.volumeOverlay.isVisible = true
-                    it.volumeBar.setProgressCompat((fraction * 100).roundToInt(), false)
+                    it.volumeValue.text = (fraction * 100).roundToInt().toString()
+                    it.volumeFill.layoutParams.height = (pillHeight * fraction).toInt()
+                    it.volumeFill.requestLayout()
                 }
             }
             onVolumeGestureEnd = { _binding?.volumeOverlay?.postDelayed(hideVolume, 800) }
@@ -183,21 +189,27 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         }
     }
 
+    private fun setupLyricsTools() {
+        val openSheet = View.OnClickListener {
+            LyricsSheetFragment().show(childFragmentManager, LyricsSheetFragment.TAG)
+        }
+        // The panel searches LRCLIB, shows the full text and has the hand-sync (edit) mode.
+        binding.lyricsFullscreen.setOnClickListener(openSheet)
+        binding.lyricsSearch.setOnClickListener(openSheet)
+        binding.lyricsEdit.setOnClickListener(openSheet)
+        binding.lyricsFont.setOnClickListener {
+            lyricsScaleIndex = (lyricsScaleIndex + 1) % lyricsScales.size
+            binding.ringLyrics.setTextScale(lyricsScales[lyricsScaleIndex])
+        }
+        binding.lyricsClose.setOnClickListener { setLyricsVisible(false) }
+    }
+
     private fun skipSeconds(seconds: Int) {
         val duration = MusicPlayerRemote.songDurationMillis
         val position = MusicPlayerRemote.songProgressMillis
         if (duration <= 0 || position < 0) return
         MusicPlayerRemote.seekTo((position + seconds * 1000).coerceIn(0, duration))
-        _binding?.seekFeedback?.let {
-            it.removeCallbacks(hideSeekFeedback)
-            it.setText(if (seconds > 0) R.string.cover_seek_forward else R.string.cover_seek_back)
-            (it.layoutParams as android.widget.FrameLayout.LayoutParams).gravity =
-                android.view.Gravity.CENTER_VERTICAL or
-                        (if (seconds > 0) android.view.Gravity.END else android.view.Gravity.START)
-            it.requestLayout()
-            it.isVisible = true
-            it.postDelayed(hideSeekFeedback, 600)
-        }
+        _binding?.seekSector?.show(seconds > 0, getString(R.string.ring_seek_seconds))
     }
 
     /**
@@ -219,6 +231,9 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         showingLyrics = visible
         binding.ringLyrics.isVisible = visible
         binding.ringCover.isVisible = !visible
+        // With lyrics shown the ring goes away and the tool chips appear under the text.
+        binding.progressRing.visibility = if (visible) View.INVISIBLE else View.VISIBLE
+        binding.lyricsTools.isVisible = visible
     }
 
     private fun updateSong() {
@@ -408,7 +423,6 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
 
     override fun onDestroyView() {
         _binding?.volumeOverlay?.removeCallbacks(hideVolume)
-        _binding?.seekFeedback?.removeCallbacks(hideSeekFeedback)
         super.onDestroyView()
         _binding = null
     }

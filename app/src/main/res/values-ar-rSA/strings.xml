@@ -604,4 +604,10 @@
     <string name="unmerge_artist_all">فصل الكل</string>
     <string name="unmerge_artist_none">مفيش فنانين متجمّعين تحت الفنان ده</string>
     <string name="artist_groups_data">تجميع الفنانين</string>
+    <string name="ring_lyrics_search">بحث</string>
+    <string name="ring_lyrics_edit">تحرير</string>
+    <string name="ring_lyrics_fullscreen">الكلمات بملء الشاشة</string>
+    <string name="ring_lyrics_font_size">حجم الخط</string>
+    <string name="ring_lyrics_close">إغلاق الكلمات</string>
+    <string name="ring_seek_seconds">١٠ ثواني</string>
 </resources>

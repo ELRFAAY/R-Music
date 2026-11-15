@@ -57,6 +57,8 @@ class CoverLrcView @JvmOverloads constructor(
     private var mAnimationDuration: Long = 0
     private var mNormalTextColor = 0
     private var mNormalTextSize = 0f
+    private var baseCurrentTextSize = 0f
+    private var baseNormalTextSize = 0f
     private var mCurrentTextColor = 0
     private var mCurrentTextSize = 0f
     private var mTimelineTextColor = 0
@@ -184,6 +186,8 @@ class CoverLrcView @JvmOverloads constructor(
         if (mNormalTextSize == 0f) {
             mNormalTextSize = mCurrentTextSize
         }
+        baseCurrentTextSize = mCurrentTextSize
+        baseNormalTextSize = mNormalTextSize
         mDividerHeight = ta.getDimension(
             R.styleable.LrcView_lrcDividerHeight,
             resources.getDimension(R.dimen.lrc_divider_height)
@@ -247,6 +251,15 @@ class CoverLrcView @JvmOverloads constructor(
         mGestureDetector = GestureDetector(context, mSimpleOnGestureListener)
         mGestureDetector!!.setIsLongpressEnabled(false)
         mScroller = Scroller(context)
+    }
+
+    /** Scales both lyric text sizes relative to the sizes from the layout (1f = as designed). */
+    fun setTextScale(scale: Float) {
+        mCurrentTextSize = baseCurrentTextSize * scale
+        mNormalTextSize = baseNormalTextSize * scale
+        mLrcPaint.textSize = mCurrentTextSize
+        initEntryList()
+        invalidate()
     }
 
     fun setNormalColor(normalColor: Int) {
