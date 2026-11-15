@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/notification_cobra_bg"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="10dp">
+
+    <ImageView
+        android:id="@+id/cobraCover"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:contentDescription="@null"
+        android:scaleType="centerCrop" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/cobraTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/cobraArtist"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="#9AA4A8"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/cobraPlay"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:contentDescription="@string/action_play_pause"
+        android:padding="6dp"
+        android:src="@drawable/ic_pause_white_48dp" />
+
+    <ImageView
+        android:id="@+id/cobraClose"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:contentDescription="@string/action_cancel"
+        android:padding="8dp"
+        android:src="@drawable/ic_close"
+        android:tint="#9AA4A8" />
+</LinearLayout>

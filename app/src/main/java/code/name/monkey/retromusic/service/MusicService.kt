@@ -722,6 +722,7 @@ class MusicService : MediaBrowserServiceCompat(),
                     ACTION_PLAY_PLAYLIST -> playFromPlaylist(intent)
                     ACTION_REWIND -> back(true)
                     ACTION_SKIP -> playNextSong(true)
+                    ACTION_TOGGLE_SHUFFLE -> toggleShuffle()
                     ACTION_STOP, ACTION_QUIT -> {
                         pendingQuit = false
                         quit()
@@ -1151,6 +1152,12 @@ class MusicService : MediaBrowserServiceCompat(),
                 listeningTracker.onPlayStateChanged(isPlaying)
                 playingNotification?.setPlaying(isPlaying)
                 startForegroundOrNotify()
+                if (isPlaying) startNotificationTicker()
+            }
+
+            SHUFFLE_MODE_CHANGED -> {
+                playingNotification?.setShuffle(getShuffleMode() != SHUFFLE_MODE_NONE)
+                startForegroundOrNotify()
             }
 
             FAVORITE_STATE_CHANGED -> {
@@ -1200,6 +1207,21 @@ class MusicService : MediaBrowserServiceCompat(),
                 }
             }
         }
+    }
+
+    private val notificationTicker = object : Runnable {
+        override fun run() {
+            val pm = getSystemService(POWER_SERVICE) as? android.os.PowerManager
+            if (!isPlaying || isQuitting || pm?.isInteractive == false) return
+            val changed = playingNotification?.updateProgress(songProgressMillis, songDurationMillis) == true
+            if (changed) startForegroundOrNotify()
+            uiThreadHandler?.postDelayed(this, 1000)
+        }
+    }
+
+    private fun startNotificationTicker() {
+        uiThreadHandler?.removeCallbacks(notificationTicker)
+        uiThreadHandler?.postDelayed(notificationTicker, 1000)
     }
 
     private fun startForegroundOrNotify() {
@@ -1466,6 +1488,7 @@ class MusicService : MediaBrowserServiceCompat(),
         const val ACTION_STOP = "$RETRO_MUSIC_PACKAGE_NAME.stop"
         const val ACTION_SKIP = "$RETRO_MUSIC_PACKAGE_NAME.skip"
         const val ACTION_REWIND = "$RETRO_MUSIC_PACKAGE_NAME.rewind"
+        const val ACTION_TOGGLE_SHUFFLE = "$RETRO_MUSIC_PACKAGE_NAME.toggleshuffle"
         const val ACTION_QUIT = "$RETRO_MUSIC_PACKAGE_NAME.quitservice"
         const val ACTION_PENDING_QUIT = "$RETRO_MUSIC_PACKAGE_NAME.pendingquitservice"
         const val INTENT_EXTRA_PLAYLIST = RETRO_MUSIC_PACKAGE_NAME + "intentextra.playlist"

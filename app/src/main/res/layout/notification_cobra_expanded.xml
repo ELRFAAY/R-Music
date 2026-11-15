@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/notification_cobra_bg"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/cobraCover"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/cobraTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/cobraArtist"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="#9AA4A8"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/cobraClose"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="top"
+            android:contentDescription="@string/action_cancel"
+            android:padding="6dp"
+            android:src="@drawable/ic_close"
+            android:tint="#9AA4A8" />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/cobraBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:adjustViewBounds="true"
+        android:contentDescription="@null"
+        android:scaleType="fitXY" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/cobraPrev"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:contentDescription="@string/action_previous"
+            android:padding="12dp"
+            android:src="@drawable/ic_skip_previous"
+            android:tint="#FFFFFF" />
+
+        <ImageView
+            android:id="@+id/cobraPlay"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:contentDescription="@string/action_play_pause"
+            android:padding="8dp"
+            android:src="@drawable/ic_pause_white_48dp" />
+
+        <ImageView
+            android:id="@+id/cobraNext"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:contentDescription="@string/action_next"
+            android:padding="12dp"
+            android:src="@drawable/ic_skip_next"
+            android:tint="#FFFFFF" />
+
+        <ImageView
+            android:id="@+id/cobraShuffle"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:contentDescription="@string/action_shuffle_playlist"
+            android:padding="13dp"
+            android:src="@drawable/ic_shuffle" />
+    </LinearLayout>
+</LinearLayout>

@@ -23,6 +23,12 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
+import android.graphics.RectF
+import android.widget.RemoteViews
 import android.graphics.drawable.Drawable
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.annotation.RequiresApi
@@ -39,6 +45,7 @@ import code.name.monkey.retromusic.service.MusicService.Companion.ACTION_QUIT
 import code.name.monkey.retromusic.service.MusicService.Companion.ACTION_REWIND
 import code.name.monkey.retromusic.service.MusicService.Companion.ACTION_SKIP
 import code.name.monkey.retromusic.service.MusicService.Companion.ACTION_TOGGLE_PAUSE
+import code.name.monkey.retromusic.service.MusicService.Companion.ACTION_TOGGLE_SHUFFLE
 import code.name.monkey.retromusic.service.MusicService.Companion.TOGGLE_FAVORITE
 import code.name.monkey.retromusic.util.PreferenceUtil
 import com.bumptech.glide.Glide
@@ -51,6 +58,17 @@ class PlayingNotification(
 ) : NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID) {
 
     private var currentTarget: CustomTarget<Bitmap>? = null
+
+    // Cobra card state
+    private val cobra = COBRA_CARD
+    private var cobraTitle: String = ""
+    private var cobraArtist: String = ""
+    private var cobraCover: Bitmap? = null
+    private var cobraPlaying = true
+    private var cobraShuffle = false
+    private var cobraProgress = 0
+    private var cobraDuration = 0
+    private var lastBarSecond = -1
 
     init {
         val action = Intent(context, MainActivity::class.java)
@@ -94,19 +112,26 @@ class PlayingNotification(
         setContentIntent(clickIntent)
         setDeleteIntent(deleteIntent)
         setShowWhen(false)
-        addAction(toggleFavorite)
-        addAction(previousAction)
-        addAction(playPauseAction)
-        addAction(nextAction)
-        if (VersionUtils.hasS()) {
-            addAction(dismissAction)
+        if (cobra) {
+            setStyle(
+                androidx.media.app.NotificationCompat.DecoratedMediaCustomViewStyle()
+                    .setMediaSession(mediaSessionToken)
+            )
+            refreshCobraViews()
+        } else {
+            addAction(toggleFavorite)
+            addAction(previousAction)
+            addAction(playPauseAction)
+            addAction(nextAction)
+            if (VersionUtils.hasS()) {
+                addAction(dismissAction)
+            }
+            setStyle(
+                MediaStyle()
+                    .setMediaSession(mediaSessionToken)
+                    .setShowActionsInCompactView(1, 2, 3)
+            )
         }
-
-        setStyle(
-            MediaStyle()
-                .setMediaSession(mediaSessionToken)
-                .setShowActionsInCompactView(1, 2, 3)
-        )
         setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
     }
 
@@ -115,6 +140,10 @@ class PlayingNotification(
         setContentTitle(song.title)
         setContentText(song.artistName)
         setSubText(song.albumName)
+        cobraTitle = song.title
+        cobraArtist = song.artistName
+        cobraProgress = 0
+        lastBarSecond = -1
 
         // Displays a temporary image while Glide loads the actual album image.
         // This allows us to update the notification immediately
@@ -137,6 +166,8 @@ class PlayingNotification(
             ) {
                 override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
                     setLargeIcon(resource)
+                    cobraCover = resource
+                    refreshCobraViews()
                     onUpdate()
                 }
 
@@ -154,6 +185,8 @@ class PlayingNotification(
     }
 
     private fun setAlbumArtImage(image: Bitmap?) {
+        cobraCover = image
+        refreshCobraViews()
         if (image == null) {
             setLargeIcon(
                 BitmapFactory.decodeResource(
@@ -188,12 +221,106 @@ class PlayingNotification(
 
     @SuppressLint("RestrictedApi")
     fun setPlaying(isPlaying: Boolean) {
-        mActions[2] = buildPlayAction(isPlaying)
+        cobraPlaying = isPlaying
+        if (cobra) refreshCobraViews() else mActions[2] = buildPlayAction(isPlaying)
     }
 
     @SuppressLint("RestrictedApi")
     fun updateFavorite(isFavorite: Boolean) {
-        mActions[0] = buildFavoriteAction(isFavorite)
+        if (!cobra) mActions[0] = buildFavoriteAction(isFavorite)
+    }
+
+    fun setShuffle(on: Boolean) {
+        cobraShuffle = on
+        if (cobra) refreshCobraViews()
+    }
+
+    /** Returns true when the bar picture changed (so the notification should be re-posted). */
+    fun updateProgress(progressMillis: Int, durationMillis: Int): Boolean {
+        if (!cobra) return false
+        cobraProgress = progressMillis
+        cobraDuration = durationMillis
+        val sec = progressMillis / 1000
+        if (sec == lastBarSecond) return false
+        lastBarSecond = sec
+        refreshCobraViews()
+        return true
+    }
+
+    private fun refreshCobraViews() {
+        if (!cobra) return
+        try {
+            val expanded = RemoteViews(context.packageName, R.layout.notification_cobra_expanded)
+            val collapsed = RemoteViews(context.packageName, R.layout.notification_cobra_collapsed)
+            val cover = roundedCover(cobraCover ?: BitmapFactory.decodeResource(
+                context.resources, R.drawable.notification_cobra_cover
+            ))
+            val green = 0xFF22D398.toInt()
+            for (v in listOf(expanded, collapsed)) {
+                v.setTextViewText(R.id.cobraTitle, cobraTitle)
+                v.setTextViewText(R.id.cobraArtist, cobraArtist)
+                v.setImageViewBitmap(R.id.cobraCover, cover)
+                v.setImageViewResource(
+                    R.id.cobraPlay,
+                    if (cobraPlaying) R.drawable.ic_pause_white_48dp else R.drawable.ic_play_arrow_white_48dp
+                )
+                v.setInt(R.id.cobraPlay, "setColorFilter", green)
+                v.setOnClickPendingIntent(R.id.cobraPlay, retrievePlaybackAction(ACTION_TOGGLE_PAUSE))
+                v.setOnClickPendingIntent(R.id.cobraClose, retrievePlaybackAction(ACTION_QUIT))
+            }
+            expanded.setOnClickPendingIntent(R.id.cobraPrev, retrievePlaybackAction(ACTION_REWIND))
+            expanded.setOnClickPendingIntent(R.id.cobraNext, retrievePlaybackAction(ACTION_SKIP))
+            expanded.setOnClickPendingIntent(R.id.cobraShuffle, retrievePlaybackAction(ACTION_TOGGLE_SHUFFLE))
+            expanded.setInt(R.id.cobraShuffle, "setColorFilter", if (cobraShuffle) green else 0xFF6B767A.toInt())
+            expanded.setImageViewBitmap(R.id.cobraBar, drawBar())
+            setCustomContentView(collapsed)
+            setCustomBigContentView(expanded)
+        } catch (e: Exception) {
+            android.util.Log.e("PlayingNotification", "cobra card failed", e)
+        }
+    }
+
+    private fun roundedCover(src: Bitmap): Bitmap {
+        val size = 192
+        val out = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val c = Canvas(out)
+        val p = Paint(Paint.ANTI_ALIAS_FLAG)
+        c.drawRoundRect(RectF(0f, 0f, size.toFloat(), size.toFloat()), 36f, 36f, p)
+        p.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
+        val side = minOf(src.width, src.height)
+        val srcRect = android.graphics.Rect(
+            (src.width - side) / 2, (src.height - side) / 2,
+            (src.width + side) / 2, (src.height + side) / 2
+        )
+        c.drawBitmap(src, srcRect, RectF(0f, 0f, size.toFloat(), size.toFloat()), p)
+        return out
+    }
+
+    private fun drawBar(): Bitmap {
+        val w = 560
+        val h = 48
+        val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val c = Canvas(bmp)
+        val head = BitmapFactory.decodeResource(context.resources, R.drawable.notification_cobra_head)
+        val headH = 40
+        val headW = head.width * headH / head.height
+        val frac = if (cobraDuration > 0) (cobraProgress.toFloat() / cobraDuration).coerceIn(0f, 1f) else 0f
+        val left = headW / 2f
+        val right = w - headW / 2f
+        val x = left + (right - left) * frac
+        val cy = h / 2f
+        val p = Paint(Paint.ANTI_ALIAS_FLAG)
+        p.strokeCap = Paint.Cap.ROUND
+        p.strokeWidth = 6f
+        p.color = 0xFF3A4246.toInt()
+        c.drawLine(left, cy, right, cy, p)
+        p.color = 0xFF22D398.toInt()
+        c.drawLine(left, cy, x, cy, p)
+        c.drawBitmap(
+            Bitmap.createScaledBitmap(head, headW, headH, true),
+            x - headW / 2f, cy - headH / 2f, null
+        )
+        return bmp
     }
 
     fun clear(context: Context) {
@@ -212,6 +339,7 @@ class PlayingNotification(
     companion object {
         internal const val NOTIFICATION_CHANNEL_ID = "playing_notification"
         const val NOTIFICATION_ID = 1
+        const val COBRA_CARD = true
 
 
         @RequiresApi(26)
