@@ -30,6 +30,9 @@ import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.GestureDetector
 import android.view.MotionEvent
+import android.view.VelocityTracker
+import android.view.ViewConfiguration
+import code.name.monkey.retromusic.model.Song
 import android.view.View
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isVisible
@@ -128,10 +131,9 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         binding.ringTitle.setOnClickListener { code.name.monkey.retromusic.fragments.base.goToAlbum(requireActivity()) }
         binding.ringArtist.setOnClickListener { code.name.monkey.retromusic.fragments.base.goToArtist(requireActivity()) }
 
-        // On the cover: a tap swaps the cover for the lyrics and back; a swipe to the RIGHT plays
-        // the next song and a swipe to the LEFT the previous one (physical directions, the same
-        // in Arabic and English, as the user asked).
-        val swipeDistance = 72 * resources.displayMetrics.density
+        // On the cover: a tap swaps the cover for the lyrics and back. A horizontal drag moves the
+        // cover with the finger and the next/previous cover comes in from the side (swipe RIGHT =
+        // next song, LEFT = previous; physical directions, the same in Arabic and English).
         val coverGestures = GestureDetector(
             requireContext(),
             object : GestureDetector.SimpleOnGestureListener() {
@@ -141,22 +143,12 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
                     setLyricsVisible(!showingLyrics)
                     return true
                 }
-
-                override fun onFling(
-                    e1: MotionEvent?,
-                    e2: MotionEvent,
-                    velocityX: Float,
-                    velocityY: Float
-                ): Boolean {
-                    if (e1 == null) return false
-                    val dx = e2.x - e1.x
-                    val dy = e2.y - e1.y
-                    if (abs(dx) < swipeDistance || abs(dx) < abs(dy) * 1.5f) return false
-                    swipeSong(next = dx > 0)
-                    return true
-                }
             })
-        binding.ringCover.setOnTouchListener { _, event -> coverGestures.onTouchEvent(event) }
+        binding.ringCover.setOnTouchListener { _, event ->
+            coverGestures.onTouchEvent(event)
+            handleCoverDrag(event)
+            true
+        }
         binding.lyricsChip.setOnClickListener { setLyricsVisible(!showingLyrics) }
         setupGestures()
         setupLyricsTools()
@@ -229,7 +221,6 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
     }
 
     private var contentColor = Color.WHITE
-    private var slideInFrom = 0 // -1 = new cover enters from the left, 1 = from the right
     private var tintAnimator: ValueAnimator? = null
 
     private fun coverTravel(): Float {
@@ -237,41 +228,127 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         return b.ringCover.width + 48 * resources.displayMetrics.density
     }
 
-    /** Swipe on the cover: the cover slides off the side, the ring empties, the next/previous song's cover slides in. */
-    private fun swipeSong(next: Boolean) {
+    private var dragStartX = 0f
+    private var dragStartY = 0f
+    private var dragging = false
+    private var coverDragging = false
+    private var velocityTracker: VelocityTracker? = null
+    private var neighborIndex = Int.MIN_VALUE
+
+    private fun neighborSong(next: Boolean): Song? {
+        val queue = MusicPlayerRemote.playingQueue
+        if (queue.isEmpty()) return null
+        var idx = MusicPlayerRemote.position + if (next) 1 else -1
+        if (idx !in queue.indices) {
+            if (MusicPlayerRemote.repeatMode != MusicService.REPEAT_MODE_ALL) return null
+            idx = (idx + queue.size) % queue.size
+        }
+        return queue[idx]
+    }
+
+    private fun showNeighbor(next: Boolean): Boolean {
+        val b = _binding ?: return false
+        val song = neighborSong(next) ?: return false
+        val idx = MusicPlayerRemote.playingQueue.indexOf(song)
+        if (idx != neighborIndex) {
+            neighborIndex = idx
+            Glide.with(this)
+                .load(RetroGlideExtension.getSongModel(song))
+                .simpleSongCoverOptions(song)
+                .error(R.drawable.default_audio_art)
+                .into(b.ringCoverNext)
+        }
+        b.ringCoverNext.isVisible = true
+        return true
+    }
+
+    private fun handleCoverDrag(event: MotionEvent) {
         val b = _binding ?: return
-        val outDir = if (next) 1f else -1f
-        slideInFrom = (-outDir).toInt()
-        b.progressRing.progress = 0f
-        b.ringCover.animate().cancel()
-        b.ringCover.animate().translationX(outDir * coverTravel()).alpha(0f).setDuration(170)
-            .withEndAction {
-                if (next) MusicPlayerRemote.playNextSong() else MusicPlayerRemote.playPreviousSong()
-            }.start()
-        // If nothing changed (end of the queue), bring the cover back.
-        b.ringCover.postDelayed({
-            val bb = _binding ?: return@postDelayed
-            if (slideInFrom != 0) {
-                slideInFrom = 0
-                bb.ringCover.animate().translationX(0f).alpha(1f).setDuration(200).start()
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                dragStartX = event.rawX
+                dragStartY = event.rawY
+                dragging = false
+                velocityTracker?.recycle()
+                velocityTracker = VelocityTracker.obtain().also { it.addMovement(event) }
             }
-        }, 1200)
+
+            MotionEvent.ACTION_MOVE -> {
+                velocityTracker?.addMovement(event)
+                val dx = event.rawX - dragStartX
+                val dy = event.rawY - dragStartY
+                val slop = ViewConfiguration.get(requireContext()).scaledTouchSlop
+                if (!dragging && abs(dx) > slop * 2 && abs(dx) > abs(dy) * 1.5f) {
+                    dragging = true
+                    coverDragging = true
+                    b.progressRing.progress = 0f
+                }
+                if (dragging) {
+                    val travel = coverTravel()
+                    if (showNeighbor(dx > 0)) {
+                        b.ringCover.translationX = dx
+                        b.ringCoverNext.translationX = if (dx > 0) dx - travel else dx + travel
+                    } else {
+                        // Nothing before/after: stretch a little and come back.
+                        b.ringCover.translationX = dx * 0.25f
+                        b.ringCoverNext.isVisible = false
+                    }
+                }
+            }
+
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                if (!dragging) return
+                dragging = false
+                velocityTracker?.addMovement(event)
+                velocityTracker?.computeCurrentVelocity(1000)
+                val vx = velocityTracker?.xVelocity ?: 0f
+                velocityTracker?.recycle()
+                velocityTracker = null
+                val dx = event.rawX - dragStartX
+                val next = dx > 0
+                val travel = coverTravel()
+                val far = abs(dx) > b.ringCover.width * 0.3f
+                val fast = abs(vx) > 1200f && (vx > 0) == next
+                val canGo = neighborSong(next) != null
+                if (event.actionMasked == MotionEvent.ACTION_UP && canGo && (far || fast)) {
+                    val dir = if (next) 1f else -1f
+                    b.ringCover.animate().translationX(dir * travel).setDuration(180).start()
+                    b.ringCoverNext.animate().translationX(0f).setDuration(180).withEndAction {
+                        if (next) MusicPlayerRemote.playNextSong() else MusicPlayerRemote.playPreviousSong()
+                    }.start()
+                    // Safety: if the song did not change, put everything back.
+                    b.ringCover.postDelayed({ resetCoverDrag() }, 1500)
+                } else {
+                    val dir = if (next) -1f else 1f
+                    b.ringCover.animate().translationX(0f).setDuration(200).start()
+                    b.ringCoverNext.animate().translationX(dir * travel).setDuration(200)
+                        .withEndAction { _binding?.ringCoverNext?.isVisible = false }.start()
+                    coverDragging = false
+                }
+            }
+        }
+    }
+
+    private fun resetCoverDrag() {
+        val b = _binding ?: return
+        coverDragging = false
+        b.ringCover.animate().cancel()
+        b.ringCoverNext.animate().cancel()
+        b.ringCover.translationX = 0f
+        b.ringCover.alpha = 1f
+        b.ringCoverNext.isVisible = false
+        neighborIndex = Int.MIN_VALUE
     }
 
     private fun slideCoverIn() {
         val b = _binding ?: return
-        val from = slideInFrom
-        slideInFrom = 0
+        // The song changed (after a swipe or from anywhere else): show the new cover in place.
         b.ringCover.animate().cancel()
-        if (from == 0) {
-            b.ringCover.translationX = 0f
-            b.ringCover.alpha = 1f
-            return
-        }
-        b.ringCover.translationX = from * coverTravel()
+        b.ringCover.translationX = 0f
         b.ringCover.alpha = 1f
-        b.ringCover.animate().translationX(0f).setDuration(260)
-            .setInterpolator(DecelerateInterpolator()).start()
+        coverDragging = false
+        neighborIndex = Int.MIN_VALUE
+        b.ringCover.post { _binding?.ringCoverNext?.isVisible = false }
     }
 
     /** Background tint from the cover's colours; dark text/icons when the colour is light. */
@@ -527,7 +604,7 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
     override fun onUpdateProgressViews(progress: Int, total: Int) {
         val b = _binding ?: return
         if (total > 0) b.progressRing.max = total.toFloat()
-        if (!isSeeking) b.progressRing.progress = progress.toFloat().coerceIn(0f, b.progressRing.max)
+        if (!isSeeking && !coverDragging) b.progressRing.progress = progress.toFloat().coerceIn(0f, b.progressRing.max)
         b.ringLyrics.updateTime(progress.toLong())
     }
 

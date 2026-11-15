@@ -126,6 +126,14 @@
             app:shapeAppearance="@style/ShapeAppearance.Material3.Circle"
             tools:srcCompat="@tools:sample/backgrounds/scenic[6]" />
 
+        <code.name.monkey.retromusic.views.RetroShapeableImageView
+            android:id="@+id/ringCoverNext"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            app:shapeAppearance="@style/ShapeAppearance.Material3.Circle" />
+
         <code.name.monkey.retromusic.lyrics.CoverLrcView
             android:id="@+id/ringLyrics"
             android:layout_width="match_parent"
