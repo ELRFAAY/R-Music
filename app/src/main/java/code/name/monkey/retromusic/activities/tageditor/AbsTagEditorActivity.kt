@@ -205,6 +205,16 @@ abstract class AbsTagEditorActivity<VB : ViewBinding> : AbsBaseActivity() {
             }
         }
 
+    protected val comment: String?
+        get() {
+            return try {
+                getAudioFile(songPaths!![0]).tagOrCreateAndSetDefault.getFirst(FieldKey.COMMENT)
+            } catch (e: Exception) {
+                logE(e)
+                null
+            }
+        }
+
     protected val albumArt: Bitmap?
         get() {
             try {

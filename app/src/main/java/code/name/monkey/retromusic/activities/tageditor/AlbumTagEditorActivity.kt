@@ -85,6 +85,7 @@ class AlbumTagEditorActivity : AbsTagEditorActivity<ActivityAlbumTagEditorBindin
         fillViewsWithFileTags()
 
         binding.yearContainer.setTint(false)
+        binding.commentContainer.setTint(false)
         binding.genreContainer.setTint(false)
         binding.albumTitleContainer.setTint(false)
         binding.albumArtistContainer.setTint(false)
@@ -93,6 +94,7 @@ class AlbumTagEditorActivity : AbsTagEditorActivity<ActivityAlbumTagEditorBindin
         binding.albumArtistText.appHandleColor().doAfterTextChanged { dataChanged() }
         binding.genreTitle.appHandleColor().doAfterTextChanged { dataChanged() }
         binding.yearTitle.appHandleColor().doAfterTextChanged { dataChanged() }
+        binding.commentTitle.appHandleColor().doAfterTextChanged { dataChanged() }
     }
 
     private fun fillViewsWithFileTags() {
@@ -100,6 +102,7 @@ class AlbumTagEditorActivity : AbsTagEditorActivity<ActivityAlbumTagEditorBindin
         binding.albumArtistText.setText(albumArtistName)
         binding.genreTitle.setText(genreName)
         binding.yearTitle.setText(songYear)
+        binding.commentTitle.setText(comment)
         logD(albumTitle + albumArtistName)
     }
 
@@ -172,6 +175,7 @@ class AlbumTagEditorActivity : AbsTagEditorActivity<ActivityAlbumTagEditorBindin
         fieldKeyValueMap[FieldKey.ARTIST] = binding.albumArtistText.text.toString()
         fieldKeyValueMap[FieldKey.ALBUM_ARTIST] = binding.albumArtistText.text.toString()
         fieldKeyValueMap[FieldKey.GENRE] = binding.genreTitle.text.toString()
+        fieldKeyValueMap[FieldKey.COMMENT] = binding.commentTitle.text.toString()
         fieldKeyValueMap[FieldKey.YEAR] = binding.yearTitle.text.toString()
 
         writeValuesToFiles(

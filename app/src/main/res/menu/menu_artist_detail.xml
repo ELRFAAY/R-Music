@@ -22,13 +22,8 @@
         app:showAsAction="never" />
 
     <item
-        android:id="@+id/action_set_artist_image"
-        android:title="@string/set_artist_image"
-        app:showAsAction="never" />
-
-    <item
-        android:id="@+id/action_reset_artist_image"
-        android:title="@string/reset_artist_image"
+        android:id="@+id/action_edit_artist"
+        android:title="@string/action_tag_editor"
         app:showAsAction="never" />
 
 </menu>

@@ -240,6 +240,71 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
     }
 
     /** Pick an existing artist (or type a new name): all songs of this artist get that name. */
+    private fun pickArtistImage() {
+        selectImageLauncher.launch(
+            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+        )
+    }
+
+    private fun resetArtistImage() {
+        showToast(resources.getString(R.string.updating))
+        lifecycleScope.launch {
+            CustomArtistImageUtil.getInstance(requireContext())
+                .resetCustomArtistImage(artist)
+            detailsViewModel.refreshArtistInfo()
+        }
+        forceDownload = true
+    }
+
+    private fun showEditArtistDialog() {
+        val ctx = requireContext()
+        val pad = (20 * resources.displayMetrics.density).toInt()
+        val input = android.widget.EditText(ctx).apply {
+            setText(artist.name)
+            setSingleLine()
+            hint = getString(R.string.edit_artist_name)
+            setSelection(text.length)
+        }
+        val note = android.widget.TextView(ctx).apply {
+            text = getString(R.string.edit_artist_name_note)
+            textSize = 12f
+            alpha = 0.7f
+        }
+        val change = com.google.android.material.button.MaterialButton(
+            ctx, null, com.google.android.material.R.attr.materialButtonOutlinedStyle
+        ).apply {
+            setText(R.string.edit_artist_change_image)
+            setOnClickListener { pickArtistImage() }
+        }
+        val remove = com.google.android.material.button.MaterialButton(
+            ctx, null, com.google.android.material.R.attr.materialButtonOutlinedStyle
+        ).apply {
+            setText(R.string.edit_artist_remove_image)
+            setOnClickListener { resetArtistImage() }
+        }
+        val holder = android.widget.LinearLayout(ctx).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(pad, pad / 2, pad, 0)
+            addView(input)
+            addView(note)
+            addView(change)
+            addView(remove)
+        }
+        materialDialog(R.string.edit_artist_title)
+            .setView(holder)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(R.string.save) { _, _ ->
+                val newName = input.text.toString().trim()
+                if (newName.isNotEmpty() && newName != artist.name) {
+                    artistMerger.merge(artist.songs, newName) {
+                        libraryViewModel.forceReload(ReloadType.Artists)
+                        findNavController().navigateUp()
+                    }
+                }
+            }
+            .show()
+    }
+
     private fun showMergeArtistDialog() {
         val names = (libraryViewModel.getArtists().value ?: emptyList())
             .map { it.name }
@@ -307,21 +372,8 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
                 return true
             }
 
-            R.id.action_set_artist_image -> {
-                selectImageLauncher.launch(
-                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                )
-                return true
-            }
-
-            R.id.action_reset_artist_image -> {
-                showToast(resources.getString(R.string.updating))
-                lifecycleScope.launch {
-                    CustomArtistImageUtil.getInstance(requireContext())
-                        .resetCustomArtistImage(artist)
-                    detailsViewModel.refreshArtistInfo()
-                }
-                forceDownload = true
+            R.id.action_edit_artist -> {
+                showEditArtistDialog()
                 return true
             }
         }

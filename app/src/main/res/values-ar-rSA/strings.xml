@@ -47,7 +47,7 @@
     <string name="action_shuffle_playlist">تشغيل عشوائي لقائمة التشغيل</string>
     <string name="action_sleep_timer">مؤقت السكون</string>
     <string name="action_sort_order">فرز</string>
-    <string name="action_tag_editor">محرر العلامة</string>
+    <string name="action_tag_editor">تعديل</string>
     <string name="action_toggle_favorite">تبديل المفضلة</string>
     <string name="action_toggle_shuffle">تفعيل وضع الخلط</string>
     <string name="adaptive">متكيف</string>
@@ -613,4 +613,11 @@
     <string name="ring_lyrics_close">إغلاق الكلمات</string>
     <string name="ring_seek_seconds">١٠ ثواني</string>
     <string name="user_data_backup">بيانات المستخدم (الاسم والصورة والكفر وشكل المكتبة)</string>
+    <string name="description">الوصف</string>
+    <string name="year_or_date">السنة / التاريخ</string>
+    <string name="edit_artist_title">تعديل الفنان</string>
+    <string name="edit_artist_name">اسم الفنان</string>
+    <string name="edit_artist_change_image">تغيير الصورة</string>
+    <string name="edit_artist_remove_image">حذف الصورة</string>
+    <string name="edit_artist_name_note">تغيير الاسم بيعدّل تاج الفنان في كل ملفات الفنان ده.</string>
 </resources>

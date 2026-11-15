@@ -80,6 +80,7 @@ class SongTagEditorActivity : AbsTagEditorActivity<ActivitySongTagEditorBinding>
         binding.trackNumberContainer.setTint(false)
         binding.discNumberContainer.setTint(false)
         binding.lyricsContainer.setTint(false)
+        binding.commentContainer.setTint(false)
 
         binding.songText.appHandleColor().doAfterTextChanged { dataChanged() }
         binding.albumText.appHandleColor().doAfterTextChanged { dataChanged() }
@@ -90,6 +91,7 @@ class SongTagEditorActivity : AbsTagEditorActivity<ActivitySongTagEditorBinding>
         binding.trackNumberText.appHandleColor().doAfterTextChanged { dataChanged() }
         binding.discNumberText.appHandleColor().doAfterTextChanged { dataChanged() }
         binding.lyricsText.appHandleColor().doAfterTextChanged { dataChanged() }
+        binding.commentText.appHandleColor().doAfterTextChanged { dataChanged() }
         binding.songComposerText.appHandleColor().doAfterTextChanged { dataChanged() }
     }
 
@@ -103,6 +105,7 @@ class SongTagEditorActivity : AbsTagEditorActivity<ActivitySongTagEditorBinding>
         binding.trackNumberText.setText(trackNumber)
         binding.discNumberText.setText(discNumber)
         binding.lyricsText.setText(lyrics)
+        binding.commentText.setText(comment)
         binding.songComposerText.setText(composer)
         logD(songTitle + songYear)
     }
@@ -154,6 +157,7 @@ class SongTagEditorActivity : AbsTagEditorActivity<ActivitySongTagEditorBinding>
         fieldKeyValueMap[FieldKey.YEAR] = binding.yearText.text.toString()
         fieldKeyValueMap[FieldKey.TRACK] = binding.trackNumberText.text.toString()
         fieldKeyValueMap[FieldKey.DISC_NO] = binding.discNumberText.text.toString()
+        fieldKeyValueMap[FieldKey.COMMENT] = binding.commentText.text.toString()
         fieldKeyValueMap[FieldKey.LYRICS] = binding.lyricsText.text.toString()
         fieldKeyValueMap[FieldKey.ALBUM_ARTIST] = binding.albumArtistText.text.toString()
         fieldKeyValueMap[FieldKey.COMPOSER] = binding.songComposerText.text.toString()

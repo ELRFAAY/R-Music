@@ -47,7 +47,7 @@
     <string name="action_shuffle_playlist">Shuffle playlist</string>
     <string name="action_sleep_timer">Sleep timer</string>
     <string name="action_sort_order">Sort order</string>
-    <string name="action_tag_editor">Tag editor</string>
+    <string name="action_tag_editor">Edit</string>
     <string name="action_toggle_favorite">Toggle favorite</string>
     <string name="action_toggle_shuffle">Toggle shuffle mode</string>
     <string name="adaptive">Adaptive</string>
@@ -622,4 +622,11 @@
     <string name="ring_lyrics_close">Close lyrics</string>
     <string name="ring_seek_seconds">10 seconds</string>
     <string name="user_data_backup">User data (name, photo, banner, library look)</string>
+    <string name="description">Description</string>
+    <string name="year_or_date">Year / date</string>
+    <string name="edit_artist_title">Edit artist</string>
+    <string name="edit_artist_name">Artist name</string>
+    <string name="edit_artist_change_image">Change picture</string>
+    <string name="edit_artist_remove_image">Remove picture</string>
+    <string name="edit_artist_name_note">Changing the name rewrites the artist tag in all of this artist's files.</string>
 </resources>
