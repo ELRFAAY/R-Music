@@ -18,6 +18,8 @@ import android.graphics.PorterDuff
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.view.View
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isVisible
@@ -48,6 +50,7 @@ import com.bumptech.glide.RequestBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.abs
 import me.tankery.lib.circularseekbar.CircularSeekBar
 
 /**
@@ -113,8 +116,36 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         binding.ringTitle.setOnClickListener { code.name.monkey.retromusic.fragments.base.goToAlbum(requireActivity()) }
         binding.ringArtist.setOnClickListener { code.name.monkey.retromusic.fragments.base.goToArtist(requireActivity()) }
 
-        // Tapping the cover or the chip swaps the cover for the lyrics and back.
-        binding.ringCover.setOnClickListener { setLyricsVisible(!showingLyrics) }
+        // On the cover: a tap swaps the cover for the lyrics and back; a swipe to the RIGHT plays
+        // the next song and a swipe to the LEFT the previous one (physical directions, the same
+        // in Arabic and English, as the user asked).
+        val swipeDistance = 72 * resources.displayMetrics.density
+        val coverGestures = GestureDetector(
+            requireContext(),
+            object : GestureDetector.SimpleOnGestureListener() {
+                override fun onDown(e: MotionEvent): Boolean = true
+
+                override fun onSingleTapUp(e: MotionEvent): Boolean {
+                    setLyricsVisible(!showingLyrics)
+                    return true
+                }
+
+                override fun onFling(
+                    e1: MotionEvent?,
+                    e2: MotionEvent,
+                    velocityX: Float,
+                    velocityY: Float
+                ): Boolean {
+                    if (e1 == null) return false
+                    val dx = e2.x - e1.x
+                    val dy = e2.y - e1.y
+                    if (abs(dx) < swipeDistance || abs(dx) < abs(dy) * 1.5f) return false
+                    if (dx > 0) MusicPlayerRemote.playNextSong()
+                    else MusicPlayerRemote.playPreviousSong()
+                    return true
+                }
+            })
+        binding.ringCover.setOnTouchListener { _, event -> coverGestures.onTouchEvent(event) }
         binding.lyricsChip.setOnClickListener { setLyricsVisible(!showingLyrics) }
         binding.ringLyrics.apply {
             setCurrentColor(Color.WHITE)
