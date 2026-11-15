@@ -629,4 +629,7 @@
     <string name="edit_artist_change_image">Change picture</string>
     <string name="edit_artist_remove_image">Remove picture</string>
     <string name="edit_artist_name_note">Changing the name rewrites the artist tag in all of this artist\'s files.</string>
+    <string name="merge_artist_restore_title">Artist merges from your backup</string>
+    <string name="merge_artist_restore_message">%1$d songs still have the old artist names. Write the merged names (%2$d artists) into their tags now?</string>
+    <string name="merge_artist_restore_later">Not now</string>
 </resources>

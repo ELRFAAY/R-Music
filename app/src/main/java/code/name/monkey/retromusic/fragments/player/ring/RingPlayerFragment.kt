@@ -95,6 +95,8 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
 
         binding.playerToolbar.apply {
             inflateMenu(R.menu.menu_player)
+            // the heart lives next to the title (animated); hide the toolbar copy
+            menu.findItem(R.id.action_toggle_favorite)?.isVisible = false
             setNavigationOnClickListener { requireActivity().onBackPressedDispatcher.onBackPressed() }
             setOnMenuItemClickListener(this@RingPlayerFragment)
             ToolbarContentTintHelper.colorizeToolbar(this, Color.WHITE, requireActivity())
@@ -493,14 +495,21 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         _binding?.artistCounter?.text = if (size == 0 || index < 0) "" else "${index + 1}/$size"
     }
 
-    private fun updateFavoriteHeart() {
+    /** The app's own heart: it fills with an animation when added and breaks when removed. */
+    private fun updateFavoriteHeart(animate: Boolean = false) {
         val id = MusicPlayerRemote.currentSong.id
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val isFavorite = libraryViewModel.isSongFavorite(id)
             withContext(Dispatchers.Main) {
-                _binding?.favoriteButton?.setImageResource(
-                    if (isFavorite) R.drawable.ic_favorite else R.drawable.ic_favorite_border
+                val button = _binding?.favoriteButton ?: return@withContext
+                button.setImageResource(
+                    if (animate) {
+                        if (isFavorite) R.drawable.avd_favorite else R.drawable.avd_unfavorite
+                    } else {
+                        if (isFavorite) R.drawable.ic_favorite else R.drawable.ic_favorite_border
+                    }
                 )
+                (button.drawable as? android.graphics.drawable.Animatable)?.start()
             }
         }
     }
@@ -598,7 +607,7 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
 
     override fun onFavoriteStateChanged() {
         super.onFavoriteStateChanged()
-        if (_binding != null) updateFavoriteHeart()
+        if (_binding != null) updateFavoriteHeart(animate = true)
     }
 
     override fun onUpdateProgressViews(progress: Int, total: Int) {

@@ -54,6 +54,33 @@ class MainActivity : AbsCastActivity() {
         setupNavigationController()
 
         WhatsNewFragment.showChangeLog(this)
+        checkPendingArtistMerge()
+    }
+
+    private val artistMerger = code.name.monkey.retromusic.fragments.artists.ArtistMerger(this)
+
+    /** After a restore: offer to write the remembered artist merges into the files again. */
+    private fun checkPendingArtistMerge() {
+        val marker = code.name.monkey.retromusic.fragments.artists.ArtistMerger.pendingMarker(this)
+        if (!marker.exists()) return
+        lifecycleScope.launch {
+            val groups =
+                code.name.monkey.retromusic.fragments.artists.ArtistMerger.findPendingGroups()
+                    ?: return@launch // no songs yet (permission); try again at the next start
+            if (groups.isEmpty()) {
+                marker.delete()
+                return@launch
+            }
+            val count = groups.values.sumOf { it.size }
+            com.google.android.material.dialog.MaterialAlertDialogBuilder(this@MainActivity)
+                .setTitle(R.string.merge_artist_restore_title)
+                .setMessage(getString(R.string.merge_artist_restore_message, count, groups.size))
+                .setNegativeButton(R.string.merge_artist_restore_later) { _, _ -> marker.delete() }
+                .setPositiveButton(R.string.merge_artist_action) { _, _ ->
+                    artistMerger.mergeGroups(groups) { marker.delete() }
+                }
+                .show()
+        }
     }
 
     private fun setupNavigationController() {

@@ -620,4 +620,7 @@
     <string name="edit_artist_change_image">تغيير الصورة</string>
     <string name="edit_artist_remove_image">حذف الصورة</string>
     <string name="edit_artist_name_note">تغيير الاسم بيعدّل تاج الفنان في كل ملفات الفنان ده.</string>
+    <string name="merge_artist_restore_title">دمج الفنانين من النسخة الاحتياطية</string>
+    <string name="merge_artist_restore_message">%1$d أغنية لسه عليها أسماء الفنانين القديمة. أكتب الأسماء المدموجة (%2$d فنان) في تاجاتها دلوقتي؟</string>
+    <string name="merge_artist_restore_later">مش دلوقتي</string>
 </resources>

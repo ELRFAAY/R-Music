@@ -192,7 +192,7 @@ object BackupHelper : KoinComponent {
             }.getOrDefault(emptyList())
         }
 
-    private fun restoreArtistGroups(zipIn: ZipInputStream) {
+    private fun restoreArtistGroups(context: Context, zipIn: ZipInputStream) {
         val root = JSONObject(zipIn.readBytes().toString(Charsets.UTF_8))
         val arr = root.optJSONArray("groups") ?: return
         val rows = mutableListOf<ArtistAliasEntity>()
@@ -205,6 +205,13 @@ object BackupHelper : KoinComponent {
             }
         }
         ArtistGroups(database.artistAliasDao()).restoreRows(rows)
+        // The tags of the files may not carry these merges yet: the app offers to write them.
+        if (rows.isNotEmpty()) {
+            runCatching {
+                code.name.monkey.retromusic.fragments.artists.ArtistMerger.pendingMarker(context)
+                    .writeText("1")
+            }
+        }
     }
 
     /** Lyrics fetched from LRCLIB or synced by hand, kept in the app's own storage. */
@@ -569,7 +576,7 @@ object BackupHelper : KoinComponent {
                     } else if (entry.isLyricsEntry() && contents.contains(LYRICS)) {
                         restoreLyrics(context, it, entry)
                     } else if (entry.isArtistGroupsEntry() && contents.contains(ARTIST_GROUPS)) {
-                        restoreArtistGroups(it)
+                        restoreArtistGroups(context, it)
                     } else if (entry.isCustomArtistEntry() && contents.contains(CUSTOM_ARTIST_IMAGES)) {
                         if (entry.isCustomArtistPrefEntry()) {
                             restoreCustomArtistPrefs(context, it, entry)
