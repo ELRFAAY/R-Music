@@ -51,6 +51,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.abs
+import kotlin.math.roundToInt
 import me.tankery.lib.circularseekbar.CircularSeekBar
 
 /**
@@ -147,6 +148,7 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
             })
         binding.ringCover.setOnTouchListener { _, event -> coverGestures.onTouchEvent(event) }
         binding.lyricsChip.setOnClickListener { setLyricsVisible(!showingLyrics) }
+        setupGestures()
         binding.ringLyrics.apply {
             setCurrentColor(Color.WHITE)
             setNormalColor(Color.argb(140, 255, 255, 255))
@@ -162,6 +164,57 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         }
     }
 
+    private val hideVolume = Runnable { _binding?.volumeOverlay?.isVisible = false }
+    private val hideSeekFeedback = Runnable { _binding?.seekFeedback?.isVisible = false }
+
+    /** Drag up/down on the cover = volume, double tap right/left half = -/+10 seconds. */
+    private fun setupGestures() {
+        binding.ringCoverArea.apply {
+            onVolumeChanged = { fraction ->
+                _binding?.let {
+                    it.volumeOverlay.removeCallbacks(hideVolume)
+                    it.volumeOverlay.isVisible = true
+                    it.volumeBar.setProgressCompat((fraction * 100).roundToInt(), false)
+                }
+            }
+            onVolumeGestureEnd = { _binding?.volumeOverlay?.postDelayed(hideVolume, 800) }
+            // Physical halves: right = forward, left = back (same in Arabic and English).
+            onDoubleTap = { forward -> skipSeconds(if (forward) 10 else -10) }
+        }
+    }
+
+    private fun skipSeconds(seconds: Int) {
+        val duration = MusicPlayerRemote.songDurationMillis
+        val position = MusicPlayerRemote.songProgressMillis
+        if (duration <= 0 || position < 0) return
+        MusicPlayerRemote.seekTo((position + seconds * 1000).coerceIn(0, duration))
+        _binding?.seekFeedback?.let {
+            it.removeCallbacks(hideSeekFeedback)
+            it.setText(if (seconds > 0) R.string.cover_seek_forward else R.string.cover_seek_back)
+            (it.layoutParams as android.widget.FrameLayout.LayoutParams).gravity =
+                android.view.Gravity.CENTER_VERTICAL or
+                        (if (seconds > 0) android.view.Gravity.END else android.view.Gravity.START)
+            it.requestLayout()
+            it.isVisible = true
+            it.postDelayed(hideSeekFeedback, 600)
+        }
+    }
+
+    /**
+     * Name shown under "Playing from". The app does not store which screen the queue was started
+     * from, so it is derived from the queue: one album -> album name, one artist -> artist name,
+     * anything else -> "Queue".
+     */
+    private fun playingSourceName(): String {
+        val queue = MusicPlayerRemote.playingQueue
+        if (queue.isEmpty()) return MusicPlayerRemote.currentSong.albumName
+        val albumIds = queue.map { it.albumId }.toSet()
+        if (albumIds.size == 1) return queue.first().albumName
+        val artistIds = queue.map { it.artistId }.toSet()
+        if (artistIds.size == 1) return queue.first().artistName
+        return getString(R.string.queue)
+    }
+
     private fun setLyricsVisible(visible: Boolean) {
         showingLyrics = visible
         binding.ringLyrics.isVisible = visible
@@ -172,7 +225,7 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         val song = MusicPlayerRemote.currentSong
         binding.ringTitle.text = song.title
         binding.ringArtist.text = song.artistName
-        binding.playingFrom.text = song.albumName
+        binding.playingFrom.text = playingSourceName()
 
         Glide.with(this)
             .load(RetroGlideExtension.getSongModel(song))
@@ -354,6 +407,8 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
     override fun onFavoriteToggled() = Unit
 
     override fun onDestroyView() {
+        _binding?.volumeOverlay?.removeCallbacks(hideVolume)
+        _binding?.seekFeedback?.removeCallbacks(hideSeekFeedback)
         super.onDestroyView()
         _binding = null
     }
