@@ -17,6 +17,7 @@ import code.name.monkey.retromusic.LIBRARY_CATEGORIES
 import code.name.monkey.retromusic.REMEMBER_LAST_TAB
 import code.name.monkey.retromusic.TAB_TEXT_MODE
 import code.name.monkey.retromusic.TOGGLE_HOME_BANNER
+import code.name.monkey.retromusic.BACKUP_FOLDER_URI
 import code.name.monkey.retromusic.USER_NAME
 import code.name.monkey.retromusic.R
 import code.name.monkey.retromusic.db.HistoryEntity
@@ -436,13 +437,72 @@ object BackupHelper : KoinComponent {
         editor.commit()
     }
 
+    /**
+     * All app settings (the main preferences and the theme preferences) as typed JSON, key by key,
+     * so they move to any build (debug / fast / release) exactly as they are. Only values that
+     * belong to one phone (the picked backup folder) are left out.
+     */
     private fun getSettingsZipItems(context: Context): List<ZipItem> {
-        val sharedPrefPath = File(context.filesDir.parentFile, "shared_prefs")
-        return listOf(
-            "${BuildConfig.APPLICATION_ID}_preferences.xml", // App settings pref path
-            "$THEME_PREFS_KEY_DEFAULT.xml"  // appthemehelper pref path
-        ).map {
-            ZipItem(File(sharedPrefPath, it).absolutePath, SETTINGS_PATH.child(it))
+        val dir = File(context.filesDir, APP_SETTINGS_PATH).apply { mkdirs() }
+        val root = JSONObject().put("version", 1)
+        for ((name, prefs) in settingsPrefs(context)) {
+            val arr = JSONArray()
+            for ((key, value) in prefs.all) {
+                if (key in SETTINGS_SKIP_KEYS) continue
+                val o = JSONObject().put("k", key)
+                when (value) {
+                    is Boolean -> o.put("t", "b").put("v", value)
+                    is Int -> o.put("t", "i").put("v", value)
+                    is Long -> o.put("t", "l").put("v", value)
+                    is Float -> o.put("t", "f").put("v", value.toDouble())
+                    is String -> o.put("t", "s").put("v", value)
+                    is Set<*> -> o.put("t", "ss").put("v", JSONArray(value.map { it.toString() }))
+                    else -> continue
+                }
+                arr.put(o)
+            }
+            root.put(name, arr)
+        }
+        val file = File(dir, APP_SETTINGS_FILE)
+        file.writeText(root.toString())
+        return listOf(ZipItem(file.absolutePath, APP_SETTINGS_PATH.child(APP_SETTINGS_FILE)))
+    }
+
+    private fun settingsPrefs(context: Context): Map<String, android.content.SharedPreferences> = mapOf(
+        "main" to PreferenceManager.getDefaultSharedPreferences(context),
+        "theme" to context.getSharedPreferences(THEME_PREFS_KEY_DEFAULT, Context.MODE_PRIVATE)
+    )
+
+    /** Replaces the settings with the saved ones (keeping this phone's own backup folder) and writes them to disk now. */
+    private fun restoreAppSettings(context: Context, root: JSONObject) {
+        for ((name, prefs) in settingsPrefs(context)) {
+            val arr = root.optJSONArray(name) ?: continue
+            val kept = prefs.all.filterKeys { it in SETTINGS_SKIP_KEYS }
+            val editor = prefs.edit().clear()
+            for ((k, v) in kept) when (v) {
+                is Boolean -> editor.putBoolean(k, v)
+                is Int -> editor.putInt(k, v)
+                is Long -> editor.putLong(k, v)
+                is Float -> editor.putFloat(k, v)
+                is String -> editor.putString(k, v)
+            }
+            for (i in 0 until arr.length()) {
+                val o = arr.optJSONObject(i) ?: continue
+                val key = o.optString("k")
+                if (key.isEmpty() || key in SETTINGS_SKIP_KEYS) continue
+                when (o.optString("t")) {
+                    "b" -> editor.putBoolean(key, o.optBoolean("v"))
+                    "i" -> editor.putInt(key, o.optInt("v"))
+                    "l" -> editor.putLong(key, o.optLong("v"))
+                    "f" -> editor.putFloat(key, o.optDouble("v").toFloat())
+                    "s" -> editor.putString(key, o.optString("v"))
+                    "ss" -> {
+                        val values = o.optJSONArray("v") ?: continue
+                        editor.putStringSet(key, (0 until values.length()).map { values.optString(it) }.toSet())
+                    }
+                }
+            }
+            editor.commit()
         }
     }
 
@@ -498,8 +558,10 @@ object BackupHelper : KoinComponent {
                         }
                     } else if (entry.isPlaylistEntry() && contents.contains(PLAYLISTS)) {
                         restorePlaylists(it, entry)
+                    } else if (entry.isAppSettingsEntry() && contents.contains(SETTINGS)) {
+                        restoreAppSettings(context, JSONObject(it.readBytes().toString(Charsets.UTF_8)))
                     } else if (entry.isPreferenceEntry() && contents.contains(SETTINGS)) {
-                        restorePreferences(context, it, entry)
+                        restorePreferences(context, it, entry) // backups made before the JSON settings
                     } else if (entry.isImageEntry() && contents.contains(USER_IMAGES)) {
                         restoreImages(context, it, entry)
                     } else if (entry.isListeningEntry() && contents.contains(LISTENING_DATA)) {
@@ -631,6 +693,9 @@ object BackupHelper : KoinComponent {
     private const val PLAYLISTS_PATH = "Playlists"
     private const val SETTINGS_PATH = "prefs"
     private const val IMAGES_PATH = "userImages"
+    private const val APP_SETTINGS_PATH = "appsettings"
+    private const val APP_SETTINGS_FILE = "settings.json"
+    private val SETTINGS_SKIP_KEYS = setOf(BACKUP_FOLDER_URI)
     private const val USER_DATA_PATH = "userdata"
     private const val USER_DATA_FILE = "user_data.json"
     private val USER_DATA_IMAGES = listOf(Constants.USER_PROFILE, Constants.USER_BANNER)
@@ -648,6 +713,10 @@ object BackupHelper : KoinComponent {
 
     private fun ZipEntry.isPlaylistEntry(): Boolean {
         return name.startsWith(PLAYLISTS_PATH)
+    }
+
+    private fun ZipEntry.isAppSettingsEntry(): Boolean {
+        return name.startsWith(APP_SETTINGS_PATH + File.separator)
     }
 
     private fun ZipEntry.isPreferenceEntry(): Boolean {
