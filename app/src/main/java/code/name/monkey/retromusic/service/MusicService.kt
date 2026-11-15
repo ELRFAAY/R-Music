@@ -723,6 +723,14 @@ class MusicService : MediaBrowserServiceCompat(),
                     ACTION_REWIND -> back(true)
                     ACTION_SKIP -> playNextSong(true)
                     ACTION_TOGGLE_SHUFFLE -> toggleShuffle()
+                    ACTION_SEEK_FRACTION -> {
+                        val fraction = intent.getFloatExtra(EXTRA_SEEK_FRACTION, -1f)
+                        if (fraction in 0f..1f && songDurationMillis > 0) {
+                            seek((songDurationMillis * fraction).toInt())
+                            playingNotification?.updateProgress(songProgressMillis, songDurationMillis)
+                            startForegroundOrNotify()
+                        }
+                    }
                     ACTION_STOP, ACTION_QUIT -> {
                         pendingQuit = false
                         quit()
@@ -1173,6 +1181,7 @@ class MusicService : MediaBrowserServiceCompat(),
                 updateMediaSessionMetaData {
                     updateMediaSessionPlaybackState()
                     playingNotification?.updateMetadata(currentSong) { startForegroundOrNotify() }
+                    if (isPlaying) startNotificationTicker()
                     isCurrentFavorite { isFavorite ->
                         playingNotification?.updateFavorite(isFavorite)
                         startForegroundOrNotify()
@@ -1212,7 +1221,11 @@ class MusicService : MediaBrowserServiceCompat(),
     private val notificationTicker = object : Runnable {
         override fun run() {
             val pm = getSystemService(POWER_SERVICE) as? android.os.PowerManager
-            if (!isPlaying || isQuitting || pm?.isInteractive == false) return
+            if (!isPlaying || isQuitting) return
+            if (pm?.isInteractive == false) {
+                uiThreadHandler?.postDelayed(this, 5000)
+                return
+            }
             val changed = playingNotification?.updateProgress(songProgressMillis, songDurationMillis) == true
             if (changed) startForegroundOrNotify()
             uiThreadHandler?.postDelayed(this, 1000)
@@ -1488,6 +1501,8 @@ class MusicService : MediaBrowserServiceCompat(),
         const val ACTION_STOP = "$RETRO_MUSIC_PACKAGE_NAME.stop"
         const val ACTION_SKIP = "$RETRO_MUSIC_PACKAGE_NAME.skip"
         const val ACTION_REWIND = "$RETRO_MUSIC_PACKAGE_NAME.rewind"
+        const val ACTION_SEEK_FRACTION = "$RETRO_MUSIC_PACKAGE_NAME.seekfraction"
+        const val EXTRA_SEEK_FRACTION = "seek_fraction"
         const val ACTION_TOGGLE_SHUFFLE = "$RETRO_MUSIC_PACKAGE_NAME.toggleshuffle"
         const val ACTION_QUIT = "$RETRO_MUSIC_PACKAGE_NAME.quitservice"
         const val ACTION_PENDING_QUIT = "$RETRO_MUSIC_PACKAGE_NAME.pendingquitservice"

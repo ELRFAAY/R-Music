@@ -273,6 +273,22 @@ class PlayingNotification(
             expanded.setOnClickPendingIntent(R.id.cobraShuffle, retrievePlaybackAction(ACTION_TOGGLE_SHUFFLE))
             expanded.setInt(R.id.cobraShuffle, "setColorFilter", if (cobraShuffle) green else 0xFF6B767A.toInt())
             expanded.setImageViewBitmap(R.id.cobraBar, drawBar())
+            val segs = intArrayOf(
+                R.id.seek0, R.id.seek1, R.id.seek2, R.id.seek3, R.id.seek4,
+                R.id.seek5, R.id.seek6, R.id.seek7, R.id.seek8, R.id.seek9
+            )
+            for (i in segs.indices) {
+                val seekIntent = Intent(MusicService.ACTION_SEEK_FRACTION)
+                seekIntent.component = ComponentName(context, MusicService::class.java)
+                seekIntent.putExtra(MusicService.EXTRA_SEEK_FRACTION, (i + 0.5f) / segs.size)
+                expanded.setOnClickPendingIntent(
+                    segs[i],
+                    PendingIntent.getService(
+                        context, 100 + i, seekIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+                )
+            }
             setCustomContentView(collapsed)
             setCustomBigContentView(expanded)
         } catch (e: Exception) {
