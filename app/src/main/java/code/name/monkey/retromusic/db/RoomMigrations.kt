@@ -26,3 +26,14 @@ val MIGRATION_24_25 = object : Migration(24, 25) {
         )
     }
 }
+val MIGRATION_25_26 = object : Migration(25, 26) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        // Must match ArtistAliasEntity exactly, Room validates the schema after migrating.
+        database.execSQL(
+            "CREATE TABLE IF NOT EXISTS `artist_aliases` (" +
+                    "`alias_name` TEXT NOT NULL, " +
+                    "`main_name` TEXT NOT NULL, " +
+                    "PRIMARY KEY(`alias_name`))"
+        )
+    }
+}

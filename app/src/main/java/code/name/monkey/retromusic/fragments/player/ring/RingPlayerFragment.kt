@@ -194,21 +194,18 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
                 it.crossfadeListener().into(binding.ringBackground)
             }
         updateFavoriteHeart()
-        updateArtistCounter()
+        updateQueueCounter()
         updateLyrics()
     }
 
-    /** "6/155": position of the playing song among the songs of its artist. */
-    private fun updateArtistCounter() {
-        val song = MusicPlayerRemote.currentSong
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val songs = libraryViewModel.artistById(song.artistId).songs
-            val position = songs.indexOfFirst { it.id == song.id } + 1
-            withContext(Dispatchers.Main) {
-                _binding?.artistCounter?.text =
-                    if (songs.isEmpty() || position == 0) "" else "$position/${songs.size}"
-            }
-        }
+    /**
+     * "6/155": position of the playing song in the play queue and the size of the queue. The queue
+     * is the list the user opened and started playing from (folder, album, playlist, artist).
+     */
+    private fun updateQueueCounter() {
+        val size = MusicPlayerRemote.playingQueue.size
+        val index = MusicPlayerRemote.position
+        _binding?.artistCounter?.text = if (size == 0 || index < 0) "" else "${index + 1}/$size"
     }
 
     private fun updateFavoriteHeart() {
@@ -287,6 +284,11 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         updatePlayPause()
         updateShuffle()
         updateRepeat()
+    }
+
+    override fun onQueueChanged() {
+        super.onQueueChanged()
+        if (_binding != null) updateQueueCounter()
     }
 
     override fun onPlayingMetaChanged() {

@@ -22,7 +22,9 @@ import java.text.Collator
 data class Artist(
     val id: Long,
     val albums: List<Album>,
-    val isAlbumArtist: Boolean = false
+    val isAlbumArtist: Boolean = false,
+    /** Set when several artist names were grouped by the user; this is the name shown. */
+    val nameOverride: String? = null
 ) {
     constructor(
         artistName: String,
@@ -34,7 +36,7 @@ data class Artist(
 
     var name: String = "-"
         get() {
-            val name = if (isAlbumArtist) getAlbumArtistName()
+            val name = nameOverride ?: if (isAlbumArtist) getAlbumArtistName()
             else getArtistName()
             return when {
                 MusicUtil.isVariousArtists(name) ->

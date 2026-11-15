@@ -84,7 +84,15 @@ class ArtistsFragment : AbsRecyclerViewCustomGridSizeFragment<ArtistAdapter, Gri
             itemLayoutRes(),
             this,
             this
-        )
+        ).also { artistAdapter ->
+            artistAdapter.onMergeRequested = { selection ->
+                ArtistGroupDialogs.mergeSelection(
+                    requireActivity(), selection.map { it.name }
+                ) {
+                    libraryViewModel.forceReload(ReloadType.Artists)
+                }
+            }
+        }
     }
 
     override fun loadGridSize(): Int {

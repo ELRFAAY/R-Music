@@ -17,8 +17,10 @@ import code.name.monkey.retromusic.db.toPlayCount
 import code.name.monkey.retromusic.db.toSongEntity
 import code.name.monkey.retromusic.extensions.showToast
 import code.name.monkey.retromusic.extensions.zipOutputStream
+import code.name.monkey.retromusic.db.ArtistAliasEntity
 import code.name.monkey.retromusic.helper.BackupContent.*
 import code.name.monkey.retromusic.model.Song
+import code.name.monkey.retromusic.repository.ArtistGroups
 import code.name.monkey.retromusic.repository.Repository
 import code.name.monkey.retromusic.repository.SongRepository
 import code.name.monkey.retromusic.util.PreferenceUtil
@@ -52,6 +54,7 @@ object BackupHelper : KoinComponent {
         zipItems.addAll(getCustomArtistZipItems(context))
         zipItems.addAll(getListeningDataZipItems(context))
         zipItems.addAll(getLyricsZipItems(context))
+        zipItems.addAll(getArtistGroupsZipItems(context))
         val done = zipAll(zipItems, tempFile) && deliver(context, tempFile, name)
         if (!silent) {
             withContext(Dispatchers.Main) {
@@ -64,6 +67,7 @@ object BackupHelper : KoinComponent {
         // Clean Cache Playlist Directory
         File(context.filesDir, PLAYLISTS_PATH).deleteRecursively()
         File(context.filesDir, LISTENING_PATH).deleteRecursively()
+        File(context.filesDir, ARTIST_GROUPS_PATH).deleteRecursively()
         return done
     }
 
@@ -147,6 +151,45 @@ object BackupHelper : KoinComponent {
         return getBackupRoot().listFiles { _, fileName ->
             fileName.endsWith(BACKUP_EXTENSION)
         }?.map { BackupEntry(it.nameWithoutExtension, it.toUri(), it) } ?: emptyList()
+    }
+
+    /**
+     * Artist names the user grouped as one artist. Saved by NAME, so the groups come back on a new
+     * phone, and restored even when some of the artists are not in the library (yet).
+     */
+    private suspend fun getArtistGroupsZipItems(context: Context): List<ZipItem> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val rows = ArtistGroups(database.artistAliasDao()).allRows()
+                if (rows.isEmpty()) return@runCatching emptyList<ZipItem>()
+                val folder = File(context.filesDir, ARTIST_GROUPS_PATH)
+                if (!folder.exists()) folder.mkdirs()
+                val root = JSONObject()
+                root.put("version", 1)
+                root.put("groups", JSONArray().also { arr ->
+                    rows.forEach {
+                        arr.put(JSONObject().put("alias", it.aliasName).put("main", it.mainName))
+                    }
+                })
+                val file = File(folder, ARTIST_GROUPS_FILE)
+                file.writeText(root.toString(), Charsets.UTF_8)
+                listOf(ZipItem(file.absolutePath, ARTIST_GROUPS_PATH.child(ARTIST_GROUPS_FILE)))
+            }.getOrDefault(emptyList())
+        }
+
+    private fun restoreArtistGroups(zipIn: ZipInputStream) {
+        val root = JSONObject(zipIn.readBytes().toString(Charsets.UTF_8))
+        val arr = root.optJSONArray("groups") ?: return
+        val rows = mutableListOf<ArtistAliasEntity>()
+        for (i in 0 until arr.length()) {
+            val o = arr.optJSONObject(i) ?: continue
+            val alias = o.optString("alias").trim()
+            val main = o.optString("main").trim()
+            if (alias.isNotEmpty() && main.isNotEmpty() && !alias.equals(main, ignoreCase = true)) {
+                rows += ArtistAliasEntity(alias, main)
+            }
+        }
+        ArtistGroups(database.artistAliasDao()).restoreRows(rows)
     }
 
     /** Lyrics fetched from LRCLIB or synced by hand, kept in the app's own storage. */
@@ -376,6 +419,8 @@ object BackupHelper : KoinComponent {
                         restoreListeningData(it)
                     } else if (entry.isLyricsEntry() && contents.contains(LYRICS)) {
                         restoreLyrics(context, it, entry)
+                    } else if (entry.isArtistGroupsEntry() && contents.contains(ARTIST_GROUPS)) {
+                        restoreArtistGroups(it)
                     } else if (entry.isCustomArtistEntry() && contents.contains(CUSTOM_ARTIST_IMAGES)) {
                         if (entry.isCustomArtistPrefEntry()) {
                             restoreCustomArtistPrefs(context, it, entry)
@@ -490,6 +535,8 @@ object BackupHelper : KoinComponent {
     private const val IMAGES_PATH = "userImages"
     private const val LISTENING_PATH = "listening"
     private const val LYRICS_PATH = "lyrics"
+    private const val ARTIST_GROUPS_PATH = "artistgroups"
+    private const val ARTIST_GROUPS_FILE = "artist_groups.json"
     private const val LISTENING_FILE = "listening.json"
     private const val CUSTOM_ARTISTS_PATH = "artistImages"
     private const val THEME_PREFS_KEY_DEFAULT = "[[kabouzeid_app-theme-helper]]"
@@ -504,6 +551,10 @@ object BackupHelper : KoinComponent {
 
     private fun ZipEntry.isLyricsEntry(): Boolean {
         return name.startsWith(LYRICS_PATH + File.separator)
+    }
+
+    private fun ZipEntry.isArtistGroupsEntry(): Boolean {
+        return name.startsWith(ARTIST_GROUPS_PATH)
     }
 
     private fun ZipEntry.isListeningEntry(): Boolean {
@@ -560,5 +611,6 @@ enum class BackupContent {
     CUSTOM_ARTIST_IMAGES,
     PLAYLISTS,
     LISTENING_DATA,
-    LYRICS
+    LYRICS,
+    ARTIST_GROUPS
 }

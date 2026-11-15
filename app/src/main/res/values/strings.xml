@@ -599,9 +599,18 @@
     <string name="ring_cover">Ring cover</string>
     <string name="ring_playing_from">Playing from</string>
     <string name="ring_no_lyrics">No lyrics for this song</string>
-    <string name="merge_artist">Merge into another artist</string>
-    <string name="merge_artist_message">All songs of "%1$s" will get the artist name you choose here. This changes the tags in the music files.</string>
-    <string name="merge_artist_hint">Artist name</string>
+    <string name="merge_artist">Merge artists</string>
     <string name="merge_artist_action">Merge</string>
-    <string name="merge_artist_done">Artist updated</string>
+    <string name="merge_artist_done">Artists grouped</string>
+    <string name="merge_artist_pick_title">Group artists under %1$s</string>
+    <string name="merge_artist_search_hint">Search artists</string>
+    <string name="merge_artist_selected">%1$d selected</string>
+    <string name="merge_artist_none">There are no other artists</string>
+    <string name="merge_artist_confirm">Group %1$d artists under %2$s? Your files and tags are not changed.</string>
+    <string name="unmerge_artist">Undo grouping</string>
+    <string name="unmerge_artist_title">Grouped under %1$s</string>
+    <string name="unmerge_artist_split">Split selected</string>
+    <string name="unmerge_artist_all">Split all</string>
+    <string name="unmerge_artist_none">No artists are grouped under this one</string>
+    <string name="artist_groups_data">Artist groups</string>
 </resources>

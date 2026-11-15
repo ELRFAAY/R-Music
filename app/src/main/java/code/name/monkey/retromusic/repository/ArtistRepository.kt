@@ -16,6 +16,7 @@ package code.name.monkey.retromusic.repository
 
 import android.provider.MediaStore.Audio.AudioColumns
 import code.name.monkey.retromusic.ALBUM_ARTIST
+import code.name.monkey.retromusic.db.ArtistAliasDao
 import code.name.monkey.retromusic.helper.SortOrder
 import code.name.monkey.retromusic.model.Album
 import code.name.monkey.retromusic.model.Artist
@@ -40,8 +41,12 @@ interface ArtistRepository {
 
 class RealArtistRepository(
     private val songRepository: RealSongRepository,
-    private val albumRepository: RealAlbumRepository
+    private val albumRepository: RealAlbumRepository,
+    aliasDao: ArtistAliasDao
 ) : ArtistRepository {
+
+    /** Artist names the user grouped as one artist (in-app only, no tag is changed). */
+    private val groups = ArtistGroups(aliasDao)
 
     private fun getSongLoaderSortOrder(): String {
         return PreferenceUtil.artistSortOrder + ", " +
@@ -71,6 +76,24 @@ class RealArtistRepository(
                 getSongLoaderSortOrder()
             )
         )
+        val snap = groups.snapshot()
+        val first = songs.firstOrNull()
+        if (first != null && snap.isGrouped(first.artistName)) {
+            // Show the songs of every name in the group, under the main artist's name.
+            val members = snap.membersOf(first.artistName)
+            val groupSongs = songRepository.songs(
+                songRepository.makeSongCursor(
+                    AudioColumns.ARTIST + " IN (" + members.joinToString(",") { "?" } + ")",
+                    members.toTypedArray(),
+                    getSongLoaderSortOrder()
+                )
+            )
+            return Artist(
+                artistId,
+                albumRepository.splitIntoAlbums(groupSongs),
+                nameOverride = snap.displayName(first.artistName)
+            )
+        }
         return Artist(artistId, albumRepository.splitIntoAlbums(songs))
     }
 
@@ -96,6 +119,24 @@ class RealArtistRepository(
                 getSongLoaderSortOrder()
             )
         )
+        val snap = groups.snapshot()
+        if (snap.isGrouped(artistName)) {
+            val members = snap.membersOf(artistName)
+            val groupSongs = songRepository.songs(
+                songRepository.makeSongCursor(
+                    "album_artist IN (" + members.joinToString(",") { "?" } + ")",
+                    members.toTypedArray(),
+                    getSongLoaderSortOrder()
+                )
+            )
+            val groupAlbums = albumRepository.splitIntoAlbums(groupSongs)
+            if (groupAlbums.isNotEmpty()) {
+                return Artist(
+                    groupAlbums[0].artistId, groupAlbums, true,
+                    nameOverride = snap.displayName(artistName)
+                )
+            }
+        }
         return Artist(artistName, albumRepository.splitIntoAlbums(songs), true)
     }
 
@@ -158,17 +199,24 @@ class RealArtistRepository(
 
 
     private fun splitIntoAlbumArtists(albums: List<Album>): List<Artist> {
-        return albums.groupBy { it.albumArtist }
+        val snap = groups.snapshot()
+        return albums.groupBy { album -> snap.groupKey(album.albumArtist) ?: album.albumArtist }
             .filter {
                 !it.key.isNullOrEmpty()
             }
             .map {
                 val currentAlbums = it.value
                 if (currentAlbums.isNotEmpty()) {
-                    if (currentAlbums[0].albumArtist == Artist.VARIOUS_ARTISTS_DISPLAY_NAME) {
+                    val first = currentAlbums[0]
+                    if (first.albumArtist == Artist.VARIOUS_ARTISTS_DISPLAY_NAME) {
                         Artist(Artist.VARIOUS_ARTISTS_ID, currentAlbums, true)
+                    } else if (snap.isGrouped(first.albumArtist)) {
+                        Artist(
+                            first.artistId, currentAlbums, true,
+                            nameOverride = snap.displayName(first.albumArtist!!)
+                        )
                     } else {
-                        Artist(currentAlbums[0].artistId, currentAlbums, true)
+                        Artist(first.artistId, currentAlbums, true)
                     }
                 } else {
                     Artist.empty
@@ -178,8 +226,26 @@ class RealArtistRepository(
 
 
     fun splitIntoArtists(albums: List<Album>): List<Artist> {
-        return albums.groupBy { it.artistId }
-            .map { Artist(it.key, it.value) }
+        val snap = groups.snapshot()
+        if (snap.isEmpty) {
+            return albums.groupBy { it.artistId }
+                .map { Artist(it.key, it.value) }
+        }
+        // Names the user grouped end up in one Artist; everyone else is grouped by id as before.
+        return albums.groupBy { snap.groupKey(it.artistName) ?: "id:${it.artistId}" }
+            .map { (_, list) ->
+                val first = list[0]
+                if (snap.isGrouped(first.artistName)) {
+                    val main = snap.displayName(first.artistName)
+                    // Prefer the id of the main artist itself, so its page opens as before.
+                    val lead = list.firstOrNull {
+                        ArtistGroups.key(it.artistName) == ArtistGroups.key(main)
+                    } ?: first
+                    Artist(lead.artistId, list, nameOverride = main)
+                } else {
+                    Artist(first.artistId, list)
+                }
+            }
     }
 
     private fun sortArtists(artists: List<Artist>): List<Artist> {

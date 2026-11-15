@@ -590,9 +590,18 @@
     <string name="ring_cover">الغلاف الدائري</string>
     <string name="ring_playing_from">التشغيل من</string>
     <string name="ring_no_lyrics">مفيش كلمات للأغنية دي</string>
-    <string name="merge_artist">دمج في فنان تاني</string>
-    <string name="merge_artist_message">كل أغاني "%1$s" هتاخد اسم الفنان اللي هتختاره هنا. ده بيغيّر التاجات جوه ملفات الموسيقى.</string>
-    <string name="merge_artist_hint">اسم الفنان</string>
+    <string name="merge_artist">دمج فنانين</string>
     <string name="merge_artist_action">دمج</string>
-    <string name="merge_artist_done">اتحدّث الفنان</string>
+    <string name="merge_artist_done">اتجمّع الفنانين</string>
+    <string name="merge_artist_pick_title">تجميع فنانين تحت %1$s</string>
+    <string name="merge_artist_search_hint">دوّر على فنان</string>
+    <string name="merge_artist_selected">اخترت %1$d</string>
+    <string name="merge_artist_none">مفيش فنانين تانيين</string>
+    <string name="merge_artist_confirm">تجميع %1$d فنانين تحت %2$s؟ ملفاتك وتاجاتك مش هتتغيّر.</string>
+    <string name="unmerge_artist">التراجع عن التجميع</string>
+    <string name="unmerge_artist_title">المجمّعين تحت %1$s</string>
+    <string name="unmerge_artist_split">فصل المختار</string>
+    <string name="unmerge_artist_all">فصل الكل</string>
+    <string name="unmerge_artist_none">مفيش فنانين متجمّعين تحت الفنان ده</string>
+    <string name="artist_groups_data">تجميع الفنانين</string>
 </resources>

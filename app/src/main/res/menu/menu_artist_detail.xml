@@ -22,6 +22,11 @@
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/action_unmerge_artist"
+        android:title="@string/unmerge_artist"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_set_artist_image"
         android:title="@string/set_artist_image"
         app:showAsAction="never" />
