@@ -103,3 +103,14 @@ F. (WRITTEN 2026-11-15, sixth session, not tested on a device: `fragments/player
 - Follow AGENTS.md in the repo (Room migrations, no main-thread IO, strings in resources).
 - Oto Music is closed source; do not try to edit its APK.
 - Commit trailers: Co-Authored-By + Claude-Session lines as per the session attribution rule.
+
+
+## Session 6 end notes (2026-11-15 14:45)
+
+- Pushed: prev/next buttons use the cover colour (`AbsPlayerControlsFragment.updatePrevNextColor(cover)`, all controls themes except Circle/Classic/Gradient which have their own), Ring cover theme (item F, layout re-spaced at e73d7c8: ring high, title guide 60%, controls guide 79%), artist merge (item 9). All WRITTEN, none tested on a device. CI run of c05b9ac was green; e73d7c8 not yet checked.
+- The CI now builds both `R-Music-debug-apk` and `R-Music-fast-apk` (fast = R8, id suffix `.fast`, installs next to debug). Tell the user to test performance with the FAST apk.
+- Item C (collapse arrow under prev/next) is NOT done: ask the user which row he means (shuffle/repeat sit in the same row as prev/next in most themes).
+- Item E (lag): the user listed lag when opening the app, a blank first screen after leaving the app, hangs when opening an album/artist/song, and the bottom navigation. Nothing changed yet; waiting for his result with the fast APK. If still slow: profile cold start (`App.onCreate`, `LibraryViewModel`), artist/album detail loading, shared element transitions.
+- The user wants the Ring theme to match "Muzio Player" (reference screenshots in docs/reference). Still missing: volume drag and double-tap +/-10 s on the cover, "Playing from" should show the real source (playlist/album), its own preview image.
+- Not started: 7 (icon picker, ask whether he has artwork), 8 (notification icon, package rename), 11-14 (artist info, lyrics translation and romanization e.g. Korean, progress bar styles), vocal separation (D, confirm first).
+- Rule from the user: work only when he says go; short Egyptian Arabic replies.
