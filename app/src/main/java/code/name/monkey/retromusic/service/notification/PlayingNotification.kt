@@ -114,8 +114,7 @@ class PlayingNotification(
         setShowWhen(false)
         if (cobra) {
             setStyle(
-                androidx.media.app.NotificationCompat.DecoratedMediaCustomViewStyle()
-                    .setMediaSession(mediaSessionToken)
+                NotificationCompat.DecoratedCustomViewStyle()
             )
             refreshCobraViews()
         } else {

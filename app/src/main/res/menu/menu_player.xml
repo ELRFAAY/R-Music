@@ -74,6 +74,10 @@
         android:orderInCategory="9"
         android:title="@string/action_clear_playing_queue" />
     <item
+        android:id="@+id/action_tag_editor"
+        android:orderInCategory="10"
+        android:title="@string/action_tag_editor" />
+    <item
         android:id="@+id/action_details"
         android:orderInCategory="10"
         android:title="@string/action_details" />
