@@ -59,6 +59,7 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
     abstract val artistId: Long?
     abstract val artistName: String?
     private lateinit var artist: Artist
+    private val artistMerger = ArtistMerger(this)
     private lateinit var songAdapter: SimpleSongAdapter
     private lateinit var albumAdapter: HorizontalAlbumAdapter
     private var forceDownload: Boolean = false
@@ -238,9 +239,42 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
         return handleSortOrderMenuItem(item)
     }
 
-    private fun reloadAfterGrouping() {
-        libraryViewModel.forceReload(ReloadType.Artists)
-        findNavController().navigateUp()
+    /** Pick an existing artist (or type a new name): all songs of this artist get that name. */
+    private fun showMergeArtistDialog() {
+        val names = (libraryViewModel.getArtists().value ?: emptyList())
+            .map { it.name }
+            .filter { it != artist.name }
+            .distinct()
+            .sorted()
+        val input = android.widget.AutoCompleteTextView(requireContext()).apply {
+            setAdapter(
+                android.widget.ArrayAdapter(
+                    requireContext(), android.R.layout.simple_dropdown_item_1line, names
+                )
+            )
+            threshold = 1
+            setSingleLine()
+            hint = getString(R.string.merge_artist_hint)
+        }
+        val holder = android.widget.FrameLayout(requireContext()).apply {
+            val pad = (20 * resources.displayMetrics.density).toInt()
+            setPadding(pad, pad / 2, pad, 0)
+            addView(input)
+        }
+        materialDialog(R.string.merge_artist)
+            .setMessage(getString(R.string.merge_artist_message, artist.name))
+            .setView(holder)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(R.string.merge_artist_action) { _, _ ->
+                val target = input.text.toString().trim()
+                if (target.isNotEmpty() && target != artist.name) {
+                    artistMerger.merge(artist.songs, target) {
+                        libraryViewModel.forceReload(ReloadType.Artists)
+                        findNavController().navigateUp()
+                    }
+                }
+            }
+            .show()
     }
 
     private fun handleSortOrderMenuItem(item: MenuItem): Boolean {
@@ -258,16 +292,7 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
             }
 
             R.id.action_merge_artist -> {
-                ArtistGroupDialogs.showPicker(requireActivity(), artist.name) {
-                    reloadAfterGrouping()
-                }
-                return true
-            }
-
-            R.id.action_unmerge_artist -> {
-                ArtistGroupDialogs.showUndo(requireActivity(), artist.name) {
-                    reloadAfterGrouping()
-                }
+                showMergeArtistDialog()
                 return true
             }
 

@@ -590,9 +590,11 @@
     <string name="muzio_theme">ميوزيو (Muzio)</string>
     <string name="ring_playing_from">التشغيل من</string>
     <string name="ring_no_lyrics">مفيش كلمات للأغنية دي</string>
-    <string name="merge_artist">دمج فنانين</string>
+    <string name="merge_artist">دمج في فنان تاني</string>
+    <string name="merge_artist_message">كل أغاني "%1$s" هتاخد اسم الفنان اللي هتختاره هنا. ده بيغيّر التاجات جوه ملفات الموسيقى.</string>
+    <string name="merge_artist_hint">اسم الفنان</string>
     <string name="merge_artist_action">دمج</string>
-    <string name="merge_artist_done">اتجمّع الفنانين</string>
+    <string name="merge_artist_done">اتحدّث الفنان</string>
     <string name="merge_artist_pick_title">تجميع فنانين تحت %1$s</string>
     <string name="merge_artist_search_hint">دوّر على فنان</string>
     <string name="merge_artist_selected">اخترت %1$d</string>

@@ -48,13 +48,10 @@ class ArtistAdapter(
     var itemLayoutRes: Int,
     val IArtistClickListener: IArtistClickListener,
     val IAlbumArtistClickListener: IAlbumArtistClickListener? = null
-) : AbsMultiSelectAdapter<ArtistAdapter.ViewHolder, Artist>(activity, R.menu.menu_artist_selection),
+) : AbsMultiSelectAdapter<ArtistAdapter.ViewHolder, Artist>(activity, R.menu.menu_media_selection),
     PopupTextProvider {
 
     var albumArtistsOnly = false
-
-    /** Called with the selected artists when "Merge artists" is chosen in the selection menu. */
-    var onMergeRequested: ((List<Artist>) -> Unit)? = null
 
     init {
         this.setHasStableIds(true)
@@ -142,10 +139,6 @@ class ArtistAdapter(
         menuItem: MenuItem,
         selection: List<Artist>
     ) {
-        if (menuItem.itemId == R.id.action_merge_artists) {
-            onMergeRequested?.invoke(selection)
-            return
-        }
         SongsMenuHelper.handleMenuClick(activity, getSongList(selection), menuItem.itemId)
     }
 

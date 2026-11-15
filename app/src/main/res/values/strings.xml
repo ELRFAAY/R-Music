@@ -599,9 +599,11 @@
     <string name="muzio_theme">Muzio</string>
     <string name="ring_playing_from">Playing from</string>
     <string name="ring_no_lyrics">No lyrics for this song</string>
-    <string name="merge_artist">Merge artists</string>
+    <string name="merge_artist">Merge into another artist</string>
+    <string name="merge_artist_message">All songs of "%1$s" will get the artist name you choose here. This changes the tags in the music files.</string>
+    <string name="merge_artist_hint">Artist name</string>
     <string name="merge_artist_action">Merge</string>
-    <string name="merge_artist_done">Artists grouped</string>
+    <string name="merge_artist_done">Artist updated</string>
     <string name="merge_artist_pick_title">Group artists under %1$s</string>
     <string name="merge_artist_search_hint">Search artists</string>
     <string name="merge_artist_selected">%1$d selected</string>

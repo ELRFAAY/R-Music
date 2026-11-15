@@ -50,7 +50,8 @@ class ArtistGroups(private val dao: ArtistAliasDao) {
         }
     }
 
-    fun snapshot(): Snapshot = Snapshot(dao.all())
+    // In-app grouping is switched off: artists are merged for real by writing the tags (ArtistMerger).
+    fun snapshot(): Snapshot = Snapshot(emptyList())
 
     /** Names grouped under [mainName], without the main name itself. */
     fun aliasesOf(mainName: String): List<String> =
