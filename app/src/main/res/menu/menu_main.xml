@@ -92,6 +92,12 @@
         android:title="@string/action_settings"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_open_folders"
+        android:icon="@drawable/ic_folder"
+        android:title="@string/folders"
+        android:visible="false"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/action_cast"
         android:title="@string/action_cast"
         app:actionProviderClass="androidx.mediarouter.app.MediaRouteActionProvider"

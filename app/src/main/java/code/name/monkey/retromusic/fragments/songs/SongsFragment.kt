@@ -21,6 +21,8 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import code.name.monkey.retromusic.R
 import code.name.monkey.retromusic.adapter.song.SongAdapter
+import androidx.navigation.findNavController
+import androidx.navigation.navOptions
 import code.name.monkey.retromusic.extensions.setUpMediaRouteButton
 import code.name.monkey.retromusic.fragments.GridStyle
 import code.name.monkey.retromusic.fragments.ReloadType
@@ -146,6 +148,8 @@ class SongsFragment : AbsRecyclerViewCustomGridSizeFragment<SongAdapter, GridLay
         val layoutItem = menu.findItem(R.id.action_layout_type)
         setupLayoutMenu(layoutItem.subMenu!!)
         setUpSortOrderMenu(menu.findItem(R.id.action_sort_order).subMenu!!)
+        // Folder button next to the cast button: browse and play straight from the folders
+        menu.findItem(R.id.action_open_folders)?.isVisible = true
         //Setting up cast button
         requireContext().setUpMediaRouteButton(menu)
     }
@@ -274,6 +278,12 @@ class SongsFragment : AbsRecyclerViewCustomGridSizeFragment<SongAdapter, GridLay
     }
 
     override fun onMenuItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.action_open_folders) {
+            requireActivity().findNavController(R.id.fragment_container).navigate(
+                R.id.action_folder, null, navOptions { launchSingleTop = true }
+            )
+            return true
+        }
         if (handleGridSizeMenuItem(item)) {
             return true
         }
