@@ -194,3 +194,9 @@ Still to do, in this order (he said: finish the handoff list, THEN the final rel
 4. FINAL RELEASE: release build type with own package id and app name "R Music", ONE permanent signing key kept in GitHub Secrets (never in the repo; today APKs are signed with the public shared-debug.keystore), maybe Baseline Profile and the fdroid flavor, then give him the APK.
 5. He still has to change the default branch of R-Music from `R_MUSIC_HANDOFF.md` to `dev`.
 Working rules: reply in short Egyptian Arabic; wait for "go" before a step (he often says it in the same message as the request); pushes only with the session proxy or a temporary token that is never stored; he interrupts long sleep loops, so poll CI in short calls.
+
+## ANSWERS from the user to the SESSION 9 questions (2026-11-15 ~21:45) - no code written yet, waiting for his "go"
+- Package id: he did NOT answer. Assumption to confirm when he says go: `com.rmusic.app`, applied to the RELEASE build only (debug and fast keep their ids). A new id is a new app: he must make a backup (all settings + listening data) first.
+- "Hide arrow" = the BOTTOM ROW of the Muzio theme (the row with the counter and the two small corner icons). A small arrow collapses/expands that row (remember the state in a preference). In the other themes the user's original wish still means the tools row under prev/next.
+- Vocal/music separation = a model that is downloaded ONCE and afterwards works offline; separated stems cached per song (see item D). Still large: ask before building, own commit series.
+- Muzio theme, bottom-right icon = AUDIO OUTPUT (speaker icon): choose the playback device (Bluetooth, speaker, ...). Replace the equalizer we show there today. (Bottom-left icon: still unknown, probably share.)
