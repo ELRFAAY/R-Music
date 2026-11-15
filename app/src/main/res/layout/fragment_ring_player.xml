@@ -87,9 +87,9 @@
         android:id="@+id/progressRing"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginStart="36dp"
+        android:layout_marginStart="44dp"
         android:layout_marginTop="12dp"
-        android:layout_marginEnd="36dp"
+        android:layout_marginEnd="44dp"
         app:cs_circle_color="#33FFFFFF"
         app:cs_circle_progress_color="@color/md_white_1000"
         app:cs_circle_stroke_width="4dp"
@@ -130,10 +130,10 @@
             android:layout_height="match_parent"
             android:visibility="gone"
             app:lrcLabel="@string/no_lyrics_found"
-            app:lrcNormalTextSize="20sp"
+            app:lrcNormalTextSize="26sp"
             app:lrcPadding="20dp"
             app:lrcTextGravity="center"
-            app:lrcTextSize="24sp"
+            app:lrcTextSize="28sp"
             app:lrcTimelineColor="@color/transparent" />
 
         <code.name.monkey.retromusic.views.SeekSectorView

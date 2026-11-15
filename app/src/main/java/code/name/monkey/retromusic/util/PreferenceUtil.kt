@@ -692,7 +692,8 @@ object PreferenceUtil {
 
     var nowPlayingScreen: NowPlayingScreen
         get() {
-            val id: Int = sharedPreferences.getInt(NOW_PLAYING_SCREEN_ID, 0)
+            var id: Int = sharedPreferences.getInt(NOW_PLAYING_SCREEN_ID, 0)
+            if (id == 15) id = 19 // the old Circle theme was removed: use Muzio
             for (nowPlayingScreen in NowPlayingScreen.values()) {
                 if (nowPlayingScreen.id == id) {
                     return nowPlayingScreen

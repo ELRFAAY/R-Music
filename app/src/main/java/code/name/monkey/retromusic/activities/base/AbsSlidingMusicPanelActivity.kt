@@ -87,7 +87,6 @@ import code.name.monkey.retromusic.fragments.player.adaptive.AdaptiveFragment
 import code.name.monkey.retromusic.fragments.player.blur.BlurPlayerFragment
 import code.name.monkey.retromusic.fragments.player.card.CardFragment
 import code.name.monkey.retromusic.fragments.player.cardblur.CardBlurFragment
-import code.name.monkey.retromusic.fragments.player.circle.CirclePlayerFragment
 import code.name.monkey.retromusic.fragments.player.ring.RingPlayerFragment
 import code.name.monkey.retromusic.fragments.player.classic.ClassicPlayerFragment
 import code.name.monkey.retromusic.fragments.player.color.ColorFragment
@@ -687,8 +686,7 @@ abstract class AbsSlidingMusicPanelActivity : AbsMusicServiceActivity(),
             Gradient -> GradientPlayerFragment()
             Tiny -> TinyPlayerFragment()
             Peek -> PeekPlayerFragment()
-            Circle -> CirclePlayerFragment()
-            Ring -> RingPlayerFragment()
+            Muzio -> RingPlayerFragment()
             Classic -> ClassicPlayerFragment()
             MD3 -> MD3PlayerFragment()
             else -> PlayerFragment()
