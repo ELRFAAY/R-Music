@@ -610,4 +610,5 @@
     <string name="ring_lyrics_font_size">حجم الخط</string>
     <string name="ring_lyrics_close">إغلاق الكلمات</string>
     <string name="ring_seek_seconds">١٠ ثواني</string>
+    <string name="user_data_backup">بيانات المستخدم (الاسم والصورة والكفر وشكل المكتبة)</string>
 </resources>

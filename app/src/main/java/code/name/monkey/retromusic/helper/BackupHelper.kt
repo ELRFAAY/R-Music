@@ -5,7 +5,19 @@ import android.net.Uri
 import android.os.Environment
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
+import androidx.preference.PreferenceManager
+import code.name.monkey.retromusic.ALBUM_COVER_STYLE
+import code.name.monkey.retromusic.ALBUM_COVER_TRANSFORM
 import code.name.monkey.retromusic.BuildConfig
+import code.name.monkey.retromusic.CAROUSEL_EFFECT
+import code.name.monkey.retromusic.Constants
+import code.name.monkey.retromusic.HOME_COVERS_ENABLED
+import code.name.monkey.retromusic.LAST_USED_TAB
+import code.name.monkey.retromusic.LIBRARY_CATEGORIES
+import code.name.monkey.retromusic.REMEMBER_LAST_TAB
+import code.name.monkey.retromusic.TAB_TEXT_MODE
+import code.name.monkey.retromusic.TOGGLE_HOME_BANNER
+import code.name.monkey.retromusic.USER_NAME
 import code.name.monkey.retromusic.R
 import code.name.monkey.retromusic.db.HistoryEntity
 import code.name.monkey.retromusic.db.ListeningEventEntity
@@ -55,6 +67,7 @@ object BackupHelper : KoinComponent {
         zipItems.addAll(getListeningDataZipItems(context))
         zipItems.addAll(getLyricsZipItems(context))
         zipItems.addAll(getArtistGroupsZipItems(context))
+        zipItems.addAll(getUserDataZipItems(context))
         val done = zipAll(zipItems, tempFile) && deliver(context, tempFile, name)
         if (!silent) {
             withContext(Dispatchers.Main) {
@@ -68,6 +81,7 @@ object BackupHelper : KoinComponent {
         File(context.filesDir, PLAYLISTS_PATH).deleteRecursively()
         File(context.filesDir, LISTENING_PATH).deleteRecursively()
         File(context.filesDir, ARTIST_GROUPS_PATH).deleteRecursively()
+        File(context.filesDir, USER_DATA_PATH).deleteRecursively()
         return done
     }
 
@@ -356,6 +370,72 @@ object BackupHelper : KoinComponent {
         return playlistZipItems
     }
 
+    /**
+     * "User data": the user name, profile image, banner and the look of the library (grid styles,
+     * items per row, sort orders, tabs, home options). Preferences are stored as typed JSON by key,
+     * so a backup restores into any build of the app (debug / fast / release) whatever its package id.
+     */
+    private fun getUserDataZipItems(context: Context): List<ZipItem> {
+        val dir = File(context.filesDir, USER_DATA_PATH).apply { mkdirs() }
+        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+        val arr = JSONArray()
+        for ((key, value) in prefs.all) {
+            if (!isUserDataKey(key)) continue
+            val o = JSONObject().put("k", key)
+            when (value) {
+                is Boolean -> o.put("t", "b").put("v", value)
+                is Int -> o.put("t", "i").put("v", value)
+                is Long -> o.put("t", "l").put("v", value)
+                is Float -> o.put("t", "f").put("v", value.toDouble())
+                is String -> o.put("t", "s").put("v", value)
+                is Set<*> -> o.put("t", "ss").put("v", JSONArray(value.map { it.toString() }))
+                else -> continue
+            }
+            arr.put(o)
+        }
+        val file = File(dir, USER_DATA_FILE)
+        file.writeText(JSONObject().put("version", 1).put("prefs", arr).toString())
+        val items = mutableListOf(ZipItem(file.absolutePath, USER_DATA_PATH.child(USER_DATA_FILE)))
+        for (name in USER_DATA_IMAGES) {
+            val image = File(context.filesDir, name)
+            if (image.exists()) items += ZipItem(image.absolutePath, USER_DATA_PATH.child(name))
+        }
+        return items
+    }
+
+    private fun isUserDataKey(key: String): Boolean =
+        key in USER_DATA_KEYS || key.contains("grid_style") || key.contains("grid_size") ||
+                key.contains("sort_order") || key.startsWith("home_")
+
+    private fun restoreUserDataImage(context: Context, zipIn: ZipInputStream, zipEntry: ZipEntry) {
+        val name = zipEntry.getFileName()
+        if (name !in USER_DATA_IMAGES) return // only the two known files, never an arbitrary path
+        File(context.filesDir, name).outputStream().buffered().use { zipIn.copyTo(it) }
+    }
+
+    /** Writes the saved values into the app's preferences and flushes them to disk right away. */
+    private fun applyUserDataPrefs(context: Context, root: JSONObject) {
+        val arr = root.optJSONArray("prefs") ?: return
+        val editor = PreferenceManager.getDefaultSharedPreferences(context).edit()
+        for (i in 0 until arr.length()) {
+            val o = arr.optJSONObject(i) ?: continue
+            val key = o.optString("k")
+            if (key.isEmpty() || !isUserDataKey(key)) continue
+            when (o.optString("t")) {
+                "b" -> editor.putBoolean(key, o.optBoolean("v"))
+                "i" -> editor.putInt(key, o.optInt("v"))
+                "l" -> editor.putLong(key, o.optLong("v"))
+                "f" -> editor.putFloat(key, o.optDouble("v").toFloat())
+                "s" -> editor.putString(key, o.optString("v"))
+                "ss" -> {
+                    val values = o.optJSONArray("v") ?: continue
+                    editor.putStringSet(key, (0 until values.length()).map { values.optString(it) }.toSet())
+                }
+            }
+        }
+        editor.commit()
+    }
+
     private fun getSettingsZipItems(context: Context): List<ZipItem> {
         val sharedPrefPath = File(context.filesDir.parentFile, "shared_prefs")
         return listOf(
@@ -406,10 +486,17 @@ object BackupHelper : KoinComponent {
         contents: List<BackupContent>
     ) {
         withContext(Dispatchers.IO) {
+            var userDataPrefs: JSONObject? = null
             ZipInputStream(inputStream).use {
                 var entry = it.nextEntry
                 while (entry != null) {
-                    if (entry.isPlaylistEntry() && contents.contains(PLAYLISTS)) {
+                    if (entry.isUserDataEntry() && contents.contains(USER_DATA)) {
+                        if (entry.getFileName() == USER_DATA_FILE) {
+                            userDataPrefs = JSONObject(it.readBytes().toString(Charsets.UTF_8))
+                        } else {
+                            restoreUserDataImage(context, it, entry)
+                        }
+                    } else if (entry.isPlaylistEntry() && contents.contains(PLAYLISTS)) {
                         restorePlaylists(it, entry)
                     } else if (entry.isPreferenceEntry() && contents.contains(SETTINGS)) {
                         restorePreferences(context, it, entry)
@@ -431,6 +518,11 @@ object BackupHelper : KoinComponent {
                     entry = it.nextEntry
                 }
             }
+            // When the whole settings file was restored it already holds these values; writing them
+            // through the live preferences as well would overwrite that file with the old in-memory copy.
+            userDataPrefs?.let { json ->
+                if (!contents.contains(SETTINGS)) applyUserDataPrefs(context, json)
+            }
             withContext(Dispatchers.Main) {
                 context.showToast(R.string.message_restore_success)
             }
@@ -447,8 +539,14 @@ object BackupHelper : KoinComponent {
     }
 
     private fun restorePreferences(context: Context, zipIn: ZipInputStream, zipEntry: ZipEntry) {
+        // The file is named after the package id of the build that made the backup (debug, fast,
+        // release...). Restore it under THIS build's name, or the app would never read it.
+        val entryName = zipEntry.getFileName()
+        val targetName = if (entryName.endsWith("_preferences.xml")) {
+            "${context.packageName}_preferences.xml"
+        } else entryName
         val file = File(
-            context.filesDir.parent!! + File.separator + "shared_prefs" + File.separator + zipEntry.getFileName()
+            context.filesDir.parent!! + File.separator + "shared_prefs" + File.separator + targetName
         )
         if (file.exists()) {
             file.delete()
@@ -533,6 +631,13 @@ object BackupHelper : KoinComponent {
     private const val PLAYLISTS_PATH = "Playlists"
     private const val SETTINGS_PATH = "prefs"
     private const val IMAGES_PATH = "userImages"
+    private const val USER_DATA_PATH = "userdata"
+    private const val USER_DATA_FILE = "user_data.json"
+    private val USER_DATA_IMAGES = listOf(Constants.USER_PROFILE, Constants.USER_BANNER)
+    private val USER_DATA_KEYS = setOf(
+        USER_NAME, LIBRARY_CATEGORIES, TOGGLE_HOME_BANNER, CAROUSEL_EFFECT, ALBUM_COVER_STYLE,
+        ALBUM_COVER_TRANSFORM, TAB_TEXT_MODE, REMEMBER_LAST_TAB, LAST_USED_TAB, HOME_COVERS_ENABLED
+    )
     private const val LISTENING_PATH = "listening"
     private const val LYRICS_PATH = "lyrics"
     private const val ARTIST_GROUPS_PATH = "artistgroups"
@@ -547,6 +652,10 @@ object BackupHelper : KoinComponent {
 
     private fun ZipEntry.isPreferenceEntry(): Boolean {
         return name.startsWith(SETTINGS_PATH)
+    }
+
+    private fun ZipEntry.isUserDataEntry(): Boolean {
+        return name.startsWith(USER_DATA_PATH + File.separator)
     }
 
     private fun ZipEntry.isLyricsEntry(): Boolean {
@@ -612,5 +721,6 @@ enum class BackupContent {
     PLAYLISTS,
     LISTENING_DATA,
     LYRICS,
-    ARTIST_GROUPS
+    ARTIST_GROUPS,
+    USER_DATA
 }
