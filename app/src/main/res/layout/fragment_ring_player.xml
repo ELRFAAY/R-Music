@@ -20,6 +20,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <View
+        android:id="@+id/ringTint"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="#B3000000"
@@ -63,6 +64,7 @@
             android:orientation="vertical">
 
             <TextView
+                android:id="@+id/playingFromLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/ring_playing_from"

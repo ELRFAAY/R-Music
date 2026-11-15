@@ -11,7 +11,17 @@
  */
 package code.name.monkey.retromusic.fragments.player.ring
 
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
+import android.content.res.ColorStateList
+import android.graphics.drawable.BitmapDrawable
+import android.view.animation.DecelerateInterpolator
+import androidx.core.graphics.ColorUtils
+import androidx.palette.graphics.Palette
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.PorterDuff
@@ -142,8 +152,7 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
                     val dx = e2.x - e1.x
                     val dy = e2.y - e1.y
                     if (abs(dx) < swipeDistance || abs(dx) < abs(dy) * 1.5f) return false
-                    if (dx > 0) MusicPlayerRemote.playNextSong()
-                    else MusicPlayerRemote.playPreviousSong()
+                    swipeSong(next = dx > 0)
                     return true
                 }
             })
@@ -183,6 +192,21 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
                     it.volumeFill.requestLayout()
                 }
             }
+            onRingTouch = { fraction, final ->
+                _binding?.let { b ->
+                    if (!isSeeking) {
+                        isSeeking = true
+                        progressViewUpdateHelper.stop()
+                    }
+                    val target = fraction * b.progressRing.max
+                    b.progressRing.progress = target
+                    if (final) {
+                        isSeeking = false
+                        MusicPlayerRemote.seekTo(target.toInt())
+                        progressViewUpdateHelper.start()
+                    }
+                }
+            }
             onVolumeGestureEnd = { _binding?.volumeOverlay?.postDelayed(hideVolume, 800) }
             // Physical halves: right = forward, left = back (same in Arabic and English).
             onDoubleTap = { forward -> skipSeconds(if (forward) 10 else -10) }
@@ -202,6 +226,105 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
             binding.ringLyrics.setTextScale(lyricsScales[lyricsScaleIndex])
         }
         binding.lyricsClose.setOnClickListener { setLyricsVisible(false) }
+    }
+
+    private var contentColor = Color.WHITE
+    private var slideInFrom = 0 // -1 = new cover enters from the left, 1 = from the right
+    private var tintAnimator: ValueAnimator? = null
+
+    private fun coverTravel(): Float {
+        val b = _binding ?: return 0f
+        return b.ringCover.width + 48 * resources.displayMetrics.density
+    }
+
+    /** Swipe on the cover: the cover slides off the side, the ring empties, the next/previous song's cover slides in. */
+    private fun swipeSong(next: Boolean) {
+        val b = _binding ?: return
+        val outDir = if (next) 1f else -1f
+        slideInFrom = (-outDir).toInt()
+        b.progressRing.progress = 0f
+        b.ringCover.animate().cancel()
+        b.ringCover.animate().translationX(outDir * coverTravel()).alpha(0f).setDuration(170)
+            .withEndAction {
+                if (next) MusicPlayerRemote.playNextSong() else MusicPlayerRemote.playPreviousSong()
+            }.start()
+        // If nothing changed (end of the queue), bring the cover back.
+        b.ringCover.postDelayed({
+            val bb = _binding ?: return@postDelayed
+            if (slideInFrom != 0) {
+                slideInFrom = 0
+                bb.ringCover.animate().translationX(0f).alpha(1f).setDuration(200).start()
+            }
+        }, 1200)
+    }
+
+    private fun slideCoverIn() {
+        val b = _binding ?: return
+        val from = slideInFrom
+        slideInFrom = 0
+        b.ringCover.animate().cancel()
+        if (from == 0) {
+            b.ringCover.translationX = 0f
+            b.ringCover.alpha = 1f
+            return
+        }
+        b.ringCover.translationX = from * coverTravel()
+        b.ringCover.alpha = 1f
+        b.ringCover.animate().translationX(0f).setDuration(260)
+            .setInterpolator(DecelerateInterpolator()).start()
+    }
+
+    /** Background tint from the cover's colours; dark text/icons when the colour is light. */
+    private fun applyCoverPalette(bitmap: android.graphics.Bitmap) {
+        Palette.from(bitmap).maximumColorCount(16).generate { palette ->
+            val b = _binding ?: return@generate
+            val base = palette?.getMutedColor(palette.getDominantColor(Color.DKGRAY)) ?: Color.DKGRAY
+            var color = base
+            val lum = ColorUtils.calculateLuminance(color)
+            if (lum in 0.3..0.5) color = ColorUtils.blendARGB(color, Color.BLACK, 0.4f)
+            val content = if (ColorUtils.calculateLuminance(color) > 0.5) Color.BLACK else Color.WHITE
+            val from = (b.ringTint.background as? ColorDrawable)?.color ?: 0xB3000000.toInt()
+            val to = ColorUtils.setAlphaComponent(color, 0xC0)
+            tintAnimator?.cancel()
+            tintAnimator = ValueAnimator.ofArgb(from, to).apply {
+                duration = 350
+                addUpdateListener { a -> _binding?.ringTint?.setBackgroundColor(a.animatedValue as Int) }
+                start()
+            }
+            applyContentColor(content)
+        }
+    }
+
+    private fun applyContentColor(c: Int) {
+        val b = _binding ?: return
+        contentColor = c
+        val soft = ColorUtils.setAlphaComponent(c, 0xCC)
+        val onContent = if (c == Color.BLACK) Color.WHITE else Color.BLACK
+        b.ringTitle.setTextColor(c)
+        b.ringArtist.setTextColor(soft)
+        b.playingFrom.setTextColor(c)
+        b.playingFromLabel.setTextColor(soft)
+        b.artistCounter.setTextColor(soft)
+        b.lyricsChip.setTextColor(c)
+        val tint = ColorStateList.valueOf(c)
+        listOf(
+            b.queueButton, b.favoriteButton, b.previousButton, b.nextButton,
+            b.shareButton, b.equalizerButton, b.lyricsFullscreen, b.lyricsClose
+        ).forEach { it.imageTintList = tint }
+        listOf(b.lyricsSearch, b.lyricsEdit, b.lyricsFont).forEach { it.setTextColor(c) }
+        b.playPauseButton.backgroundTintList = tint
+        b.playPauseButton.imageTintList = ColorStateList.valueOf(onContent)
+        b.progressRing.circleColor = ColorUtils.setAlphaComponent(c, 0x33)
+        b.progressRing.circleProgressColor = c
+        b.progressRing.pointerColor = c
+        b.ringLyrics.setCurrentColor(c)
+        b.ringLyrics.setNormalColor(ColorUtils.setAlphaComponent(c, 140))
+        b.ringLyrics.setTimeTextColor(c)
+        b.ringLyrics.setTimelineColor(c)
+        b.ringLyrics.setTimelineTextColor(c)
+        ToolbarContentTintHelper.colorizeToolbar(b.playerToolbar, c, requireActivity())
+        updateShuffle()
+        updateRepeat()
     }
 
     private fun skipSeconds(seconds: Int) {
@@ -246,6 +369,23 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
             .load(RetroGlideExtension.getSongModel(song))
             .simpleSongCoverOptions(song)
             .error(R.drawable.default_audio_art)
+            .listener(object : RequestListener<Drawable> {
+                override fun onLoadFailed(
+                    e: GlideException?, model: Any?, target: Target<Drawable>?, isFirstResource: Boolean
+                ): Boolean {
+                    slideCoverIn()
+                    return false
+                }
+
+                override fun onResourceReady(
+                    resource: Drawable?, model: Any?, target: Target<Drawable>?,
+                    dataSource: DataSource?, isFirstResource: Boolean
+                ): Boolean {
+                    slideCoverIn()
+                    (resource as? BitmapDrawable)?.bitmap?.let { applyCoverPalette(it) }
+                    return false
+                }
+            })
             .into(binding.ringCover)
 
         Glide.with(this)
@@ -315,8 +455,8 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
 
     private fun updateShuffle() {
         binding.shuffleButton.setColorFilter(
-            if (MusicPlayerRemote.shuffleMode == MusicService.SHUFFLE_MODE_SHUFFLE) Color.WHITE
-            else Color.argb(90, 255, 255, 255), PorterDuff.Mode.SRC_IN
+            if (MusicPlayerRemote.shuffleMode == MusicService.SHUFFLE_MODE_SHUFFLE) contentColor
+            else ColorUtils.setAlphaComponent(contentColor, 90), PorterDuff.Mode.SRC_IN
         )
     }
 
@@ -326,8 +466,8 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
             if (mode == MusicService.REPEAT_MODE_THIS) R.drawable.ic_repeat_one else R.drawable.ic_repeat
         )
         binding.repeatButton.setColorFilter(
-            if (mode == MusicService.REPEAT_MODE_NONE) Color.argb(90, 255, 255, 255)
-            else Color.WHITE, PorterDuff.Mode.SRC_IN
+            if (mode == MusicService.REPEAT_MODE_NONE) ColorUtils.setAlphaComponent(contentColor, 90)
+            else contentColor, PorterDuff.Mode.SRC_IN
         )
     }
 
@@ -412,7 +552,7 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
 
     override fun onHide() = Unit
 
-    override fun toolbarIconColor(): Int = Color.WHITE
+    override fun toolbarIconColor(): Int = contentColor
 
     override val paletteColor: Int
         get() = Color.BLACK
@@ -423,6 +563,7 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
 
     override fun onDestroyView() {
         _binding?.volumeOverlay?.removeCallbacks(hideVolume)
+        tintAnimator?.cancel()
         super.onDestroyView()
         _binding = null
     }

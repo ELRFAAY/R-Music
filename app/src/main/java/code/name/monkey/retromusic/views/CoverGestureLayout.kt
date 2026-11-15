@@ -18,7 +18,10 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.ViewConfiguration
 import android.widget.FrameLayout
+import android.util.TypedValue
 import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.hypot
 import kotlin.math.roundToInt
 
 /**
@@ -45,7 +48,31 @@ class CoverGestureLayout @JvmOverloads constructor(
     /** Called on a double tap; [forward] is true for the right half. */
     var onDoubleTap: ((forward: Boolean) -> Unit)? = null
 
-    private enum class Mode { NONE, VOLUME, OTHER }
+    /**
+     * Touch on the outer band of the cover (where the progress ring is): [fraction] is the angle
+     * from 12 o'clock clockwise as 0f..1f; [final] is true when the finger lifts. A tap on the ring
+     * jumps there, a drag moves along it, like the reference player.
+     */
+    var onRingTouch: ((fraction: Float, final: Boolean) -> Unit)? = null
+
+    private enum class Mode { NONE, VOLUME, OTHER, RING }
+    private val ringBand = TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP, 26f, resources.displayMetrics
+    )
+    private var lastRingFraction = 0f
+
+    private fun ringFraction(x: Float, y: Float): Float {
+        val dx = x - width / 2f
+        val dy = y - height / 2f
+        var a = atan2(dx, -dy) // 0 at the top, clockwise
+        if (a < 0) a += (2 * Math.PI).toFloat()
+        return (a / (2 * Math.PI)).toFloat().coerceIn(0f, 1f)
+    }
+
+    private fun inRingBand(x: Float, y: Float): Boolean {
+        val radius = minOf(width, height) / 2f
+        return hypot(x - width / 2f, y - height / 2f) >= radius - ringBand
+    }
 
     private val slop = ViewConfiguration.get(context).scaledTouchSlop
     private val doubleTapTimeout = ViewConfiguration.getDoubleTapTimeout().toLong()
@@ -71,6 +98,13 @@ class CoverGestureLayout @JvmOverloads constructor(
                 downY = ev.y
                 downTime = ev.eventTime
                 startVolumeFraction = currentVolumeFraction()
+                if (onRingTouch != null && inRingBand(ev.x, ev.y)) {
+                    mode = Mode.RING
+                    lastRingFraction = ringFraction(ev.x, ev.y)
+                    parent?.requestDisallowInterceptTouchEvent(true)
+                    onRingTouch?.invoke(lastRingFraction, false)
+                    return true
+                }
                 // The player panel would otherwise grab vertical drags to collapse itself.
                 parent?.requestDisallowInterceptTouchEvent(true)
             }
@@ -78,6 +112,11 @@ class CoverGestureLayout @JvmOverloads constructor(
             MotionEvent.ACTION_POINTER_DOWN -> if (mode == Mode.NONE) mode = Mode.OTHER
 
             MotionEvent.ACTION_MOVE -> {
+                if (mode == Mode.RING) {
+                    lastRingFraction = ringFraction(ev.x, ev.y)
+                    onRingTouch?.invoke(lastRingFraction, false)
+                    return true
+                }
                 val dx = ev.x - downX
                 val dy = ev.y - downY
                 if (mode == Mode.NONE) {
@@ -98,6 +137,12 @@ class CoverGestureLayout @JvmOverloads constructor(
             }
 
             MotionEvent.ACTION_UP -> {
+                if (mode == Mode.RING) {
+                    mode = Mode.NONE
+                    lastRingFraction = ringFraction(ev.x, ev.y)
+                    onRingTouch?.invoke(lastRingFraction, true)
+                    return true
+                }
                 if (mode == Mode.VOLUME) {
                     mode = Mode.NONE
                     onVolumeGestureEnd?.invoke()
@@ -109,6 +154,7 @@ class CoverGestureLayout @JvmOverloads constructor(
             }
 
             MotionEvent.ACTION_CANCEL -> {
+                if (mode == Mode.RING) onRingTouch?.invoke(lastRingFraction, true)
                 if (mode == Mode.VOLUME) onVolumeGestureEnd?.invoke()
                 mode = Mode.NONE
             }
