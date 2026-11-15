@@ -164,7 +164,7 @@ class PlayingNotification(
                 bigNotificationImageSize
             ) {
                 override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
-                    setLargeIcon(resource)
+                    if (!cobra) setLargeIcon(resource)
                     cobraCover = resource
                     refreshCobraViews()
                     onUpdate()
@@ -186,6 +186,7 @@ class PlayingNotification(
     private fun setAlbumArtImage(image: Bitmap?) {
         cobraCover = image
         refreshCobraViews()
+        if (cobra) return
         if (image == null) {
             setLargeIcon(
                 BitmapFactory.decodeResource(
