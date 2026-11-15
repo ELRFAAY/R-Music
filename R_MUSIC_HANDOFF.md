@@ -114,3 +114,34 @@ F. (WRITTEN 2026-11-15, sixth session, not tested on a device: `fragments/player
 - The user wants the Ring theme to match "Muzio Player" (reference screenshots in docs/reference). Still missing: volume drag and double-tap +/-10 s on the cover, "Playing from" should show the real source (playlist/album), its own preview image.
 - Not started: 7 (icon picker, ask whether he has artwork), 8 (notification icon, package rename), 11-14 (artist info, lyrics translation and romanization e.g. Korean, progress bar styles), vocal separation (D, confirm first).
 - Rule from the user: work only when he says go; short Egyptian Arabic replies.
+
+## Session 7 notes (2026-11-15 15:20): requirements gathered, NO code written
+Rule: wait for the user to say "go" before any step; short Egyptian Arabic. Builds of e73d7c8 and 4679749 are green (debug 17 MB, fast 7 MB).
+
+### Ring theme = match Muzio Player's circle theme in behaviour (own icons/fonts, NOT a pixel copy; Muzio is closed source)
+Reference: the user's screen recording of Muzio (not in the repo). What it shows and what the user confirmed:
+- Top bar: three-dots (left), "Playing from" + the real source name (playlist/album/artist) centred, collapse chevron (right). The source must be real.
+- Big circular cover with a THIN white progress ring around it, starting at 12 o'clock clockwise, with a white knob dot at the progress end; dragging the knob seeks.
+- Volume: vertical drag on the cover shows a white vertical bar with the number (e.g. 71) and a speaker icon. Volume must NOT sit where the timeline is (the current Ring theme does that and the user dislikes it).
+- Double tap on the left/right half of the cover: -10 s / +10 s with a grey sector and a "10 seconds" label.
+- Single tap in the middle of the cover: lyrics REPLACE the cover (current line larger and brighter). Under the lyrics a small chip row: fullscreen, search, edit, font size, close.
+- Swipe the cover LEFT = PREVIOUS song, swipe RIGHT = NEXT song (user's rule, app is RTL).
+- Under the cover: queue icon (left), title, artist name (tap opens the artist page) with a small "lyrics" chip beside it, heart (right).
+- Controls row: shuffle, previous, big white round play/pause, next, repeat.
+- Bottom row: a counter "6/155" in the middle: 155 = number of songs the CURRENT ARTIST has in the library, 6 = the number of the playing song among them (NOT the queue position). Use the artist-page sort order and the main artist (the one shown under the title). Two small icons in the corners (user did not say what they are; ask).
+- Own preview image for the theme in the theme picker.
+Existing code: Ring theme was added in 4219421 and re-spaced in e73d7c8 (ring high, title guide 60%, controls guide 79%). Missing from it: ring knob seek check, volume drag on cover, double tap +/-10 s, swipe prev/next, tap-for-lyrics replace-cover, artist counter, real "Playing from", preview.
+
+### Performance / final build (answer given to the user)
+- `fast` build type = release config (R8 + shrink resources) with applicationId suffix `.fast`, app name "R Music Fast", fonts copied from debug (src/fast). Same code as debug; separate app data, so restore a backup into it and pick the backup folder again.
+- R8 risks to watch: only reflection users; proguard-rules.pro keeps jaudiotagger, models, fragments, Glide. One dynamic resource lookup (RetroColorUtil.getMatColor "md_*" arrays) may be shrunk (harmless fallback black). Ask the user to test tag edit, artist merge, lyrics fetch, backup/restore, wall, Ring in the fast APK; a crash only in fast = missing R8 rule.
+- Final version plan: release build, own package name (no suffix), name "R Music", ONE permanent signing key stored in GitHub Secrets (never in the repo; today the APKs are signed with the public shared-debug.keystore), maybe Baseline Profile and the `fdroid` flavor (no Play Billing/Cast, lighter; not tried yet). New package id = new app, so move data with a backup.
+
+### Repo privacy (user asked: "only me")
+The fork ELRFAAY/RetroMusicPlayer is PUBLIC and a fork of a public repo cannot be made private. Plan: user creates a new empty PRIVATE repo (e.g. R-Music), we `git push --mirror` into it, he installs the Claude GitHub app on it, then deletes the old fork. Free plan: private repos OK, Actions 2000 min/month (a build is ~15-20 min). Waiting for his link and "go".
+
+### Icon: new cobra artwork (sent 2026-11-15 10:00), NOT started
+New 1024x1024 image: green cobra with tail and white fangs inside a thin green ring, dark #272A28-ish background, a small triangle at the bottom (the image is not in the repo: ask the user to resend). User asked "can you add the cobra" = use it as the launcher icon. Plan: extract the green/white artwork to a transparent layer (alpha from brightness, white eyes/fangs kept white); adaptive foreground with the ring about 68 dp of the 108 dp canvas (inside the 72 dp circular mask), background `ic_launcher_background` #282828, monochrome layer with the eyes/fangs transparent, regenerate the same files as commit 49595f8: drawable-*dpi/ic_launcher_foreground.png (108/162/216/324/432 px), ic_launcher_monochrome.png, mipmap-*/ic_launcher(.png/_round.png) (48..192 px), app/src/main/ic_launcher-playstore.png and ic_launcher-web.png (512 px). Ask first whether he wants the ring kept or the cobra alone (bigger).
+
+### Still open from the user's list
+1 lag (waiting for his fast-APK result), 2 hide-arrow row (ask which row), 4 icon picker (ask if he has designs), 5 notification icon (simple one-colour cobra) + package rename, 6 artist info, lyrics translation/romanization (Korean), progress bar styles, 7 vocal/music separation (confirm meaning first). Also: no setting yet for auto-fetch lyrics / Wi-Fi only; mini player oval (step 4 research notes above in this file) not built.
