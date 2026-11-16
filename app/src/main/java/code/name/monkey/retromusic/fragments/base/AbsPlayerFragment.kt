@@ -187,6 +187,13 @@ abstract class AbsPlayerFragment(@LayoutRes layout: Int) : AbsMusicServiceFragme
                 return true
             }
 
+            R.id.action_artist_info -> {
+                code.name.monkey.retromusic.fragments.artists.ArtistInfoSheetFragment
+                    .newInstance(MusicPlayerRemote.currentSong.artistName)
+                    .show(parentFragmentManager, code.name.monkey.retromusic.fragments.artists.ArtistInfoSheetFragment.TAG)
+                return true
+            }
+
             R.id.action_go_to_artist -> {
                 goToArtist(requireActivity())
                 return true

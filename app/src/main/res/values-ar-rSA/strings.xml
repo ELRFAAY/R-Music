@@ -645,4 +645,7 @@
     <string name="lyrics_translate_failed">معرفتش أترجم. اتأكد من النت لأول تحميل.</string>
     <string name="lyrics_translate_same">الكلمات أصلاً بنفس اللغة دي</string>
     <string name="lyrics_no_korean">مفيش حروف كورية في الكلمات دي</string>
+    <string name="artist_info">معلومات الفنان</string>
+    <string name="artist_info_none">مفيش معلومات عن الفنان ده</string>
+    <string name="artist_info_loading">بيجيب معلومات الفنان…</string>
 </resources>
