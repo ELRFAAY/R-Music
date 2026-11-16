@@ -270,7 +270,39 @@ abstract class AbsSlidingMusicPanelActivity : AbsMusicServiceActivity(),
     private fun setupMiniPlayerOval() {
         val ovalBinding = ViewMiniPlayerOvalBinding.inflate(layoutInflater, binding.root, false)
         binding.root.addView(ovalBinding.root)
-        miniPlayerOval = MiniPlayerOvalController(ovalBinding) { expandPanel() }
+        val zone = View(this).apply {
+            visibility = View.GONE
+            layoutParams = androidx.coordinatorlayout.widget.CoordinatorLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dip(R.dimen.mini_player_height)
+            ).apply {
+                gravity = android.view.Gravity.BOTTOM
+                marginStart = (8 * resources.displayMetrics.density).toInt(); marginEnd = marginStart
+            }
+        }
+        binding.root.addView(zone)
+        fun zoneBottom() = windowInsets.getBottomInsets() +
+            (if (navigationView.isVisible && navigationView is BottomNavigationView) dip(R.dimen.bottom_nav_height) else 0)
+        miniPlayerOval = MiniPlayerOvalController(
+            ovalBinding,
+            onOpen = { expandPanel() },
+            zoneTop = { binding.root.height - zoneBottom() - dip(R.dimen.mini_player_height) },
+            onZone = { visible, hot ->
+                if (visible && !zone.isVisible) {
+                    (zone.layoutParams as androidx.coordinatorlayout.widget.CoordinatorLayout.LayoutParams)
+                        .bottomMargin = zoneBottom()
+                    zone.requestLayout()
+                }
+                zone.isVisible = visible
+                zone.background = android.graphics.drawable.GradientDrawable().apply {
+                    cornerRadius = 16f * resources.displayMetrics.density
+                    setColor(if (hot) 0x66FFFFFF else 0x22FFFFFF)
+                    setStroke((2 * resources.displayMetrics.density).toInt(), if (hot) 0xFFFFFFFF.toInt() else 0x88FFFFFF.toInt())
+                }
+            },
+            onDroppedInZone = {
+                PreferenceUtil.setMiniPlayerStyle("0")
+            }
+        )
         addMusicServiceEventListener(miniPlayerOval)
         updateOvalPosition()
         // The navigation rail (landscape) has no width before the first layout pass.

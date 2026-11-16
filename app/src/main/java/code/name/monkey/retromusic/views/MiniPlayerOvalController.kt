@@ -40,6 +40,12 @@ import com.bumptech.glide.Glide
 class MiniPlayerOvalController(
     private val binding: ViewMiniPlayerOvalBinding,
     private val onOpen: () -> Unit,
+    /** Where the old bottom bar sits (top y in the parent), or null when unknown. */
+    private val zoneTop: () -> Int? = { null },
+    /** Drag feedback: [visible] = show the drop rectangle, [hot] = the oval is over it. */
+    private val onZone: (visible: Boolean, hot: Boolean) -> Unit = { _, _ -> },
+    /** The oval was dropped on the old bar spot: switch to the bottom bar. */
+    private val onDroppedInZone: () -> Unit = {},
 ) : IMusicServiceEventListener, MusicProgressViewUpdateHelper.Callback {
 
     private val context get() = binding.root.context
@@ -67,6 +73,7 @@ class MiniPlayerOvalController(
         binding.root.parent?.requestDisallowInterceptTouchEvent(true)
         binding.root.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
         binding.root.animate().scaleX(1.1f).scaleY(1.1f).setDuration(120).start()
+        if (!PreferenceUtil.miniPlayerLocked) onZone(true, false)
     }
 
     init {
@@ -97,6 +104,7 @@ class MiniPlayerOvalController(
                     moved = false
                     if (moveMode) {
                         dragging = true
+                        onZone(true, false)
                         v.parent?.requestDisallowInterceptTouchEvent(true)
                         return@setOnTouchListener true
                     }
@@ -114,6 +122,7 @@ class MiniPlayerOvalController(
                         }
                         if (moved && (moveMode || !PreferenceUtil.miniPlayerLocked)) {
                             moveTo(startLeft + dx.toInt(), startTop + dy.toInt())
+                            onZone(true, isOverZone())
                         }
                         true
                     } else {
@@ -128,8 +137,20 @@ class MiniPlayerOvalController(
                     v.removeCallbacks(startDrag)
                     if (dragging) {
                         dragging = false
+                        val dropped = moved && (moveMode || !PreferenceUtil.miniPlayerLocked) &&
+                            event.actionMasked == MotionEvent.ACTION_UP && isOverZone()
+                        onZone(false, false)
                         v.isPressed = false
                         v.animate().scaleX(1f).scaleY(1f).setDuration(120).start()
+                        if (dropped) {
+                            moveMode = false
+                            v.scaleX = 1f
+                            v.scaleY = 1f
+                            PreferenceUtil.miniPlayerOffsetX = 0
+                            PreferenceUtil.miniPlayerOffsetY = 0
+                            onDroppedInZone()
+                            return@setOnTouchListener true
+                        }
                         if (moved && (moveMode || !PreferenceUtil.miniPlayerLocked)) {
                             savePosition()
                         } else if (!moveMode && event.actionMasked == MotionEvent.ACTION_UP) {
@@ -163,6 +184,12 @@ class MiniPlayerOvalController(
             moveTo(defaultLeft(), defaultTop())
         }
         code.name.monkey.retromusic.adapter.artist.ArtistPopup.show(binding.root, entries)
+    }
+
+    private fun isOverZone(): Boolean {
+        val top = zoneTop() ?: return false
+        val lp = binding.root.layoutParams as ViewGroup.MarginLayoutParams
+        return lp.topMargin + binding.root.height / 2 >= top - dp(16)
     }
 
     private fun defaultLeft() = baseLeft + dp(12)

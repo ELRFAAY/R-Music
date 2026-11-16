@@ -661,4 +661,5 @@
     <string name="mini_reset_position">إعادة ضبط المكان</string>
     <string name="pref_clear_vocal_stems_title">مسح ملفات فصل الصوت</string>
     <string name="pref_clear_vocal_stems_summary">هيفضي %1$d ميجا. الملفات بتتعمل تاني لما تحتاجها.</string>
+    <string name="mini_to_oval">تحويل لميني بلاير صغير</string>
 </resources>

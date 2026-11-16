@@ -670,4 +670,5 @@
     <string name="mini_reset_position">Reset position</string>
     <string name="pref_clear_vocal_stems_title">Delete separated vocals</string>
     <string name="pref_clear_vocal_stems_summary">Frees %1$d MB. Vocal tracks are made again when needed.</string>
+    <string name="mini_to_oval">Turn into the small player</string>
 </resources>

@@ -65,6 +65,16 @@ open class MiniPlayerFragment : AbsMusicServiceFragment(R.layout.fragment_mini_p
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentMiniPlayerBinding.bind(view)
         view.setOnTouchListener(FlingPlayBackController(requireContext()))
+        // long press on the bar: turn it back into the small floating player
+        view.setOnLongClickListener {
+            code.name.monkey.retromusic.adapter.artist.ArtistPopup.show(
+                view,
+                listOf(getString(R.string.mini_to_oval) to {
+                    PreferenceUtil.setMiniPlayerStyle("1")
+                })
+            )
+            true
+        }
         setUpMiniPlayer()
         setUpButtons()
     }
