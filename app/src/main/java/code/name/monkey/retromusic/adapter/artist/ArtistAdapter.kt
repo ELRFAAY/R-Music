@@ -47,11 +47,14 @@ class ArtistAdapter(
     var dataSet: List<Artist>,
     var itemLayoutRes: Int,
     val IArtistClickListener: IArtistClickListener,
-    val IAlbumArtistClickListener: IAlbumArtistClickListener? = null
+    val IAlbumArtistClickListener: IAlbumArtistClickListener? = null,
+    var onMerge: ((Artist) -> Unit)? = null,
+    var onRename: ((Artist) -> Unit)? = null
 ) : AbsMultiSelectAdapter<ArtistAdapter.ViewHolder, Artist>(activity, R.menu.menu_media_selection),
     PopupTextProvider {
 
     var albumArtistsOnly = false
+    private var rawDataSet: List<Artist> = dataSet
 
     init {
         this.setHasStableIds(true)
@@ -59,7 +62,10 @@ class ArtistAdapter(
 
     @SuppressLint("NotifyDataSetChanged")
     fun swapDataSet(dataSet: List<Artist>) {
-        this.dataSet = dataSet
+        rawDataSet = dataSet
+        val pinned = PreferenceUtil.pinnedArtists
+        this.dataSet = if (pinned.isEmpty()) dataSet
+        else dataSet.sortedBy { if (it.name in pinned) 0 else 1 }
         notifyDataSetChanged()
         albumArtistsOnly = PreferenceUtil.albumArtistsOnly
     }
@@ -181,7 +187,36 @@ class ArtistAdapter(
         }
 
         override fun onLongClick(v: View?): Boolean {
-            return toggleChecked(layoutPosition)
+            if (isInQuickSelectMode) return toggleChecked(layoutPosition)
+            val pos = layoutPosition
+            if (pos < 0 || pos >= dataSet.size) return true
+            val artist = dataSet[pos]
+            val pinned = PreferenceUtil.pinnedArtists
+            val isPinned = artist.name in pinned
+            val songs = artist.songs
+            ArtistPopup.show(
+                image ?: itemView,
+                listOf(
+                    activity.getString(if (isPinned) R.string.artist_unpin else R.string.artist_pin) to {
+                        PreferenceUtil.pinnedArtists =
+                            if (isPinned) pinned - artist.name else pinned + artist.name
+                        swapDataSet(rawDataSet)
+                    },
+                    activity.getString(R.string.action_play_next) to {
+                        SongsMenuHelper.handleMenuClick(activity, songs, R.id.action_play_next)
+                    },
+                    activity.getString(R.string.action_add_to_playing_queue) to {
+                        SongsMenuHelper.handleMenuClick(activity, songs, R.id.action_add_to_current_playing)
+                    },
+                    activity.getString(R.string.action_add_to_playlist) to {
+                        SongsMenuHelper.handleMenuClick(activity, songs, R.id.action_add_to_playlist)
+                    },
+                    activity.getString(R.string.merge_artist) to { onMerge?.invoke(artist) },
+                    activity.getString(R.string.edit_artist_title) to { onRename?.invoke(artist) },
+                    activity.getString(R.string.artist_select) to { toggleChecked(layoutPosition) }
+                )
+            )
+            return true
         }
     }
 }

@@ -38,6 +38,59 @@ import code.name.monkey.retromusic.util.RetroUtil
 
 class ArtistsFragment : AbsRecyclerViewCustomGridSizeFragment<ArtistAdapter, GridLayoutManager>(),
     IArtistClickListener, IAlbumArtistClickListener {
+    private val artistMerger = ArtistMerger(this)
+
+    private fun showRename(artist: code.name.monkey.retromusic.model.Artist) {
+        val ctx = requireContext()
+        val pad = (20 * resources.displayMetrics.density).toInt()
+        val input = android.widget.EditText(ctx).apply {
+            setText(artist.name); setSingleLine(); setSelection(text.length)
+            hint = getString(R.string.edit_artist_name)
+        }
+        val holder = android.widget.FrameLayout(ctx).apply {
+            setPadding(pad, pad / 2, pad, 0); addView(input)
+        }
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(ctx)
+            .setTitle(R.string.edit_artist_title)
+            .setView(holder)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(R.string.save) { _, _ ->
+                val n = input.text.toString().trim()
+                if (n.isNotEmpty() && n != artist.name) {
+                    artistMerger.merge(artist.songs, n) {
+                        libraryViewModel.forceReload(ReloadType.Artists)
+                    }
+                }
+            }.show()
+    }
+
+    private fun showMerge(artist: code.name.monkey.retromusic.model.Artist) {
+        val ctx = requireContext()
+        val names = (libraryViewModel.getArtists().value ?: emptyList())
+            .map { it.name }.filter { it != artist.name }.distinct().sorted()
+        val input = android.widget.AutoCompleteTextView(ctx).apply {
+            setAdapter(android.widget.ArrayAdapter(ctx, android.R.layout.simple_dropdown_item_1line, names))
+            threshold = 1; setSingleLine(); hint = getString(R.string.merge_artist_hint)
+        }
+        val pad = (20 * resources.displayMetrics.density).toInt()
+        val holder = android.widget.FrameLayout(ctx).apply {
+            setPadding(pad, pad / 2, pad, 0); addView(input)
+        }
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(ctx)
+            .setTitle(R.string.merge_artist)
+            .setMessage(getString(R.string.merge_artist_message, artist.name))
+            .setView(holder)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(R.string.merge_artist_action) { _, _ ->
+                val t = input.text.toString().trim()
+                if (t.isNotEmpty() && t != artist.name) {
+                    artistMerger.merge(artist.songs, t) {
+                        libraryViewModel.forceReload(ReloadType.Artists)
+                    }
+                }
+            }.show()
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         libraryViewModel.getArtists().observe(viewLifecycleOwner) {
@@ -83,7 +136,9 @@ class ArtistsFragment : AbsRecyclerViewCustomGridSizeFragment<ArtistAdapter, Gri
             dataSet,
             itemLayoutRes(),
             this,
-            this
+            this,
+            onMerge = { showMerge(it) },
+            onRename = { showRename(it) }
         )
     }
 

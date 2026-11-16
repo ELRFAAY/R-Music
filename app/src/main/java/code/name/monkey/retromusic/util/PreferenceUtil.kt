@@ -951,6 +951,12 @@ object PreferenceUtil {
     val lyricsPanel: Boolean
         get() = sharedPreferences.getBoolean(LYRICS_PANEL, true)
 
+    /** Names of artists pinned to the top of the artists list. */
+    var pinnedArtists: Set<String>
+        get() = sharedPreferences.getString("pinned_artists", "").orEmpty()
+            .split('\n').filter { it.isNotEmpty() }.toSet()
+        set(v) = sharedPreferences.edit { putString("pinned_artists", v.joinToString("\n")) }
+
     /** Muzio theme: tools hidden behind the arrow (only prev/play/next + heart stay). */
     var muzioToolsHidden: Boolean
         get() = sharedPreferences.getBoolean("muzio_tools_hidden", false)

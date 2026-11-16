@@ -626,4 +626,7 @@
     <string name="pref_system_player_notification_title">إشعار مشغّل أندرويد</string>
     <string name="pref_system_player_notification_summary">استخدم إشعار أندرويد العادي اللي شريطه بيتسحب بدل كارت الكوبرا</string>
     <string name="muzio_toggle_tools">إظهار / إخفاء الأدوات</string>
+    <string name="artist_pin">تثبيت في الأول</string>
+    <string name="artist_unpin">إلغاء التثبيت</string>
+    <string name="artist_select">تحديد</string>
 </resources>

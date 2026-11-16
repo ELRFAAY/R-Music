@@ -635,4 +635,7 @@
     <string name="pref_system_player_notification_title">System player notification</string>
     <string name="pref_system_player_notification_summary">Use the standard Android player notification, whose progress bar can be dragged, instead of the cobra card</string>
     <string name="muzio_toggle_tools">Show / hide tools</string>
+    <string name="artist_pin">Pin to top</string>
+    <string name="artist_unpin">Unpin</string>
+    <string name="artist_select">Select</string>
 </resources>
