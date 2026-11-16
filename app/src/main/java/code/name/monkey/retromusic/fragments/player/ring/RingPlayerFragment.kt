@@ -98,20 +98,33 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
             // the heart lives next to the title (animated); hide the toolbar copy
             menu.findItem(R.id.action_toggle_favorite)?.isVisible = false
             setNavigationOnClickListener { requireActivity().onBackPressedDispatcher.onBackPressed() }
-            // arrow placed before every other toolbar icon: hides/shows all tools
-            menu.add(0, TOOLS_ARROW_ID, 0, R.string.muzio_toggle_tools)
-                .setShowAsAction(android.view.MenuItem.SHOW_AS_ACTION_ALWAYS)
-            setOnMenuItemClickListener { item ->
-                if (item.itemId == TOOLS_ARROW_ID) {
-                    PreferenceUtil.muzioToolsHidden = !PreferenceUtil.muzioToolsHidden
-                    applyToolsHidden()
-                    true
-                } else onMenuItemClick(item)
-            }
+            setOnMenuItemClickListener { item -> onMenuItemClick(item) }
             ToolbarContentTintHelper.colorizeToolbar(this, Color.WHITE, requireActivity())
             drawAboveSystemBars()
         }
+        binding.toolsArrow.setOnClickListener {
+            PreferenceUtil.muzioToolsHidden = !PreferenceUtil.muzioToolsHidden
+            applyToolsHidden()
+        }
         applyToolsHidden()
+        binding.equalizerButton.setOnClickListener {
+            android.widget.Toast.makeText(
+                requireContext(), R.string.vocal_separation_soon, android.widget.Toast.LENGTH_SHORT
+            ).show()
+        }
+        // keep the bottom row above the phone's navigation buttons
+        val bottomBase = (16 * resources.displayMetrics.density).toInt()
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.shareButton) { v, insets ->
+            val nav = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.navigationBars()).bottom
+            (v.layoutParams as? android.view.ViewGroup.MarginLayoutParams)?.let {
+                if (it.bottomMargin != bottomBase + nav) {
+                    it.bottomMargin = bottomBase + nav
+                    v.layoutParams = it
+                }
+            }
+            insets
+        }
+        binding.shareButton.requestApplyInsets()
 
         binding.ringTitle.isSelected = true
         binding.progressRing.setOnSeekBarChangeListener(this)
@@ -139,7 +152,6 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
                 )
             )
         }
-        binding.equalizerButton.setOnClickListener { NavigationUtil.openEqualizer(requireActivity()) }
         binding.ringTitle.setOnClickListener { code.name.monkey.retromusic.fragments.base.goToAlbum(requireActivity()) }
         binding.ringArtist.setOnClickListener { code.name.monkey.retromusic.fragments.base.goToArtist(requireActivity()) }
 
@@ -433,7 +445,7 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         val tint = ColorStateList.valueOf(c)
         listOf(
             b.queueButton, b.favoriteButton, b.previousButton, b.nextButton,
-            b.shareButton, b.equalizerButton, b.lyricsFullscreen, b.lyricsClose
+            b.shareButton, b.equalizerButton, b.toolsArrow, b.lyricsFullscreen, b.lyricsClose
         ).forEach { it.imageTintList = tint }
         listOf(b.lyricsSearch, b.lyricsEdit, b.lyricsFont).forEach { it.setTextColor(c) }
         b.playPauseButton.backgroundTintList = tint
@@ -484,6 +496,8 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         // With lyrics shown the ring goes away and the tool chips appear under the text.
         binding.progressRing.visibility = if (visible) View.INVISIBLE else View.VISIBLE
         binding.lyricsTools.isVisible = visible
+        // volume drag / double tap / ring seek only make sense while the cover is on screen
+        binding.ringCoverArea.gesturesEnabled = !visible
     }
 
     private fun updateSong() {
@@ -713,17 +727,18 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         val menu = b.playerToolbar.menu
         for (i in 0 until menu.size()) {
             val it = menu.getItem(i)
-            if (it.itemId != TOOLS_ARROW_ID && it.itemId != R.id.action_toggle_favorite) {
+            if (it.itemId != R.id.action_toggle_favorite) {
                 it.isVisible = !hidden
             }
         }
-        menu.findItem(TOOLS_ARROW_ID)?.setIcon(
-            if (hidden) R.drawable.ic_keyboard_arrow_down else R.drawable.ic_keyboard_arrow_up
-        )
+        // Sideways arrow at the end edge: tools shown = points to the edge (tap to fold them away),
+        // hidden = points inward (tap to bring them back).
+        val rtl = resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL
+        val towardsEdge = if (rtl) R.drawable.ic_chevron_left_tools else R.drawable.ic_chevron_right_tools
+        val inward = if (rtl) R.drawable.ic_chevron_right_tools else R.drawable.ic_chevron_left_tools
+        b.toolsArrow.setImageResource(if (hidden) inward else towardsEdge)
         ToolbarContentTintHelper.colorizeToolbar(b.playerToolbar, contentColor, requireActivity())
     }
 
-    private companion object {
-        const val TOOLS_ARROW_ID = 0x4D5A0001
-    }
+
 }

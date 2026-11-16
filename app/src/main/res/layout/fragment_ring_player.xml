@@ -49,19 +49,27 @@
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/playerToolbar"
         style="@style/Toolbar"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginEnd="48dp"
         app:layout_constraintTop_toBottomOf="@id/status_bar"
-        app:navigationIcon="@drawable/ic_keyboard_arrow_down">
+        app:navigationIcon="@drawable/ic_keyboard_arrow_down" />
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:gravity="center"
-            android:orientation="vertical">
+    <!-- Title: independent of the toolbar icons so it never moves when tools are hidden -->
+    <LinearLayout
+        android:id="@+id/playingFromBox"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="104dp"
+        android:layout_marginEnd="104dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="@id/playerToolbar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/playerToolbar">
 
             <TextView
                 android:id="@+id/playingFromLabel"
@@ -82,7 +90,20 @@
                 android:textStyle="bold"
                 tools:text="Album name" />
         </LinearLayout>
-    </com.google.android.material.appbar.MaterialToolbar>
+
+    <!-- Tools arrow: always at the same spot (end of the top bar) -->
+    <ImageView
+        android:id="@+id/toolsArrow"
+        android:layout_width="48dp"
+        android:layout_height="0dp"
+        android:background="?attr/roundSelector"
+        android:contentDescription="@string/muzio_toggle_tools"
+        android:padding="12dp"
+        android:src="@drawable/ic_chevron_right_tools"
+        app:layout_constraintBottom_toBottomOf="@id/playerToolbar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/playerToolbar"
+        app:tint="@color/md_white_1000" />
 
     <!-- Progress ring (full circle) with the round cover inside -->
     <me.tankery.lib.circularseekbar.CircularSeekBar
@@ -436,8 +457,8 @@
         android:layout_height="48dp"
         android:layout_marginEnd="24dp"
         android:background="?attr/roundSelector"
-        android:contentDescription="@string/equalizer"
-        android:src="@drawable/ic_equalizer"
+        android:contentDescription="@string/vocal_separation"
+        android:src="@drawable/ic_vocal_wave"
         app:layout_constraintBottom_toBottomOf="@id/shareButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/shareButton"

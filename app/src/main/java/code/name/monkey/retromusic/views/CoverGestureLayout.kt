@@ -39,6 +39,9 @@ class CoverGestureLayout @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr) {
 
+    /** When false (lyrics shown) every gesture here is off and touches go straight to the children. */
+    var gesturesEnabled = true
+
     /** Volume as 0f..1f, called while dragging. */
     var onVolumeChanged: ((fraction: Float) -> Unit)? = null
 
@@ -91,6 +94,10 @@ class CoverGestureLayout @JvmOverloads constructor(
     private val replayTap = Runnable { replayPendingTap() }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        if (!gesturesEnabled) {
+            if (ev.actionMasked == MotionEvent.ACTION_DOWN) parent?.requestDisallowInterceptTouchEvent(true)
+            return super.dispatchTouchEvent(ev)
+        }
         when (ev.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 mode = Mode.NONE

@@ -649,4 +649,6 @@
     <string name="artist_info_none">مفيش معلومات عن الفنان ده</string>
     <string name="artist_info_loading">بيجيب معلومات الفنان…</string>
     <string name="mini_player_shape_player">مشغّل (الاسم تحت الكفر + الأزرار)</string>
+    <string name="vocal_separation">فصل صوت المغني</string>
+    <string name="vocal_separation_soon">فصل الصوت لسه مش جاهز</string>
 </resources>

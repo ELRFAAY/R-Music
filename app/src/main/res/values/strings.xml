@@ -658,4 +658,6 @@
     <string name="artist_info_none">No info found for this artist</string>
     <string name="artist_info_loading">Loading the artist info…</string>
     <string name="mini_player_shape_player">Player (name under the cover + buttons)</string>
+    <string name="vocal_separation">Vocal separation</string>
+    <string name="vocal_separation_soon">Vocal separation is not ready yet</string>
 </resources>
