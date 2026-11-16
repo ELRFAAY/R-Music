@@ -108,10 +108,17 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         }
         applyToolsHidden()
         binding.equalizerButton.setOnClickListener {
-            android.widget.Toast.makeText(
-                requireContext(), R.string.vocal_separation_soon, android.widget.Toast.LENGTH_SHORT
-            ).show()
+            val song = MusicPlayerRemote.currentSong
+            val on = code.name.monkey.retromusic.vocal.VocalSeparator.toggle(song)
+            if (!on || code.name.monkey.retromusic.vocal.VocalSeparator.hasStem(song)) {
+                MusicPlayerRemote.musicService?.reloadCurrentKeepingPosition()
+            }
+            updateVocalButton()
         }
+        viewLifecycleOwner.lifecycleScope.launch {
+            code.name.monkey.retromusic.vocal.VocalSeparator.status.collect { showVocalStatus(it) }
+        }
+        updateVocalButton()
         // keep the bottom row above the phone's navigation buttons
         val bottomBase = (16 * resources.displayMetrics.density).toInt()
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.shareButton) { v, insets ->
@@ -716,6 +723,24 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         tintAnimator?.cancel()
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun updateVocalButton() {
+        val b = _binding ?: return
+        b.equalizerButton.alpha = if (code.name.monkey.retromusic.vocal.VocalSeparator.vocalMode) 1f else 0.55f
+    }
+
+    private fun showVocalStatus(st: code.name.monkey.retromusic.vocal.VocalSeparator.Status) {
+        val b = _binding ?: return
+        val V = code.name.monkey.retromusic.vocal.VocalSeparator.Status
+        val text = when (st) {
+            is V.Downloading -> getString(R.string.vocal_downloading, st.percent)
+            is V.Processing -> getString(R.string.vocal_processing, st.percent)
+            is V.Error -> getString(R.string.vocal_error)
+            else -> null
+        }
+        updateVocalButton()
+        if (text != null) b.artistCounter.text = text else updateQueueCounter()
     }
 
     private fun applyToolsHidden() {

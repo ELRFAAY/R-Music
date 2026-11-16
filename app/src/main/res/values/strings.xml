@@ -660,4 +660,7 @@
     <string name="mini_player_shape_player">Player (name under the cover + buttons)</string>
     <string name="vocal_separation">Vocal separation</string>
     <string name="vocal_separation_soon">Vocal separation is not ready yet</string>
+    <string name="vocal_downloading">Downloading model %1$d%%</string>
+    <string name="vocal_processing">Separating voice %1$d%%</string>
+    <string name="vocal_error">Separation failed</string>
 </resources>

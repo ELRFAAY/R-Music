@@ -178,6 +178,7 @@ dependencies {
     implementation(libs.koin.android)
 
     implementation(libs.glide)
+    implementation(libs.onnxruntime.android)
     implementation(libs.mlkit.translate)
     implementation(libs.mlkit.language.id)
     ksp(libs.glide.ksp)

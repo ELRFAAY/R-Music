@@ -651,4 +651,7 @@
     <string name="mini_player_shape_player">مشغّل (الاسم تحت الكفر + الأزرار)</string>
     <string name="vocal_separation">فصل صوت المغني</string>
     <string name="vocal_separation_soon">فصل الصوت لسه مش جاهز</string>
+    <string name="vocal_downloading">تنزيل الموديل %1$d%%</string>
+    <string name="vocal_processing">فصل الصوت %1$d%%</string>
+    <string name="vocal_error">فشل فصل الصوت</string>
 </resources>

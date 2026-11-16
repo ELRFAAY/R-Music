@@ -5,7 +5,7 @@ import android.support.v4.media.session.MediaSessionCompat.QueueItem
 import code.name.monkey.retromusic.model.Song
 import code.name.monkey.retromusic.util.MusicUtil
 
-val Song.uri get() = MusicUtil.getSongFileUri(songId = id)
+val Song.uri get() = code.name.monkey.retromusic.vocal.VocalSeparator.uriFor(this)
 
 val Song.albumArtUri get() = MusicUtil.getMediaStoreAlbumCoverUri(albumId)
 

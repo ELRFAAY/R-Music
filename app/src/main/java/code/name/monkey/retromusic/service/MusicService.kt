@@ -311,6 +311,13 @@ class MusicService : MediaBrowserServiceCompat(),
     private var isForeground = false
     override fun onCreate() {
         super.onCreate()
+        code.name.monkey.retromusic.vocal.VocalSeparator.onStemReady = { songId ->
+            uiThreadHandler?.post {
+                if (currentSong.id == songId && code.name.monkey.retromusic.vocal.VocalSeparator.vocalMode) {
+                    reloadCurrentKeepingPosition()
+                }
+            }
+        }
         val powerManager = getSystemService<PowerManager>()
         if (powerManager != null) {
             wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, javaClass.name)
@@ -827,6 +834,18 @@ class MusicService : MediaBrowserServiceCompat(),
         }
     }
 
+    /** Re-opens the current song (original or singer-only file) and continues from the same spot. */
+    fun reloadCurrentKeepingPosition() {
+        val pos = songProgressMillis
+        val wasPlaying = isPlaying
+        openTrackAndPrepareNextAt(position) { success ->
+            if (success) {
+                seek(pos)
+                if (wasPlaying) play()
+            }
+        }
+    }
+
     @Synchronized
     fun openTrackAndPrepareNextAt(position: Int, completion: (success: Boolean) -> Unit) {
         this.position = position
@@ -1188,6 +1207,7 @@ class MusicService : MediaBrowserServiceCompat(),
                     updateMediaSessionPlaybackState()
                     playingNotification?.updateMetadata(currentSong) { startForegroundOrNotify() }
                     if (isPlaying) startNotificationTicker()
+                    code.name.monkey.retromusic.vocal.VocalSeparator.onSongChanged(currentSong)
                     isCurrentFavorite { isFavorite ->
                         playingNotification?.updateFavorite(isFavorite)
                         startForegroundOrNotify()
