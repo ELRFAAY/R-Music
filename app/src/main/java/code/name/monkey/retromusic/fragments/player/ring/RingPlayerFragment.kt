@@ -175,9 +175,12 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
                 MusicPlayerRemote.resumePlaying()
                 true
             }
-            setOnClickListener { setLyricsVisible(false) }
+            // Synced lyrics: a tap on a line jumps there (the X chip closes). Plain text: a tap goes back to the cover.
+            setOnClickListener { if (!lyricsSynced) setLyricsVisible(false) }
         }
     }
+
+    private var lyricsSynced = false
 
     private val hideVolume = Runnable { _binding?.volumeOverlay?.isVisible = false }
     private var lyricsScaleIndex = 0
@@ -261,6 +264,20 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         return queue[idx]
     }
 
+    /** Moves the current cover together with its ring, and the next/previous cover with its ring. */
+    private fun moveUnit(current: Float, neighbor: Float?) {
+        val b = _binding ?: return
+        b.ringCover.translationX = current
+        b.progressRing.translationX = current
+        if (neighbor == null) {
+            b.ringCoverNext.isVisible = false
+            b.progressRingNext.isVisible = false
+        } else {
+            b.ringCoverNext.translationX = neighbor
+            b.progressRingNext.translationX = neighbor
+        }
+    }
+
     private fun showNeighbor(next: Boolean): Boolean {
         val b = _binding ?: return false
         val song = neighborSong(next) ?: return false
@@ -274,6 +291,7 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
                 .into(b.ringCoverNext)
         }
         b.ringCoverNext.isVisible = true
+        b.progressRingNext.isVisible = true
         return true
     }
 
@@ -296,17 +314,15 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
                 if (!dragging && abs(dx) > slop * 2 && abs(dx) > abs(dy) * 1.5f) {
                     dragging = true
                     coverDragging = true
-                    b.progressRing.progress = 0f
+                    b.progressRingNext.progress = 0f
                 }
                 if (dragging) {
                     val travel = coverTravel()
                     if (showNeighbor(dx > 0)) {
-                        b.ringCover.translationX = dx
-                        b.ringCoverNext.translationX = if (dx > 0) dx - travel else dx + travel
+                        moveUnit(dx, if (dx > 0) dx - travel else dx + travel)
                     } else {
                         // Nothing before/after: stretch a little and come back.
-                        b.ringCover.translationX = dx * 0.25f
-                        b.ringCoverNext.isVisible = false
+                        moveUnit(dx * 0.25f, null)
                     }
                 }
             }
@@ -328,6 +344,8 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
                 if (event.actionMasked == MotionEvent.ACTION_UP && canGo && (far || fast)) {
                     val dir = if (next) 1f else -1f
                     b.ringCover.animate().translationX(dir * travel).setDuration(180).start()
+                    b.progressRing.animate().translationX(dir * travel).setDuration(180).start()
+                    b.progressRingNext.animate().translationX(0f).setDuration(180).start()
                     b.ringCoverNext.animate().translationX(0f).setDuration(180).withEndAction {
                         if (next) MusicPlayerRemote.playNextSong() else MusicPlayerRemote.playPreviousSong()
                     }.start()
@@ -336,8 +354,13 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
                 } else {
                     val dir = if (next) -1f else 1f
                     b.ringCover.animate().translationX(0f).setDuration(200).start()
+                    b.progressRing.animate().translationX(0f).setDuration(200).start()
+                    b.progressRingNext.animate().translationX(dir * travel).setDuration(200).start()
                     b.ringCoverNext.animate().translationX(dir * travel).setDuration(200)
-                        .withEndAction { _binding?.ringCoverNext?.isVisible = false }.start()
+                        .withEndAction {
+                            _binding?.ringCoverNext?.isVisible = false
+                            _binding?.progressRingNext?.isVisible = false
+                        }.start()
                     coverDragging = false
                 }
             }
@@ -349,9 +372,13 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         coverDragging = false
         b.ringCover.animate().cancel()
         b.ringCoverNext.animate().cancel()
+        b.progressRing.animate().cancel()
+        b.progressRingNext.animate().cancel()
         b.ringCover.translationX = 0f
+        b.progressRing.translationX = 0f
         b.ringCover.alpha = 1f
         b.ringCoverNext.isVisible = false
+        b.progressRingNext.isVisible = false
         neighborIndex = Int.MIN_VALUE
     }
 
@@ -359,11 +386,16 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         val b = _binding ?: return
         // The song changed (after a swipe or from anywhere else): show the new cover in place.
         b.ringCover.animate().cancel()
+        b.progressRing.animate().cancel()
         b.ringCover.translationX = 0f
+        b.progressRing.translationX = 0f
         b.ringCover.alpha = 1f
         coverDragging = false
         neighborIndex = Int.MIN_VALUE
-        b.ringCover.post { _binding?.ringCoverNext?.isVisible = false }
+        b.ringCover.post {
+            _binding?.ringCoverNext?.isVisible = false
+            _binding?.progressRingNext?.isVisible = false
+        }
     }
 
     /** Background tint from the cover's colours; dark text/icons when the colour is light. */
@@ -409,6 +441,9 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         b.progressRing.circleColor = ColorUtils.setAlphaComponent(c, 0x33)
         b.progressRing.circleProgressColor = c
         b.progressRing.pointerColor = c
+        b.progressRingNext.circleColor = ColorUtils.setAlphaComponent(c, 0x33)
+        b.progressRingNext.circleProgressColor = c
+        b.progressRingNext.pointerColor = c
         b.ringLyrics.setCurrentColor(c)
         b.ringLyrics.setNormalColor(ColorUtils.setAlphaComponent(c, 140))
         b.ringLyrics.setTimeTextColor(c)
@@ -532,14 +567,16 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val lrcFile = LyricUtil.getSyncedLyricsFile(song)
             val embedded = if (lrcFile == null) LyricUtil.getEmbeddedSyncedLyrics(song.data) else null
+            val plain = LyricUtil.getStoredPlainLyrics(song)
             withContext(Dispatchers.Main) {
                 val view = _binding?.ringLyrics ?: return@withContext
+                lyricsSynced = lrcFile != null || embedded != null
                 when {
                     lrcFile != null -> view.loadLrc(lrcFile)
                     embedded != null -> view.loadLrc(embedded)
                     else -> {
                         view.reset()
-                        view.setLabel(getString(R.string.ring_no_lyrics))
+                        view.setLabel(plain ?: getString(R.string.ring_no_lyrics))
                     }
                 }
             }

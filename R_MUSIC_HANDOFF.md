@@ -258,3 +258,7 @@ DONE + pushed (all compile; none tested on a device):
 - 2f16201 FIX: Muzio crashed on open ("order does not contain a valid category": menu.add order -1 -> 0). Found from the user's bug report.
 - 0af538f oval mini player: new shape 3 "Player" (prev/play/next beside the cover, name marquee under the cover); shape 0 = cover + play (theme a). Settings > UI > Mini player.
 LEFT, in this order: (1) Muzio animation vs docs/reference/theme-ring-reference-video.mp4 (ask the user WHICH animation differs), (2) vocal/instrumental separation toggle (confirm the approach first, see item D above), (3) package rename LAST, then the final release build with a permanent key in GitHub Secrets.
+
+### Muzio swipe + lyrics tap (user feedback 2026-11-16 10:30; video in docs/reference/muzio-swipe-reference-video.mp4)
+- Swipe: the WHOLE unit moves together: the cover AND the ring around it (with its knob); the next/previous cover comes in with its own ring (progress 0, dot at 12 o'clock); the background colour and title change with the new song. Done in this commit (`progressRingNext`, `moveUnit`); still compare on a device with the video.
+- Lyrics tap: synced lyrics: tapping a line seeks, the X chip closes; plain text (no sync, or only a label): a tap returns to the cover, another tap on the cover opens the lyrics again (`lyricsSynced` flag in RingPlayerFragment). Plain lyrics saved by hand show as the label text.

@@ -107,6 +107,32 @@
         app:layout_constraintTop_toBottomOf="@id/playerToolbar"
         tools:progress="40" />
 
+    <!-- The ring of the next/previous cover while swiping (moves with its cover) -->
+    <me.tankery.lib.circularseekbar.CircularSeekBar
+        android:id="@+id/progressRingNext"
+        android:clickable="false"
+        android:focusable="false"
+        android:visibility="gone"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="44dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="44dp"
+        app:cs_circle_color="#33FFFFFF"
+        app:cs_circle_progress_color="@color/md_white_1000"
+        app:cs_circle_stroke_width="4dp"
+        app:cs_end_angle="270"
+        app:cs_move_outside_circle="true"
+        app:cs_pointer_color="@color/md_white_1000"
+        app:cs_pointer_halo_width="0dp"
+        app:cs_pointer_stroke_width="14dp"
+        app:cs_start_angle="270"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/playerToolbar"
+        tools:progress="0" />
+
     <!-- Cover area: drag up/down = volume, double tap right/left = +/-10 s (CoverGestureLayout) -->
     <code.name.monkey.retromusic.views.CoverGestureLayout
         android:id="@+id/ringCoverArea"
