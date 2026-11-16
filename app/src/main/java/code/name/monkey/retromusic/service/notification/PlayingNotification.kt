@@ -313,12 +313,12 @@ class PlayingNotification(
 
     private val headScaled: Bitmap by lazy {
         val head = BitmapFactory.decodeResource(context.resources, R.drawable.notification_cobra_head)
-        val h = 52
+        val h = 80
         Bitmap.createScaledBitmap(head, head.width * h / head.height, h, true)
     }
 
     private fun roundedCover(src: Bitmap): Bitmap {
-        val size = 224
+        val size = 320
         val out = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val c = Canvas(out)
         val p = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -334,8 +334,8 @@ class PlayingNotification(
     }
 
     private fun drawBar(): Bitmap {
-        val w = 800
-        val h = 64
+        val w = 900
+        val h = 96
         val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val c = Canvas(bmp)
         val head = headScaled
@@ -348,7 +348,7 @@ class PlayingNotification(
         val cy = h / 2f
         val p = Paint(Paint.ANTI_ALIAS_FLAG)
         p.strokeCap = Paint.Cap.ROUND
-        p.strokeWidth = 8f
+        p.strokeWidth = 11f
         p.color = 0xFF3A4246.toInt()
         c.drawLine(left, cy, right, cy, p)
         p.color = 0xFF22D398.toInt()
