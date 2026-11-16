@@ -93,6 +93,7 @@ class ArtistAdapter(
         val isChecked = isChecked(artist)
         holder.itemView.isActivated = isChecked
         holder.title?.text = artist.name
+        markPinned(holder, artist.name in PreferenceUtil.pinnedArtists)
         holder.text?.hide()
         val transitionName =
             if (albumArtistsOnly) artist.name else artist.id.toString()
@@ -104,12 +105,28 @@ class ArtistAdapter(
         loadArtistImage(artist, holder)
     }
 
+    /** A small pin before the name of a pinned artist. */
+    private fun markPinned(holder: ViewHolder, pinned: Boolean) {
+        val t = holder.title ?: return
+        if (pinned) {
+            val size = (16 * t.resources.displayMetrics.density).toInt()
+            val d = androidx.core.content.ContextCompat.getDrawable(t.context, R.drawable.ic_menu_pin)
+            d?.setBounds(0, 0, size, size)
+            t.setCompoundDrawablesRelative(d, null, null, null)
+            t.compoundDrawablePadding = 6
+            t.compoundDrawableTintList = ColorStateList.valueOf(t.currentTextColor)
+        } else {
+            t.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, 0, 0)
+        }
+    }
+
     private fun setColors(processor: MediaNotificationProcessor, holder: ViewHolder) {
         holder.mask?.backgroundTintList = ColorStateList.valueOf(processor.primaryTextColor)
         if (holder.paletteColorContainer != null) {
             holder.paletteColorContainer?.setBackgroundColor(processor.backgroundColor)
             holder.title?.setTextColor(processor.primaryTextColor)
         }
+        holder.title?.compoundDrawableTintList = ColorStateList.valueOf(holder.title?.currentTextColor ?: 0)
         holder.imageContainerCard?.setCardBackgroundColor(processor.backgroundColor)
     }
 

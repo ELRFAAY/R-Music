@@ -332,3 +332,7 @@ The user watches the CI himself on his computer; do not sleep-poll long. Rules: 
 ### Session 17c (23:40): vocal separation FAILS on the user's phone ("فشل فصل الصوت")
 - Cause unknown (can't reach huggingface from the sandbox). Error text now shows the stage + message: `Separation failed (download|decode|model|separate: <msg>)` in the counter line under the title. Ask the user to read it to you. Suspects: model download blocked/too short, ONNX input shape (dimF/dimT dynamic?), output array cast in `flatten`, OOM.
 - User: focus now = (2) Muzio center-tap speed and (3) Muzio swipe on a fresh APK. Package rename: do NOT start until he says.
+
+### Session 17d (23:50): pins + backup
+- Artist pins live in pref `pinned_artists` (artist names), cover-wall pins in `home_covers_pinned` (song ids). BackupHelper `getSettingsZipItems` saves ALL prefs except BACKUP_FOLDER_URI, so pins are backed up and restored as they are. Caveat: wall pins are MediaStore song ids, which can differ on another phone/reinstall (artist pins are by name, safe). Not tested.
+- Added a small pin icon before the artist name for pinned artists (`ArtistAdapter.markPinned`). Not compiled/tested.
