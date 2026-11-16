@@ -821,10 +821,10 @@ object PreferenceUtil {
     val isMiniPlayerOval: Boolean
         get() = sharedPreferences.getStringOrDefault(MINI_PLAYER_STYLE, "1") == "1"
 
-    /** 0 = oval, 1 = oval with the song title, 2 = circle with the cover only. */
+    /** 0 = oval, 1 = oval with the song title, 2 = circle with the cover only, 3 = player (buttons + name under the cover). */
     val miniPlayerShape: Int
         get() = (sharedPreferences.getStringOrDefault(MINI_PLAYER_SHAPE, "0").toIntOrNull()
-            ?: 0).coerceIn(0, 2)
+            ?: 0).coerceIn(0, 3)
 
     /** 0 = small, 1 = medium, 2 = large. */
     val miniPlayerSize: Int
