@@ -2,6 +2,13 @@ package code.name.monkey.retromusic.fragments.lyrics
 
 import android.app.Dialog
 import android.os.Bundle
+import android.text.InputType
+import android.view.Gravity
+import android.widget.EditText
+import android.widget.FrameLayout
+import androidx.core.os.bundleOf
+import androidx.fragment.app.setFragmentResult
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,6 +25,7 @@ import code.name.monkey.retromusic.lyrics.LrcLibClient
 import code.name.monkey.retromusic.lyrics.LrcView
 import code.name.monkey.retromusic.model.Song
 import code.name.monkey.retromusic.util.LyricUtil
+import code.name.monkey.retromusic.util.PreferenceUtil
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -75,6 +83,8 @@ class LyricsSheetFragment : BottomSheetDialogFragment() {
         }
         binding.lyricsSheetGet.setOnClickListener { load(MusicPlayerRemote.currentSong, true) }
         binding.lyricsSheetSyncStart.setOnClickListener { startSync() }
+        binding.lyricsSheetManual.setOnClickListener { showManualDialog() }
+        binding.lyricsSheetEdit.setOnClickListener { showManualDialog() }
         binding.lyricsSyncMark.setOnClickListener { markLine() }
         binding.lyricsSyncUndo.setOnClickListener { undoMark() }
         binding.lyricsSyncCancel.setOnClickListener {
@@ -106,6 +116,7 @@ class LyricsSheetFragment : BottomSheetDialogFragment() {
         syncStamps.clear()
         binding.lyricsSheetSyncHolder.isVisible = false
         binding.lyricsSheetSyncStart.isVisible = false
+        binding.lyricsSheetEdit.isVisible = false
     }
 
     private fun showStatus(text: String, showButton: Boolean) {
@@ -116,6 +127,7 @@ class LyricsSheetFragment : BottomSheetDialogFragment() {
         binding.lyricsSheetStatusHolder.isVisible = true
         binding.lyricsSheetStatus.text = text
         binding.lyricsSheetGet.isVisible = showButton
+        binding.lyricsSheetManual.isVisible = true
     }
 
     private fun showSynced(text: String) {
@@ -124,6 +136,7 @@ class LyricsSheetFragment : BottomSheetDialogFragment() {
         binding.lyricsSheetPlainScroll.isVisible = false
         binding.lyricsSheetLrc.isVisible = true
         binding.lyricsSheetLrc.loadLrc(text)
+        binding.lyricsSheetEdit.isVisible = true
     }
 
     private fun showPlain(text: String) {
@@ -134,6 +147,63 @@ class LyricsSheetFragment : BottomSheetDialogFragment() {
         binding.lyricsSheetPlainScroll.isVisible = true
         binding.lyricsSheetPlain.text = text
         binding.lyricsSheetSyncStart.isVisible = true
+        binding.lyricsSheetEdit.isVisible = true
+    }
+
+    /** Lets the user type or paste the lyrics when none are found (or fix the ones that are shown). */
+    private fun showManualDialog() {
+        val song = currentSong ?: return
+        val ctx = requireContext()
+        viewLifecycleOwner.lifecycleScope.launch {
+            val existing = withContext(Dispatchers.IO) {
+                LyricUtil.getSyncedLyricsFile(song)?.let { LyricUtil.getStringFromLrc(it) }
+                    ?.takeIf { it.isNotBlank() }
+                    ?: LyricUtil.getStoredPlainLyrics(song).orEmpty()
+            }
+            if (_binding == null) return@launch
+            val input = EditText(ctx).apply {
+                inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
+                minLines = 8
+                maxLines = 14
+                gravity = Gravity.TOP
+                hint = getString(R.string.lyrics_manual_hint)
+                setText(existing)
+            }
+            val holder = FrameLayout(ctx).apply {
+                val pad = (20 * resources.displayMetrics.density).toInt()
+                setPadding(pad, pad / 2, pad, 0)
+                addView(input)
+            }
+            MaterialAlertDialogBuilder(ctx)
+                .setTitle(R.string.lyrics_add_manual)
+                .setView(holder)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(android.R.string.ok) { _, _ -> saveManual(song, input.text.toString()) }
+                .show()
+        }
+    }
+
+    private fun saveManual(song: Song, text: String) {
+        val clean = text.trim()
+        if (clean.isEmpty()) return
+        val synced = Regex("^\\[\\d{1,3}:\\d{2}([.:]\\d{1,3})?]", RegexOption.MULTILINE).containsMatchIn(clean)
+        viewLifecycleOwner.lifecycleScope.launch {
+            withContext(Dispatchers.IO) {
+                if (synced) {
+                    LyricUtil.deleteStoredLyrics(song, synced = false, plain = true)
+                    LyricUtil.storeFetchedLyrics(song, clean, null)
+                } else {
+                    LyricUtil.deleteStoredLyrics(song, synced = true, plain = false)
+                    LyricUtil.storeFetchedLyrics(song, null, clean)
+                }
+            }
+            context?.showToast(R.string.lyrics_manual_saved)
+            if (_binding != null) {
+                if (synced) showSynced(clean) else showPlain(clean)
+                setFragmentResult(RESULT_KEY, bundleOf())
+                requireActivity().supportFragmentManager.setFragmentResult(RESULT_KEY, bundleOf())
+            }
+        }
     }
 
     private fun startSync() {
@@ -205,6 +275,9 @@ class LyricsSheetFragment : BottomSheetDialogFragment() {
             if (!forceOnline) {
                 local.first?.let { return@launch showSynced(it) }
             }
+            if (!forceOnline && PreferenceUtil.lyricsWifiOnly && !onWifi()) {
+                return@launch fallbackToLocal(local, R.string.lyrics_waiting_wifi)
+            }
             showStatus(getString(R.string.lyrics_searching), false)
             val outcome = withContext(Dispatchers.IO) {
                 try {
@@ -231,6 +304,14 @@ class LyricsSheetFragment : BottomSheetDialogFragment() {
         }
     }
 
+    private fun onWifi(): Boolean {
+        val cm = context?.getSystemService(android.content.Context.CONNECTIVITY_SERVICE)
+            as? android.net.ConnectivityManager ?: return false
+        val caps = cm.getNetworkCapabilities(cm.activeNetwork) ?: return false
+        return caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI) ||
+            caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_ETHERNET)
+    }
+
     private fun fallbackToLocal(local: Pair<String?, String?>, @androidx.annotation.StringRes message: Int) {
         when {
             local.first != null -> showSynced(local.first!!)
@@ -247,5 +328,6 @@ class LyricsSheetFragment : BottomSheetDialogFragment() {
 
     companion object {
         const val TAG = "LYRICS_SHEET"
+        const val RESULT_KEY = "lyrics_updated"
     }
 }

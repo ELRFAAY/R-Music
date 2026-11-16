@@ -223,6 +223,9 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         }
         // The panel searches LRCLIB, shows the full text and has the hand-sync (edit) mode.
         binding.lyricsFullscreen.setOnClickListener(openSheet)
+        requireActivity().supportFragmentManager.setFragmentResultListener(
+            LyricsSheetFragment.RESULT_KEY, viewLifecycleOwner
+        ) { _, _ -> updateLyrics() }
         binding.lyricsSearch.setOnClickListener(openSheet)
         binding.lyricsEdit.setOnClickListener(openSheet)
         binding.lyricsFont.setOnClickListener {

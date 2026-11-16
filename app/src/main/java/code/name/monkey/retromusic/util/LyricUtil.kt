@@ -168,6 +168,13 @@ object LyricUtil {
         plain?.let { File(dir, storeName(song) + ".txt").writeText(it) }
     }
 
+    /** Removes the kept copies of the song's lyrics (used when the user rewrites them by hand). */
+    fun deleteStoredLyrics(song: Song, synced: Boolean, plain: Boolean) {
+        val dir = storeDir()
+        if (synced) File(dir, storeName(song) + ".lrc").delete()
+        if (plain) File(dir, storeName(song) + ".txt").delete()
+    }
+
     fun getSyncedLyricsFile(song: Song): File? {
         return when {
             isLrcOriginalFileExist(song.data) -> {

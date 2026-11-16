@@ -638,4 +638,11 @@
     <string name="artist_pin">Pin to top</string>
     <string name="artist_unpin">Unpin</string>
     <string name="artist_select">Select</string>
+    <string name="lyrics_add_manual">Add lyrics manually</string>
+    <string name="lyrics_edit">Edit lyrics</string>
+    <string name="lyrics_manual_hint">Paste or type the lyrics. Lines that start with [mm:ss.xx] make them synced.</string>
+    <string name="lyrics_manual_saved">Lyrics saved</string>
+    <string name="pref_title_lyrics_wifi_only">Fetch lyrics on Wi-Fi only</string>
+    <string name="pref_summary_lyrics_wifi_only">Lyrics are not downloaded automatically on mobile data. The Get lyrics button still works.</string>
+    <string name="lyrics_waiting_wifi">Waiting for Wi-Fi. Tap Get lyrics to use mobile data.</string>
 </resources>

@@ -629,4 +629,11 @@
     <string name="artist_pin">تثبيت في الأول</string>
     <string name="artist_unpin">إلغاء التثبيت</string>
     <string name="artist_select">تحديد</string>
+    <string name="lyrics_add_manual">إضافة الكلمات يدويًا</string>
+    <string name="lyrics_edit">تعديل الكلمات</string>
+    <string name="lyrics_manual_hint">الصق الكلمات أو اكتبها. لو السطور بتبدأ بـ [mm:ss.xx] هتبقى متزامنة.</string>
+    <string name="lyrics_manual_saved">اتحفظت الكلمات</string>
+    <string name="pref_title_lyrics_wifi_only">جلب الكلمات على الواي فاي بس</string>
+    <string name="pref_summary_lyrics_wifi_only">الكلمات ما بتتحمّلش لوحدها على باقة الموبايل. زرار "هات الكلمات" شغال عادي.</string>
+    <string name="lyrics_waiting_wifi">مستني الواي فاي. دوس "هات الكلمات" لو عايز تستخدم باقة الموبايل.</string>
 </resources>

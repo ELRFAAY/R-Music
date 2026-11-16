@@ -164,8 +164,25 @@
                 android:layout_marginTop="16dp"
                 android:text="@string/lyrics_get"
                 android:visibility="gone" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/lyrics_sheet_manual"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/lyrics_add_manual"
+                android:visibility="gone" />
         </LinearLayout>
     </FrameLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/lyrics_sheet_edit"
+        style="@style/Widget.Material3.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="@string/lyrics_edit"
+        android:visibility="gone" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/lyrics_sheet_sync_start"

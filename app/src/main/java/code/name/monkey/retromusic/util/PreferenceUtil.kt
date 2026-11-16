@@ -64,6 +64,7 @@ import code.name.monkey.retromusic.LOCALE_AUTO_STORE_ENABLED
 import code.name.monkey.retromusic.LOCK_SCREEN
 import code.name.monkey.retromusic.LYRICS_OPTIONS
 import code.name.monkey.retromusic.LYRICS_PANEL
+import code.name.monkey.retromusic.LYRICS_WIFI_ONLY
 import code.name.monkey.retromusic.LYRICS_TYPE
 import code.name.monkey.retromusic.MANAGE_AUDIO_FOCUS
 import code.name.monkey.retromusic.MATERIAL_YOU
@@ -950,6 +951,10 @@ object PreferenceUtil {
     /** Lyrics button opens a panel from the bottom instead of drawing lyrics over the cover. */
     val lyricsPanel: Boolean
         get() = sharedPreferences.getBoolean(LYRICS_PANEL, true)
+
+    /** When true, lyrics are only fetched automatically on Wi-Fi (the Get button still works). */
+    val lyricsWifiOnly: Boolean
+        get() = sharedPreferences.getBoolean(LYRICS_WIFI_ONLY, false)
 
     /** Names of artists pinned to the top of the artists list. */
     var pinnedArtists: Set<String>
