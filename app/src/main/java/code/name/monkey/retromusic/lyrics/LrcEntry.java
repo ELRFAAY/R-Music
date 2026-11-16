@@ -15,6 +15,9 @@
 package code.name.monkey.retromusic.lyrics;
 
 import android.text.Layout;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.style.RelativeSizeSpan;
 import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
@@ -96,9 +99,15 @@ class LrcEntry implements Comparable<LrcEntry> {
     this.secondText = secondText;
   }
 
-  private String getShowText() {
+  /** The second line (pronunciation / translation) is drawn smaller than the lyric line. */
+  private CharSequence getShowText() {
     if (!TextUtils.isEmpty(secondText)) {
-      return text + "\n" + secondText;
+      SpannableStringBuilder b = new SpannableStringBuilder(text);
+      b.append("\n");
+      int start = b.length();
+      b.append(secondText);
+      b.setSpan(new RelativeSizeSpan(0.7f), start, b.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+      return b;
     } else {
       return text;
     }

@@ -66,7 +66,7 @@ class CoverLrcView @JvmOverloads constructor(
     private var mTimeTextColor = 0
     private var mDrawableWidth = 0
     private var mTimeTextWidth = 0
-    private var mDefaultLabel: String? = null
+    private var mDefaultLabel: CharSequence? = null
     private var mLrcPadding = 0f
     private var mOnPlayClickListener: OnPlayClickListener? = null
     private var mAnimator: ValueAnimator? = null
@@ -315,7 +315,7 @@ class CoverLrcView @JvmOverloads constructor(
         }
     }
 
-    fun setLabel(label: String?) {
+    fun setLabel(label: CharSequence?) {
         runOnUi {
             mDefaultLabel = label
             invalidate()

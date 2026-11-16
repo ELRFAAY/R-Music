@@ -619,11 +619,24 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
     }
 
     /** Plain lyrics: a pronunciation line under every Korean line. */
-    private fun withPronunciation(text: String, mode: String): String =
-        text.lines().joinToString("\n") { line ->
+    private fun withPronunciation(text: String, mode: String): CharSequence {
+        val b = android.text.SpannableStringBuilder()
+        text.lines().forEachIndexed { i, line ->
+            if (i > 0) b.append("\n")
+            b.append(line)
             val p = code.name.monkey.retromusic.util.KoreanRomanizer.pronounce(line, mode)
-            if (p == null) line else "$line\n$p"
+            if (p != null) {
+                b.append("\n")
+                val start = b.length
+                b.append(p)
+                b.setSpan(
+                    android.text.style.RelativeSizeSpan(0.7f), start, b.length,
+                    android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
         }
+        return b
+    }
 
     private fun updatePlayPause() {
         binding.playPauseButton.setImageResource(
