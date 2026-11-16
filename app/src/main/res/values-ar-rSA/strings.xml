@@ -636,4 +636,13 @@
     <string name="pref_title_lyrics_wifi_only">جلب الكلمات على الواي فاي بس</string>
     <string name="pref_summary_lyrics_wifi_only">الكلمات ما بتتحمّلش لوحدها على باقة الموبايل. زرار "هات الكلمات" شغال عادي.</string>
     <string name="lyrics_waiting_wifi">مستني الواي فاي. دوس "هات الكلمات" لو عايز تستخدم باقة الموبايل.</string>
+    <string name="lyrics_translate">ترجمة</string>
+    <string name="lyrics_translate_ar">للعربي</string>
+    <string name="lyrics_translate_en">للإنجليزي</string>
+    <string name="lyrics_romanize_ko">نطق الكوري بحروف لاتينية</string>
+    <string name="lyrics_show_original">الكلمات الأصلية</string>
+    <string name="lyrics_translating">بيتحمّل ملف اللغة أول مرة…</string>
+    <string name="lyrics_translate_failed">معرفتش أترجم. اتأكد من النت لأول تحميل.</string>
+    <string name="lyrics_translate_same">الكلمات أصلاً بنفس اللغة دي</string>
+    <string name="lyrics_no_korean">مفيش حروف كورية في الكلمات دي</string>
 </resources>

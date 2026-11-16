@@ -645,4 +645,13 @@
     <string name="pref_title_lyrics_wifi_only">Fetch lyrics on Wi-Fi only</string>
     <string name="pref_summary_lyrics_wifi_only">Lyrics are not downloaded automatically on mobile data. The Get lyrics button still works.</string>
     <string name="lyrics_waiting_wifi">Waiting for Wi-Fi. Tap Get lyrics to use mobile data.</string>
+    <string name="lyrics_translate">Translate</string>
+    <string name="lyrics_translate_ar">To Arabic</string>
+    <string name="lyrics_translate_en">To English</string>
+    <string name="lyrics_romanize_ko">Romanize Korean</string>
+    <string name="lyrics_show_original">Show original</string>
+    <string name="lyrics_translating">Downloading the language the first time…</string>
+    <string name="lyrics_translate_failed">Couldn\'t translate. Check the internet for the first download.</string>
+    <string name="lyrics_translate_same">The lyrics are already in this language</string>
+    <string name="lyrics_no_korean">No Korean letters in these lyrics</string>
 </resources>

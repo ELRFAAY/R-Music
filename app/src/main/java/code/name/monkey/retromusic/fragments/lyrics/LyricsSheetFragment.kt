@@ -7,6 +7,9 @@ import android.view.Gravity
 import android.widget.EditText
 import android.widget.FrameLayout
 import androidx.core.os.bundleOf
+import android.widget.PopupMenu
+import code.name.monkey.retromusic.lyrics.LyricsTranslator
+import code.name.monkey.retromusic.util.KoreanRomanizer
 import androidx.fragment.app.setFragmentResult
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.view.LayoutInflater
@@ -49,6 +52,8 @@ class LyricsSheetFragment : BottomSheetDialogFragment() {
     // Hand syncing: the user taps "Mark" when each line of plain lyrics starts.
     private var currentSong: Song? = null
     private var currentPlain: String? = null
+    private var currentSynced: String? = null
+    private var translated = false
     private var syncLines: List<String> = emptyList()
     private val syncStamps = ArrayList<Long>()
 
@@ -84,6 +89,7 @@ class LyricsSheetFragment : BottomSheetDialogFragment() {
         binding.lyricsSheetGet.setOnClickListener { load(MusicPlayerRemote.currentSong, true) }
         binding.lyricsSheetSyncStart.setOnClickListener { startSync() }
         binding.lyricsSheetManual.setOnClickListener { showManualDialog() }
+        binding.lyricsSheetTranslate.setOnClickListener { onTranslateClicked(it) }
         binding.lyricsSheetEdit.setOnClickListener { showManualDialog() }
         binding.lyricsSyncMark.setOnClickListener { markLine() }
         binding.lyricsSyncUndo.setOnClickListener { undoMark() }
@@ -117,6 +123,7 @@ class LyricsSheetFragment : BottomSheetDialogFragment() {
         binding.lyricsSheetSyncHolder.isVisible = false
         binding.lyricsSheetSyncStart.isVisible = false
         binding.lyricsSheetEdit.isVisible = false
+        binding.lyricsSheetTranslate.isVisible = false
     }
 
     private fun showStatus(text: String, showButton: Boolean) {
@@ -136,6 +143,10 @@ class LyricsSheetFragment : BottomSheetDialogFragment() {
         binding.lyricsSheetPlainScroll.isVisible = false
         binding.lyricsSheetLrc.isVisible = true
         binding.lyricsSheetLrc.loadLrc(text)
+        currentSynced = text
+        translated = false
+        binding.lyricsSheetTranslate.setText(R.string.lyrics_translate)
+        binding.lyricsSheetTranslate.isVisible = true
         binding.lyricsSheetEdit.isVisible = true
     }
 
@@ -148,6 +159,86 @@ class LyricsSheetFragment : BottomSheetDialogFragment() {
         binding.lyricsSheetPlain.text = text
         binding.lyricsSheetSyncStart.isVisible = true
         binding.lyricsSheetEdit.isVisible = true
+        currentSynced = null
+        translated = false
+        binding.lyricsSheetTranslate.setText(R.string.lyrics_translate)
+        binding.lyricsSheetTranslate.isVisible = true
+    }
+
+    /** The lyrics as plain lines, without the [mm:ss.xx] stamps. */
+    private fun currentLines(): List<String> {
+        val raw = currentSynced ?: currentPlain.orEmpty()
+        return raw.lines().map { it.replace(Regex("^(\\[[^\\]]*\\])+"), "").trim() }.filter { it.isNotEmpty() }
+    }
+
+    private fun onTranslateClicked(anchor: View) {
+        if (translated) {
+            // Back to the original lyrics.
+            val synced = currentSynced
+            val plain = currentPlain
+            if (synced != null) showSynced(synced) else if (plain != null) showPlain(plain)
+            return
+        }
+        PopupMenu(requireContext(), anchor).apply {
+            menu.add(0, 1, 0, R.string.lyrics_translate_ar)
+            menu.add(0, 2, 1, R.string.lyrics_translate_en)
+            menu.add(0, 3, 2, R.string.lyrics_romanize_ko)
+            setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    1 -> translateTo("ar")
+                    2 -> translateTo("en")
+                    else -> romanizeKorean()
+                }
+                true
+            }
+            show()
+        }
+    }
+
+    private fun showInterleaved(original: List<String>, extra: List<String>) {
+        val text = original.indices.joinToString("\n\n") { i -> original[i] + "\n" + extra.getOrElse(i) { "" } }
+        val synced = currentSynced
+        val plain = currentPlain
+        hideSync()
+        // hideSync cleared the buttons: show the plain view with the translation, keep the originals for "Show original".
+        currentSynced = synced
+        currentPlain = plain
+        binding.lyricsSheetStatusHolder.isVisible = false
+        binding.lyricsSheetLrc.isVisible = false
+        binding.lyricsSheetPlainScroll.isVisible = true
+        binding.lyricsSheetPlain.text = text
+        translated = true
+        binding.lyricsSheetTranslate.setText(R.string.lyrics_show_original)
+        binding.lyricsSheetTranslate.isVisible = true
+    }
+
+    private fun romanizeKorean() {
+        val lines = currentLines()
+        if (lines.none { KoreanRomanizer.containsHangul(it) }) {
+            context?.showToast(R.string.lyrics_no_korean)
+            return
+        }
+        showInterleaved(lines, lines.map { KoreanRomanizer.romanize(it) })
+    }
+
+    private fun translateTo(tag: String) {
+        val lines = currentLines()
+        if (lines.isEmpty()) return
+        context?.showToast(R.string.lyrics_translating)
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = withContext(Dispatchers.Default) {
+                try {
+                    Result.success(LyricsTranslator.translate(lines, tag))
+                } catch (e: Exception) {
+                    Result.failure(e)
+                }
+            }
+            if (_binding == null) return@launch
+            result.onSuccess { translatedLines ->
+                if (translatedLines == null) context?.showToast(R.string.lyrics_translate_same)
+                else showInterleaved(lines, translatedLines)
+            }.onFailure { context?.showToast(R.string.lyrics_translate_failed) }
+        }
     }
 
     /** Lets the user type or paste the lyrics when none are found (or fix the ones that are shown). */
