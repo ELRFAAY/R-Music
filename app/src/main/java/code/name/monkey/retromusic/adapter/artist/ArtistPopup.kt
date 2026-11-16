@@ -22,8 +22,10 @@ object ArtistPopup {
     fun show(anchor: View, entries: List<Pair<String, () -> Unit>>) {
         val ctx = anchor.context
         val d = ctx.resources.displayMetrics.density
-        val surface = MaterialColors.getColor(anchor, com.google.android.material.R.attr.colorSurface, Color.DKGRAY)
-        val onSurface = MaterialColors.getColor(anchor, com.google.android.material.R.attr.colorOnSurface, Color.WHITE)
+        // Opaque card; text colour picked from the card's own brightness so it is always readable
+        // (on a pure black theme the theme's "on surface" colour can also be black).
+        val surface = MaterialColors.getColor(anchor, com.google.android.material.R.attr.colorSurface, Color.DKGRAY) or 0xFF000000.toInt()
+        val onSurface = if (androidx.core.graphics.ColorUtils.calculateLuminance(surface) > 0.5) Color.BLACK else Color.WHITE
 
         val card = LinearLayout(ctx).apply {
             orientation = LinearLayout.VERTICAL
@@ -37,6 +39,9 @@ object ArtistPopup {
         entries.forEach { (label, action) ->
             card.addView(TextView(ctx).apply {
                 text = label
+                minWidth = (170 * d).toInt()
+                minHeight = (44 * d).toInt()
+                gravity = Gravity.CENTER_VERTICAL
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
                 setTextColor(onSurface)
                 setPadding((18 * d).toInt(), (12 * d).toInt(), (24 * d).toInt(), (12 * d).toInt())
