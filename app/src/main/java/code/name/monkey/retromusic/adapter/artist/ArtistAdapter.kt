@@ -49,8 +49,7 @@ class ArtistAdapter(
     val IArtistClickListener: IArtistClickListener,
     val IAlbumArtistClickListener: IAlbumArtistClickListener? = null,
     var onMerge: ((Artist) -> Unit)? = null,
-    var onRename: ((Artist) -> Unit)? = null,
-    var onImage: ((Artist) -> Unit)? = null
+    var onRename: ((Artist) -> Unit)? = null
 ) : AbsMultiSelectAdapter<ArtistAdapter.ViewHolder, Artist>(activity, R.menu.menu_media_selection),
     PopupTextProvider {
 
@@ -214,7 +213,6 @@ class ArtistAdapter(
                     },
                     activity.getString(R.string.merge_artist) to { onMerge?.invoke(artist) },
                     activity.getString(R.string.edit_artist_title) to { onRename?.invoke(artist) },
-                    activity.getString(R.string.edit_artist_change_image) to { onImage?.invoke(artist) },
                     activity.getString(R.string.artist_select) to { toggleChecked(layoutPosition) }
                 )
             )

@@ -474,20 +474,7 @@ abstract class AbsSlidingMusicPanelActivity : AbsMusicServiceActivity(),
             }
     }
 
-    /** Muzio: the system buttons hide while the player is open (swipe from the edge shows them). */
-    private fun setNavBarHidden(hidden: Boolean) {
-        val c = androidx.core.view.WindowInsetsControllerCompat(window, window.decorView)
-        if (hidden) {
-            c.systemBarsBehavior =
-                androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            c.hide(WindowInsetsCompat.Type.navigationBars())
-        } else {
-            c.show(WindowInsetsCompat.Type.navigationBars())
-        }
-    }
-
     open fun onPanelCollapsed() {
-        setNavBarHidden(false)
         setMiniPlayerAlphaProgress(0F)
         // restore values
         animateNavigationBarColor(surfaceColor())
@@ -498,7 +485,6 @@ abstract class AbsSlidingMusicPanelActivity : AbsMusicServiceActivity(),
     }
 
     open fun onPanelExpanded() {
-        if (nowPlayingScreen == Ring) setNavBarHidden(true)
         setMiniPlayerAlphaProgress(1F)
         onPaletteColorChanged()
         //playerFragment?.onShow()
