@@ -16,6 +16,11 @@ android {
         minSdk = 24
         targetSdk = 36
 
+        // phones only: drops the x86 / 32-bit copies of the native libraries (ONNX runtime, ML Kit)
+        ndk {
+            abiFilters += listOf("arm64-v8a")
+        }
+
         vectorDrawables {
             useSupportLibrary = true
         }
