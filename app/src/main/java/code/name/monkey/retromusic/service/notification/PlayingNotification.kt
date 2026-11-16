@@ -60,7 +60,7 @@ class PlayingNotification(
     private var currentTarget: CustomTarget<Bitmap>? = null
 
     // Cobra card state
-    private val cobra = COBRA_CARD
+    private val cobra = COBRA_CARD && !PreferenceUtil.isSystemPlayerNotification
     private var cobraTitle: String = ""
     private var cobraArtist: String = ""
     private var cobraCover: Bitmap? = null
@@ -240,7 +240,8 @@ class PlayingNotification(
         if (!cobra) return false
         cobraProgress = progressMillis
         cobraDuration = durationMillis
-        val sec = progressMillis / 1000
+        // every 2 seconds: the head only moves a few pixels per second, and each re-post is costly
+        val sec = progressMillis / 2000
         if (sec == lastBarSecond) return false
         lastBarSecond = sec
         refreshCobraViews()
@@ -252,9 +253,7 @@ class PlayingNotification(
         try {
             val expanded = RemoteViews(context.packageName, R.layout.notification_cobra_expanded)
             val collapsed = RemoteViews(context.packageName, R.layout.notification_cobra_collapsed)
-            val cover = roundedCover(cobraCover ?: BitmapFactory.decodeResource(
-                context.resources, R.drawable.notification_cobra_cover
-            ))
+            val cover = roundedCoverCached()
             val green = 0xFF22D398.toInt()
             for (v in listOf(expanded, collapsed)) {
                 v.setTextViewText(R.id.cobraTitle, cobraTitle)
@@ -273,21 +272,8 @@ class PlayingNotification(
             expanded.setOnClickPendingIntent(R.id.cobraShuffle, retrievePlaybackAction(ACTION_TOGGLE_SHUFFLE))
             expanded.setInt(R.id.cobraShuffle, "setColorFilter", if (cobraShuffle) green else 0xFF6B767A.toInt())
             expanded.setImageViewBitmap(R.id.cobraBar, drawBar())
-            val segs = intArrayOf(
-                R.id.seek0, R.id.seek1, R.id.seek2, R.id.seek3, R.id.seek4,
-                R.id.seek5, R.id.seek6, R.id.seek7, R.id.seek8, R.id.seek9
-            )
-            for (i in segs.indices) {
-                val seekIntent = Intent(MusicService.ACTION_SEEK_FRACTION)
-                seekIntent.component = ComponentName(context, MusicService::class.java)
-                seekIntent.putExtra(MusicService.EXTRA_SEEK_FRACTION, (i + 0.5f) / segs.size)
-                expanded.setOnClickPendingIntent(
-                    segs[i],
-                    PendingIntent.getService(
-                        context, 100 + i, seekIntent,
-                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                    )
-                )
+            for (i in SEEK_IDS.indices) {
+                expanded.setOnClickPendingIntent(SEEK_IDS[i], seekIntents[i])
             }
             setCustomContentView(collapsed)
             setCustomBigContentView(expanded)
@@ -296,8 +282,43 @@ class PlayingNotification(
         }
     }
 
+    /** The rounded cover is made once per picture, not once per second. */
+    private var roundedCache: Bitmap? = null
+    private var roundedSource: Bitmap? = null
+
+    private fun roundedCoverCached(): Bitmap {
+        val src = cobraCover
+        val cached = roundedCache
+        if (cached != null && roundedSource === src) return cached
+        val made = roundedCover(src ?: BitmapFactory.decodeResource(
+            context.resources, R.drawable.notification_cobra_cover
+        ))
+        roundedCache = made
+        roundedSource = src
+        return made
+    }
+
+    /** One pending intent per tap segment, created once. */
+    private val seekIntents: Array<PendingIntent> by lazy {
+        Array(SEEK_IDS.size) { i ->
+            val seekIntent = Intent(MusicService.ACTION_SEEK_FRACTION)
+            seekIntent.component = ComponentName(context, MusicService::class.java)
+            seekIntent.putExtra(MusicService.EXTRA_SEEK_FRACTION, (i + 0.5f) / SEEK_IDS.size)
+            PendingIntent.getService(
+                context, 100 + i, seekIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        }
+    }
+
+    private val headScaled: Bitmap by lazy {
+        val head = BitmapFactory.decodeResource(context.resources, R.drawable.notification_cobra_head)
+        val h = 52
+        Bitmap.createScaledBitmap(head, head.width * h / head.height, h, true)
+    }
+
     private fun roundedCover(src: Bitmap): Bitmap {
-        val size = 192
+        val size = 224
         val out = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val c = Canvas(out)
         val p = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -313,13 +334,13 @@ class PlayingNotification(
     }
 
     private fun drawBar(): Bitmap {
-        val w = 560
-        val h = 48
+        val w = 800
+        val h = 64
         val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val c = Canvas(bmp)
-        val head = BitmapFactory.decodeResource(context.resources, R.drawable.notification_cobra_head)
-        val headH = 40
-        val headW = head.width * headH / head.height
+        val head = headScaled
+        val headH = head.height
+        val headW = head.width
         val frac = if (cobraDuration > 0) (cobraProgress.toFloat() / cobraDuration).coerceIn(0f, 1f) else 0f
         val left = headW / 2f
         val right = w - headW / 2f
@@ -327,15 +348,12 @@ class PlayingNotification(
         val cy = h / 2f
         val p = Paint(Paint.ANTI_ALIAS_FLAG)
         p.strokeCap = Paint.Cap.ROUND
-        p.strokeWidth = 6f
+        p.strokeWidth = 8f
         p.color = 0xFF3A4246.toInt()
         c.drawLine(left, cy, right, cy, p)
         p.color = 0xFF22D398.toInt()
         c.drawLine(left, cy, x, cy, p)
-        c.drawBitmap(
-            Bitmap.createScaledBitmap(head, headW, headH, true),
-            x - headW / 2f, cy - headH / 2f, null
-        )
+        c.drawBitmap(head, x - headW / 2f, cy - headH / 2f, null)
         return bmp
     }
 
@@ -356,6 +374,13 @@ class PlayingNotification(
         internal const val NOTIFICATION_CHANNEL_ID = "playing_notification"
         const val NOTIFICATION_ID = 1
         const val COBRA_CARD = true
+
+        private val SEEK_IDS = intArrayOf(
+            R.id.seek0, R.id.seek1, R.id.seek2, R.id.seek3, R.id.seek4,
+            R.id.seek5, R.id.seek6, R.id.seek7, R.id.seek8, R.id.seek9,
+            R.id.seek10, R.id.seek11, R.id.seek12, R.id.seek13, R.id.seek14,
+            R.id.seek15, R.id.seek16, R.id.seek17, R.id.seek18, R.id.seek19
+        )
 
 
         @RequiresApi(26)

@@ -56,6 +56,14 @@
 
         <code.name.monkey.appthemehelper.common.prefs.supportv7.ATESwitchPreference
             android:defaultValue="false"
+            android:key="system_player_notification"
+            android:layout="@layout/list_item_view_switch"
+            android:summary="@string/pref_system_player_notification_summary"
+            android:title="@string/pref_system_player_notification_title"
+            app:icon="@drawable/ic_notification" />
+
+        <code.name.monkey.appthemehelper.common.prefs.supportv7.ATESwitchPreference
+            android:defaultValue="false"
             android:key="keep_screen_on"
             android:layout="@layout/list_item_view_switch"
             android:summary="@string/pref_keep_screen_on_summary"

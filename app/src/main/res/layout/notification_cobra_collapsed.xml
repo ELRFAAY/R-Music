@@ -6,12 +6,12 @@
     android:background="@drawable/notification_cobra_bg"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:padding="10dp">
+    android:padding="12dp">
 
     <ImageView
         android:id="@+id/cobraCover"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
         android:contentDescription="@null"
         android:scaleType="centerCrop" />
 
@@ -29,7 +29,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:textColor="#FFFFFF"
-            android:textSize="15sp"
+            android:textSize="17sp"
             android:textStyle="bold" />
 
         <TextView
@@ -39,7 +39,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:textColor="#9AA4A8"
-            android:textSize="13sp" />
+            android:textSize="15sp" />
     </LinearLayout>
 
     <ImageView

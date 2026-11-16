@@ -64,6 +64,7 @@ import code.name.monkey.retromusic.CROSS_FADE_DURATION
 import code.name.monkey.retromusic.PLAYBACK_PITCH
 import code.name.monkey.retromusic.PLAYBACK_SPEED
 import code.name.monkey.retromusic.R
+import code.name.monkey.retromusic.SYSTEM_PLAYER_NOTIFICATION
 import code.name.monkey.retromusic.TOGGLE_HEADSET
 import code.name.monkey.retromusic.activities.LockScreenActivity
 import code.name.monkey.retromusic.appwidgets.AppWidgetBig
@@ -703,6 +704,11 @@ class MusicService : MediaBrowserServiceCompat(),
             ALBUM_ART_ON_LOCK_SCREEN, BLURRED_ALBUM_ART -> updateMediaSessionMetaData(::updateMediaSessionPlaybackState)
 
             TOGGLE_HEADSET -> registerHeadsetEvents()
+
+            SYSTEM_PLAYER_NOTIFICATION -> {
+                updateNotification()
+                startForegroundOrNotify()
+            }
         }
     }
 

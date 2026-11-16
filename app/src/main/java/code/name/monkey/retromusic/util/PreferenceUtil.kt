@@ -95,6 +95,7 @@ import code.name.monkey.retromusic.SONG_SORT_ORDER
 import code.name.monkey.retromusic.START_DIRECTORY
 import code.name.monkey.retromusic.SWIPE_ANYWHERE_NOW_PLAYING
 import code.name.monkey.retromusic.SWIPE_DOWN_DISMISS
+import code.name.monkey.retromusic.SYSTEM_PLAYER_NOTIFICATION
 import code.name.monkey.retromusic.TAB_TEXT_MODE
 import code.name.monkey.retromusic.TOGGLE_ADD_CONTROLS
 import code.name.monkey.retromusic.TOGGLE_FULL_SCREEN
@@ -375,6 +376,8 @@ object PreferenceUtil {
         get() = sharedPreferences.getBoolean(
             TOGGLE_HOME_BANNER, false
         )
+
+    val isSystemPlayerNotification get() = sharedPreferences.getBoolean(SYSTEM_PLAYER_NOTIFICATION, false)
 
     val isScreenOnEnabled get() = sharedPreferences.getBoolean(KEEP_SCREEN_ON, false)
 
