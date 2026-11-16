@@ -504,14 +504,32 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
     }
 
     private fun setLyricsVisible(visible: Boolean) {
+        val b = _binding ?: return
+        val changed = showingLyrics != visible
         showingLyrics = visible
-        binding.ringLyrics.isVisible = visible
-        binding.ringCover.isVisible = !visible
-        // With lyrics shown the ring goes away and the tool chips appear under the text.
-        binding.progressRing.visibility = if (visible) View.INVISIBLE else View.VISIBLE
-        binding.lyricsTools.isVisible = visible
         // volume drag / double tap / ring seek only make sense while the cover is on screen
-        binding.ringCoverArea.gesturesEnabled = !visible
+        b.ringCoverArea.gesturesEnabled = !visible
+        if (!changed) return
+        val d = 250L
+        val shown = if (visible) listOf(b.ringLyrics, b.lyricsTools) else listOf(b.ringCover, b.progressRing)
+        val hidden = if (visible) listOf(b.ringCover, b.progressRing) else listOf(b.ringLyrics, b.lyricsTools)
+        hidden.forEach { v ->
+            v.animate().cancel()
+            v.animate().alpha(0f).setDuration(d).withEndAction {
+                if (showingLyrics == visible) {
+                    v.visibility = if (v === b.progressRing) View.INVISIBLE else View.GONE
+                }
+                v.alpha = 1f
+            }.start()
+        }
+        shown.forEach { v ->
+            v.animate().cancel()
+            v.alpha = 0f
+            v.visibility = View.VISIBLE
+            // the lyrics slide up a little while they fade in, like the reference video
+            if (v === b.ringLyrics) v.translationY = 24f * resources.displayMetrics.density
+            v.animate().alpha(1f).translationY(0f).setDuration(d).start()
+        }
     }
 
     private fun updateSong() {
