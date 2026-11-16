@@ -135,6 +135,8 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
         }
     }
 
+    private var allSongsShown = false
+
     private fun showArtist(artist: Artist) {
         if (artist.songCount == 0) {
             findNavController().navigateUp()
@@ -159,7 +161,23 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
         )
         binding.fragmentArtistContent.songTitle.text = songText
         binding.fragmentArtistContent.albumTitle.text = albumText
-        songAdapter.swapDataSet(artist.sortedSongs)
+        // Hundreds of rows with covers inside a scrolling page froze the screen: show the first
+        // ones and let the user expand the rest.
+        val allSongs = artist.sortedSongs
+        val showAll = binding.fragmentArtistContent.showAllSongs
+        if (!allSongsShown && allSongs.size > FIRST_SONGS) {
+            songAdapter.swapDataSet(allSongs.take(FIRST_SONGS))
+            showAll.text = getString(R.string.show_all_songs, allSongs.size)
+            showAll.isVisible = true
+            showAll.setOnClickListener {
+                allSongsShown = true
+                showAll.isVisible = false
+                songAdapter.swapDataSet(allSongs)
+            }
+        } else {
+            showAll.isVisible = false
+            songAdapter.swapDataSet(allSongs)
+        }
         albumAdapter.swapDataSet(artist.albums)
     }
 
@@ -503,3 +521,4 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
         _binding = null
     }
 }
+private const val FIRST_SONGS = 30

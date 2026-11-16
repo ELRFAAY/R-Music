@@ -654,4 +654,5 @@
     <string name="vocal_downloading">تنزيل الموديل %1$d%%</string>
     <string name="vocal_processing">فصل الصوت %1$d%%</string>
     <string name="vocal_error">فشل فصل الصوت</string>
+    <string name="show_all_songs">عرض كل الأغاني (%1$d)</string>
 </resources>

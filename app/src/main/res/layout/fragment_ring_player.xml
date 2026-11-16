@@ -53,7 +53,6 @@
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginEnd="48dp"
         app:layout_constraintTop_toBottomOf="@id/status_bar"
         app:navigationIcon="@drawable/ic_keyboard_arrow_down" />
 
@@ -94,14 +93,14 @@
     <!-- Tools arrow: always at the same spot (end of the top bar) -->
     <ImageView
         android:id="@+id/toolsArrow"
-        android:layout_width="48dp"
+        android:layout_width="40dp"
         android:layout_height="0dp"
         android:background="?attr/roundSelector"
         android:contentDescription="@string/muzio_toggle_tools"
-        android:padding="12dp"
+        android:padding="10dp"
         android:src="@drawable/ic_chevron_right_tools"
         app:layout_constraintBottom_toBottomOf="@id/playerToolbar"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/playerToolbar"
         app:tint="@color/md_white_1000" />
 
@@ -201,12 +200,12 @@
         <!-- Volume: white pill in the middle of the cover; white = level, grey = rest -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/volumeOverlay"
-            android:layout_width="44dp"
-            android:layout_height="170dp"
+            android:layout_width="26dp"
+            android:layout_height="150dp"
             android:layout_gravity="center"
             android:visibility="gone"
             app:cardBackgroundColor="#B3808080"
-            app:cardCornerRadius="22dp"
+            app:cardCornerRadius="13dp"
             app:cardElevation="0dp"
             tools:visibility="visible">
 
@@ -221,25 +220,26 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="top|center_horizontal"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="6dp"
                 app:cardBackgroundColor="@color/md_white_1000"
-                app:cardCornerRadius="8dp"
+                app:cardCornerRadius="6dp"
                 app:cardElevation="0dp">
 
                 <TextView
                     android:id="@+id/volumeValue"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingHorizontal="6dp"
-                    android:paddingVertical="2dp"
+                    android:paddingHorizontal="3dp"
+                    android:paddingVertical="1dp"
                     android:textColor="@color/md_black_1000"
-                    android:textSize="13sp"
+                    android:textSize="10sp"
                     tools:text="71" />
             </com.google.android.material.card.MaterialCardView>
 
             <ImageView
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginBottom="6dp"
                 android:layout_gravity="bottom|center_horizontal"
                 android:layout_marginBottom="10dp"
                 android:importantForAccessibility="no"

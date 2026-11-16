@@ -104,9 +104,10 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         }
         binding.toolsArrow.setOnClickListener {
             PreferenceUtil.muzioToolsHidden = !PreferenceUtil.muzioToolsHidden
-            applyToolsHidden()
+            applyToolsHidden(true)
         }
         applyToolsHidden()
+        binding.playerToolbar.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> slideTools(false) }
         binding.equalizerButton.setOnClickListener {
             val song = MusicPlayerRemote.currentSong
             val on = code.name.monkey.retromusic.vocal.VocalSeparator.toggle(song)
@@ -743,19 +744,12 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         if (text != null) b.artistCounter.text = text else updateQueueCounter()
     }
 
-    private fun applyToolsHidden() {
+    private fun applyToolsHidden(animate: Boolean = false) {
         val b = _binding ?: return
         val hidden = PreferenceUtil.muzioToolsHidden
         val vis = if (hidden) View.GONE else View.VISIBLE
         listOf(b.queueButton, b.shuffleButton, b.repeatButton, b.shareButton,
             b.artistCounter, b.equalizerButton, b.lyricsChip).forEach { it.visibility = vis }
-        val menu = b.playerToolbar.menu
-        for (i in 0 until menu.size()) {
-            val it = menu.getItem(i)
-            if (it.itemId != R.id.action_toggle_favorite) {
-                it.isVisible = !hidden
-            }
-        }
         // Sideways arrow at the end edge: tools shown = points to the edge (tap to fold them away),
         // hidden = points inward (tap to bring them back).
         val rtl = resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL
@@ -763,6 +757,40 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         val inward = if (rtl) R.drawable.ic_chevron_right_tools else R.drawable.ic_chevron_left_tools
         b.toolsArrow.setImageResource(if (hidden) inward else towardsEdge)
         ToolbarContentTintHelper.colorizeToolbar(b.playerToolbar, contentColor, requireActivity())
+        slideTools(animate)
+    }
+
+    private fun menuView(): View? {
+        val tb = _binding?.playerToolbar ?: return null
+        for (i in 0 until tb.childCount) {
+            val c = tb.getChildAt(i)
+            if (c is androidx.appcompat.widget.ActionMenuView) return c
+        }
+        return null
+    }
+
+    /** The toolbar icons slide into the edge; the arrow, next to them, goes with them and flips. */
+    private fun slideTools(animate: Boolean) {
+        val b = _binding ?: return
+        val amv = menuView() ?: return
+        if (amv.width == 0) return
+        val rtl = resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL
+        val tbLeft = b.playerToolbar.left.toFloat()
+        val arrowW = b.toolsArrow.width.toFloat().coerceAtLeast(40f * resources.displayMetrics.density)
+        // arrow sits on the inner side of the icon group (next to the moon)
+        val baseX = if (rtl) tbLeft + amv.right else tbLeft + amv.left - arrowW
+        val shift = if (PreferenceUtil.muzioToolsHidden) (if (rtl) -amv.width else amv.width).toFloat() else 0f
+        // the arrow keeps touching the group, so it moves by the same amount
+        val targetArrowX = baseX + shift
+        if (animate) {
+            amv.animate().translationX(shift).alpha(if (PreferenceUtil.muzioToolsHidden) 0f else 1f)
+                .setDuration(220).start()
+            b.toolsArrow.animate().x(targetArrowX).setDuration(220).start()
+        } else {
+            amv.translationX = shift
+            amv.alpha = if (PreferenceUtil.muzioToolsHidden) 0f else 1f
+            b.toolsArrow.x = targetArrowX
+        }
     }
 
 
