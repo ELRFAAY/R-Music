@@ -262,3 +262,11 @@ LEFT, in this order: (1) Muzio animation vs docs/reference/theme-ring-reference-
 ### Muzio swipe + lyrics tap (user feedback 2026-11-16 10:30; video in docs/reference/muzio-swipe-reference-video.mp4)
 - Swipe: the WHOLE unit moves together: the cover AND the ring around it (with its knob); the next/previous cover comes in with its own ring (progress 0, dot at 12 o'clock); the background colour and title change with the new song. Done in this commit (`progressRingNext`, `moveUnit`); still compare on a device with the video.
 - Lyrics tap: synced lyrics: tapping a line seeks, the X chip closes; plain text (no sync, or only a label): a tap returns to the cover, another tap on the cover opens the lyrics again (`lyricsSynced` flag in RingPlayerFragment). Plain lyrics saved by hand show as the label text.
+
+### Index of everything the user sent (all in docs/reference/)
+- theme-ring-reference-video.mp4 (11 MB) = the Muzio recording of the circle theme (+ the jpg crops next to it).
+- muzio-swipe-reference-video.mp4 (13.6 MB) = swipe prev/next animation (whole cover + ring slide, next one enters with its ring, background recolours).
+- muzio-ring-seek-reference-video.mp4 (10 MB) = tapping/dragging on the progress ring moves the knob and seeks, arc fills white.
+- notification-design-cobra.jpg = notification card design; cobra-logo-source.jpg = the ring-cobra logo used for the icons.
+- bug-report-muzio-menu-crash-fixed.txt = the crash report that led to the fix in 2f16201.
+- user-images/ = older screenshots and logo drafts from 2026-11-14 (DroidDeck screenshot, R logo sketches, Retro logo); look only for layout reference, do not copy those brands' art.

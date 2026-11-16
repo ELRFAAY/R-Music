@@ -1,0 +1,32 @@
+Build version: 7.0.3 FAST 
+Current date: 2026-11-16 10:18:46 
+Device: Xiaomi M2102J20SG 
+OS version: Android 12 (SDK 31) 
+ 
+Stack trace:  
+java.lang.IllegalArgumentException: order does not contain a valid category.
+	at m.l.a(r8-map-id-1ce03b7052dd9535ba8f49468d1960fbf7a2fd08e73f1475e11a1847f2543825:73)
+	at m.l.add(r8-map-id-1ce03b7052dd9535ba8f49468d1960fbf7a2fd08e73f1475e11a1847f2543825:4)
+	at code.name.monkey.retromusic.fragments.player.ring.RingPlayerFragment.onViewCreated(r8-map-id-1ce03b7052dd9535ba8f49468d1960fbf7a2fd08e73f1475e11a1847f2543825:523)
+	at androidx.fragment.app.c0.performViewCreated(r8-map-id-1ce03b7052dd9535ba8f49468d1960fbf7a2fd08e73f1475e11a1847f2543825:15)
+	at androidx.fragment.app.i1.f(r8-map-id-1ce03b7052dd9535ba8f49468d1960fbf7a2fd08e73f1475e11a1847f2543825:312)
+	at androidx.fragment.app.i1.k(r8-map-id-1ce03b7052dd9535ba8f49468d1960fbf7a2fd08e73f1475e11a1847f2543825:177)
+	at androidx.fragment.app.b1.O(r8-map-id-1ce03b7052dd9535ba8f49468d1960fbf7a2fd08e73f1475e11a1847f2543825:59)
+	at androidx.fragment.app.b1.t(r8-map-id-1ce03b7052dd9535ba8f49468d1960fbf7a2fd08e73f1475e11a1847f2543825:34)
+	at androidx.fragment.app.h0.onStart(r8-map-id-1ce03b7052dd9535ba8f49468d1960fbf7a2fd08e73f1475e11a1847f2543825:34)
+	at h.l.onStart(r8-map-id-1ce03b7052dd9535ba8f49468d1960fbf7a2fd08e73f1475e11a1847f2543825:1)
+	at android.app.Instrumentation.callActivityOnStart(Instrumentation.java:1455)
+	at android.app.Activity.performStart(Activity.java:8270)
+	at android.app.ActivityThread.handleStartActivity(ActivityThread.java:3780)
+	at android.app.servertransaction.TransactionExecutor.performLifecycleSequence(TransactionExecutor.java:221)
+	at android.app.servertransaction.TransactionExecutor.cycleToPath(TransactionExecutor.java:201)
+	at android.app.servertransaction.TransactionExecutor.executeLifecycleState(TransactionExecutor.java:173)
+	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:97)
+	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2282)
+	at android.os.Handler.dispatchMessage(Handler.java:106)
+	at android.os.Looper.loopOnce(Looper.java:210)
+	at android.os.Looper.loop(Looper.java:299)
+	at android.app.ActivityThread.main(ActivityThread.java:8250)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:556)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1045)
