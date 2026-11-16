@@ -156,6 +156,8 @@
     <!-- Cover area: drag up/down = volume, double tap right/left = +/-10 s (CoverGestureLayout) -->
     <code.name.monkey.retromusic.views.CoverGestureLayout
         android:id="@+id/ringCoverArea"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_margin="8dp"
