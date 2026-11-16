@@ -666,4 +666,5 @@
     <string name="pronunciation_english">حروف إنجليزي</string>
     <string name="pronunciation_arabic">حروف عربي</string>
     <string name="pronunciation_off">إيقاف</string>
+    <string name="muzio_double_tap_hint">اضغط مرتين يمين أو شمال لتقدّم أو ترجع 10 ثواني</string>
 </resources>

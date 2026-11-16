@@ -675,4 +675,5 @@
     <string name="pronunciation_english">English letters</string>
     <string name="pronunciation_arabic">Arabic letters</string>
     <string name="pronunciation_off">Off</string>
+    <string name="muzio_double_tap_hint">Double tap left or right to skip 10 seconds</string>
 </resources>

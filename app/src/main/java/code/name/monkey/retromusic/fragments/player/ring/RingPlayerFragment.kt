@@ -183,6 +183,7 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         }
         binding.lyricsChip.setOnClickListener { setLyricsVisible(!showingLyrics) }
         setupGestures()
+        showFirstUseHint()
         setupLyricsTools()
         binding.ringLyrics.apply {
             setCurrentColor(Color.WHITE)
@@ -207,6 +208,23 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
     private val lyricsScales = floatArrayOf(1f, 1.25f, 1.5f, 0.85f)
 
     /** Drag up/down on the cover = volume, double tap right/left half = -/+10 seconds. */
+    /** Once: tells how to skip 10 seconds, then fades away. */
+    private fun showFirstUseHint() {
+        val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(requireContext())
+        if (prefs.getBoolean("muzio_double_tap_hint_shown", false)) return
+        prefs.edit().putBoolean("muzio_double_tap_hint_shown", true).apply()
+        val hint = binding.swipeHint
+        hint.alpha = 0f
+        hint.isVisible = true
+        hint.animate().alpha(1f).setDuration(250).withEndAction {
+            hint.postDelayed({
+                _binding?.swipeHint?.animate()?.alpha(0f)?.setDuration(400)?.withEndAction {
+                    _binding?.swipeHint?.isVisible = false
+                }?.start()
+            }, 3500)
+        }.start()
+    }
+
     private fun setupGestures() {
         val pillHeight = 170 * resources.displayMetrics.density
         binding.ringCoverArea.apply {
