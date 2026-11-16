@@ -79,7 +79,7 @@
             app:icon="@drawable/ic_screen_lock_portrait" />
 
         <code.name.monkey.appthemehelper.common.prefs.supportv7.ATESwitchPreference
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:key="save_last_directory"
             android:layout="@layout/list_item_view_switch"
             android:summary="@string/pref_save_last_directory_summary"

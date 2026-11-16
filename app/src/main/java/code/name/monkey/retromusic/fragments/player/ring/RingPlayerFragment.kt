@@ -98,10 +98,20 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
             // the heart lives next to the title (animated); hide the toolbar copy
             menu.findItem(R.id.action_toggle_favorite)?.isVisible = false
             setNavigationOnClickListener { requireActivity().onBackPressedDispatcher.onBackPressed() }
-            setOnMenuItemClickListener(this@RingPlayerFragment)
+            // arrow placed before every other toolbar icon: hides/shows all tools
+            menu.add(0, TOOLS_ARROW_ID, -1, R.string.muzio_toggle_tools)
+                .setShowAsAction(android.view.MenuItem.SHOW_AS_ACTION_ALWAYS)
+            setOnMenuItemClickListener { item ->
+                if (item.itemId == TOOLS_ARROW_ID) {
+                    PreferenceUtil.muzioToolsHidden = !PreferenceUtil.muzioToolsHidden
+                    applyToolsHidden()
+                    true
+                } else onMenuItemClick(item)
+            }
             ToolbarContentTintHelper.colorizeToolbar(this, Color.WHITE, requireActivity())
             drawAboveSystemBars()
         }
+        applyToolsHidden()
 
         binding.ringTitle.isSelected = true
         binding.progressRing.setOnSeekBarChangeListener(this)
@@ -652,5 +662,28 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         tintAnimator?.cancel()
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun applyToolsHidden() {
+        val b = _binding ?: return
+        val hidden = PreferenceUtil.muzioToolsHidden
+        val vis = if (hidden) View.GONE else View.VISIBLE
+        listOf(b.queueButton, b.shuffleButton, b.repeatButton, b.shareButton,
+            b.artistCounter, b.equalizerButton, b.lyricsChip).forEach { it.visibility = vis }
+        val menu = b.playerToolbar.menu
+        for (i in 0 until menu.size()) {
+            val it = menu.getItem(i)
+            if (it.itemId != TOOLS_ARROW_ID && it.itemId != R.id.action_toggle_favorite) {
+                it.isVisible = !hidden
+            }
+        }
+        menu.findItem(TOOLS_ARROW_ID)?.setIcon(
+            if (hidden) R.drawable.ic_keyboard_arrow_down else R.drawable.ic_keyboard_arrow_up
+        )
+        ToolbarContentTintHelper.colorizeToolbar(b.playerToolbar, contentColor, requireActivity())
+    }
+
+    private companion object {
+        const val TOOLS_ARROW_ID = 0x4D5A0001
     }
 }

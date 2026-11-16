@@ -755,7 +755,7 @@ object PreferenceUtil {
         }
 
     var saveLastDirectory: Boolean
-        get() = sharedPreferences.getBoolean(SAVE_LAST_DIRECTORY, false)
+        get() = sharedPreferences.getBoolean(SAVE_LAST_DIRECTORY, true)
         set(value) = sharedPreferences.edit { putBoolean(SAVE_LAST_DIRECTORY, value) }
 
     fun getRecentlyPlayedCutoffTimeMillis(): Long {
@@ -950,6 +950,11 @@ object PreferenceUtil {
     /** Lyrics button opens a panel from the bottom instead of drawing lyrics over the cover. */
     val lyricsPanel: Boolean
         get() = sharedPreferences.getBoolean(LYRICS_PANEL, true)
+
+    /** Muzio theme: tools hidden behind the arrow (only prev/play/next + heart stay). */
+    var muzioToolsHidden: Boolean
+        get() = sharedPreferences.getBoolean("muzio_tools_hidden", false)
+        set(v) = sharedPreferences.edit { putBoolean("muzio_tools_hidden", v) }
 
     val lyricsScreenOn
         get() = sharedPreferences.getBoolean(SCREEN_ON_LYRICS, false)

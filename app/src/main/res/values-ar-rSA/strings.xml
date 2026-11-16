@@ -625,4 +625,5 @@
     <string name="merge_artist_restore_later">مش دلوقتي</string>
     <string name="pref_system_player_notification_title">إشعار مشغّل أندرويد</string>
     <string name="pref_system_player_notification_summary">استخدم إشعار أندرويد العادي اللي شريطه بيتسحب بدل كارت الكوبرا</string>
+    <string name="muzio_toggle_tools">إظهار / إخفاء الأدوات</string>
 </resources>

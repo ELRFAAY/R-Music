@@ -85,6 +85,7 @@ class TiltedCoverGridView @JvmOverloads constructor(
             override fun onDown(e: MotionEvent): Boolean = covers.isNotEmpty()
 
             override fun onSingleTapUp(e: MotionEvent): Boolean {
+                if (coverSongs.size != covers.size) return false // only the saved picture is shown
                 val index = hitTest(e.x, e.y)
                 if (index < 0) return false
                 playSoundEffect(android.view.SoundEffectConstants.CLICK)
@@ -93,6 +94,7 @@ class TiltedCoverGridView @JvmOverloads constructor(
             }
 
             override fun onLongPress(e: MotionEvent) {
+                if (coverSongs.size != covers.size) return
                 val hit = findHit(e.x, e.y) ?: return
                 performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                 onSongLongClick?.invoke(coverSongs, hit)
@@ -128,6 +130,56 @@ class TiltedCoverGridView @JvmOverloads constructor(
         invalidate()
     }
 
+    private var restoredFromDisk = false
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        restoreFromDisk()
+    }
+
+    private val cacheDir get() = java.io.File(context.filesDir, "wall_cache")
+
+    /**
+     * The wall is saved when it has finished loading and drawn again at once on the next start,
+     * so it does not stay black while the library and the covers load. Taps are ignored until the
+     * real songs arrive (coverSongs is empty meanwhile).
+     */
+    private fun restoreFromDisk() {
+        if (restoredFromDisk || covers.isNotEmpty()) return
+        restoredFromDisk = true
+        roundExecutor.execute {
+            val loadedFromDisk = runCatching {
+                val ids = java.io.File(cacheDir, "ids.txt").readLines().mapNotNull { it.toLongOrNull() }
+                ids.indices.mapNotNull {
+                    android.graphics.BitmapFactory.decodeFile(java.io.File(cacheDir, "$it.png").path)
+                }.takeIf { it.size == ids.size && it.isNotEmpty() }
+            }.getOrNull() ?: return@execute
+            post {
+                if (covers.isEmpty() && coverSongs.isEmpty()) {
+                    covers = loadedFromDisk
+                    invalidate()
+                }
+            }
+        }
+    }
+
+    private fun saveToDisk(ids: List<Long>, bitmaps: List<Bitmap>) {
+        val snapshot = bitmaps.toList()
+        roundExecutor.execute {
+            runCatching {
+                val dir = cacheDir
+                dir.deleteRecursively()
+                dir.mkdirs()
+                snapshot.forEachIndexed { i, b ->
+                    java.io.File(dir, "$i.png").outputStream().use {
+                        b.compress(Bitmap.CompressFormat.PNG, 100, it)
+                    }
+                }
+                java.io.File(dir, "ids.txt").writeText(ids.joinToString("\n"))
+            }
+        }
+    }
+
     /** Loads the covers of [songs]. Does nothing if the same songs are already shown. */
     fun setCovers(songs: List<Song>) {
         val key = songs.map { it.id }
@@ -154,6 +206,7 @@ class TiltedCoverGridView @JvmOverloads constructor(
                 covers = keep.map { loaded[it]!! }
                 coverSongs = keep.map { songs[it] }
                 invalidate()
+                saveToDisk(coverSongs.map { it.id }, covers)
             }
         }
         songs.forEachIndexed { index, song ->
