@@ -131,21 +131,28 @@ object VocalSeparator {
         }
         job?.cancel()
         job = scope.launch {
+            var stage = "start"
             try {
                 if (song.duration > MAX_MINUTES * 60_000L) {
                     _status.value = Status.Error("long")
                     return@launch
                 }
                 val model = modelFile(c)
-                if (!model.exists() || model.length() < MODEL_MIN_BYTES) download(model)
+                if (!model.exists() || model.length() < MODEL_MIN_BYTES) {
+                    stage = "download"
+                    download(model)
+                }
                 if (!isActive) return@launch
                 _status.value = Status.Processing(song.id, 0)
+                stage = "decode"
                 val pcm = AudioDecoder.decode(
                     c, MusicUtil.getSongFileUri(song.id), song.duration
                 ) { !isActive }
+                stage = "model"
                 val out = stemFile(c, song)
                 val tmp = File(out.parentFile, out.name + ".part")
                 MdxSeparator(model).use { sep ->
+                    stage = "separate"
                     sep.separate(pcm, tmp, { !isActive }) { p ->
                         _status.value = Status.Processing(song.id, p)
                     }
@@ -164,7 +171,7 @@ object VocalSeparator {
                 throw e
             } catch (e: Throwable) {
                 Log.e(TAG, "separation failed", e)
-                _status.value = Status.Error(e.message ?: e.javaClass.simpleName)
+                _status.value = Status.Error("$stage: " + (e.message ?: e.javaClass.simpleName))
             }
         }
     }

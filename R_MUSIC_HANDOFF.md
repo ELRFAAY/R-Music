@@ -328,3 +328,7 @@ The user watches the CI himself on his computer; do not sleep-poll long. Rules: 
 - Compared user's recording (docs/reference/Screenrecorder-2026-11-16-23-22-40-29.mp4) with the Muzio reference video.
 - The flat "wall" cutting the sliding cover in his recording = APK older than commit e4fcbf2 (clipChildren=false on ringCoverArea). Current code already has it; ring moves with its cover, incoming ring starts empty (progress 0, knob at top), background tint crossfades 350 ms.
 - Needs user to install newest R-Music-fast-apk and re-record if the wall is still there.
+
+### Session 17c (23:40): vocal separation FAILS on the user's phone ("فشل فصل الصوت")
+- Cause unknown (can't reach huggingface from the sandbox). Error text now shows the stage + message: `Separation failed (download|decode|model|separate: <msg>)` in the counter line under the title. Ask the user to read it to you. Suspects: model download blocked/too short, ONNX input shape (dimF/dimT dynamic?), output array cast in `flatten`, OOM.
+- User: focus now = (2) Muzio center-tap speed and (3) Muzio swipe on a fresh APK. Package rename: do NOT start until he says.
