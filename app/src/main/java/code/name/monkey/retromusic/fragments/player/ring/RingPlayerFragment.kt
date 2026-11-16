@@ -99,7 +99,7 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
             menu.findItem(R.id.action_toggle_favorite)?.isVisible = false
             setNavigationOnClickListener { requireActivity().onBackPressedDispatcher.onBackPressed() }
             // arrow placed before every other toolbar icon: hides/shows all tools
-            menu.add(0, TOOLS_ARROW_ID, -1, R.string.muzio_toggle_tools)
+            menu.add(0, TOOLS_ARROW_ID, 0, R.string.muzio_toggle_tools)
                 .setShowAsAction(android.view.MenuItem.SHOW_AS_ACTION_ALWAYS)
             setOnMenuItemClickListener { item ->
                 if (item.itemId == TOOLS_ARROW_ID) {
