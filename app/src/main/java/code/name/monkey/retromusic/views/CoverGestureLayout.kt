@@ -155,7 +155,7 @@ class CoverGestureLayout @JvmOverloads constructor(
                     onVolumeGestureEnd?.invoke()
                     return true
                 }
-                if (mode == Mode.NONE && isShortTap(ev)) {
+                if (mode == Mode.NONE && isShortTap(ev) && (hasPendingTap || !isCenterTap(ev))) {
                     return handleTapUp(ev)
                 }
             }
@@ -168,6 +168,10 @@ class CoverGestureLayout @JvmOverloads constructor(
         }
         return super.dispatchTouchEvent(ev)
     }
+
+    /** A tap in the middle 40% answers at once (no waiting for a possible double tap). */
+    private fun isCenterTap(ev: MotionEvent): Boolean =
+        ev.x > width * 0.3f && ev.x < width * 0.7f
 
     private fun isShortTap(ev: MotionEvent): Boolean =
         ev.eventTime - downTime < longPressTimeout &&

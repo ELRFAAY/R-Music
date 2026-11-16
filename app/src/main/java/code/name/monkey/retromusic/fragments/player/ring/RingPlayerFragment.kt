@@ -748,7 +748,7 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
     private fun applyToolsHidden(animate: Boolean = false) {
         val b = _binding ?: return
         val hidden = PreferenceUtil.muzioToolsHidden
-        val vis = if (hidden) View.GONE else View.VISIBLE
+        val vis = if (hidden) View.INVISIBLE else View.VISIBLE
         listOf(b.queueButton, b.shuffleButton, b.repeatButton, b.shareButton,
             b.artistCounter, b.equalizerButton, b.lyricsChip).forEach { it.visibility = vis }
         // Sideways arrow at the end edge: tools shown = points to the edge (tap to fold them away),
