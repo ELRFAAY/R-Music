@@ -733,11 +733,10 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
 
     private fun showVocalStatus(st: code.name.monkey.retromusic.vocal.VocalSeparator.Status) {
         val b = _binding ?: return
-        val V = code.name.monkey.retromusic.vocal.VocalSeparator.Status
         val text = when (st) {
-            is V.Downloading -> getString(R.string.vocal_downloading, st.percent)
-            is V.Processing -> getString(R.string.vocal_processing, st.percent)
-            is V.Error -> getString(R.string.vocal_error)
+            is code.name.monkey.retromusic.vocal.VocalSeparator.Status.Downloading -> getString(R.string.vocal_downloading, st.percent)
+            is code.name.monkey.retromusic.vocal.VocalSeparator.Status.Processing -> getString(R.string.vocal_processing, st.percent)
+            is code.name.monkey.retromusic.vocal.VocalSeparator.Status.Error -> getString(R.string.vocal_error)
             else -> null
         }
         updateVocalButton()
