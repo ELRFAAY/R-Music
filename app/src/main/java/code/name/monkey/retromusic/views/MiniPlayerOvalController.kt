@@ -55,6 +55,7 @@ class MiniPlayerOvalController(
     private val touchSlop = ViewConfiguration.get(binding.root.context).scaledTouchSlop
     private var dragging = false
     private var moved = false
+    private var moveMode = false
     private var downRawX = 0f
     private var downRawY = 0f
     private var startLeft = 0
@@ -94,6 +95,11 @@ class MiniPlayerOvalController(
                     startTop = lp.topMargin
                     dragging = false
                     moved = false
+                    if (moveMode) {
+                        dragging = true
+                        v.parent?.requestDisallowInterceptTouchEvent(true)
+                        return@setOnTouchListener true
+                    }
                     v.postDelayed(startDrag, ViewConfiguration.getLongPressTimeout().toLong())
                     fling.onTouch(v, event)
                     false
@@ -106,7 +112,7 @@ class MiniPlayerOvalController(
                         if (!moved && (kotlin.math.abs(dx) > touchSlop || kotlin.math.abs(dy) > touchSlop)) {
                             moved = true
                         }
-                        if (moved) {
+                        if (moved && (moveMode || !PreferenceUtil.miniPlayerLocked)) {
                             moveTo(startLeft + dx.toInt(), startTop + dy.toInt())
                         }
                         true
@@ -124,11 +130,12 @@ class MiniPlayerOvalController(
                         dragging = false
                         v.isPressed = false
                         v.animate().scaleX(1f).scaleY(1f).setDuration(120).start()
-                        if (moved) {
+                        if (moved && (moveMode || !PreferenceUtil.miniPlayerLocked)) {
                             savePosition()
-                        } else if (shape == SHAPE_CIRCLE && event.actionMasked == MotionEvent.ACTION_UP) {
-                            PlayPauseButtonOnClickHandler().onClick(v)
+                        } else if (!moveMode && event.actionMasked == MotionEvent.ACTION_UP) {
+                            showMenu()
                         }
+                        moveMode = false
                         true
                     } else {
                         fling.onTouch(v, event)
@@ -138,6 +145,24 @@ class MiniPlayerOvalController(
                 else -> fling.onTouch(v, event)
             }
         }
+    }
+
+    /** Long press without moving: small menu next to the oval (move / lock / reset position). */
+    private fun showMenu() {
+        val locked = PreferenceUtil.miniPlayerLocked
+        val entries = mutableListOf<Pair<String, () -> Unit>>()
+        if (!locked) {
+            entries += context.getString(R.string.mini_move) to { moveMode = true }
+        }
+        entries += context.getString(if (locked) R.string.mini_unlock else R.string.mini_lock) to {
+            PreferenceUtil.miniPlayerLocked = !locked
+        }
+        entries += context.getString(R.string.mini_reset_position) to {
+            PreferenceUtil.miniPlayerOffsetX = 0
+            PreferenceUtil.miniPlayerOffsetY = 0
+            moveTo(defaultLeft(), defaultTop())
+        }
+        code.name.monkey.retromusic.adapter.artist.ArtistPopup.show(binding.root, entries)
     }
 
     private fun defaultLeft() = baseLeft + dp(12)

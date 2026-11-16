@@ -52,6 +52,19 @@ class OtherSettingsFragment : AbsSettingsFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        findPreference<Preference>("clear_vocal_stems")?.let { pref ->
+            val ctx = requireContext()
+            fun refresh() {
+                val mb = code.name.monkey.retromusic.vocal.VocalSeparator.stemsSize(ctx) / 1_000_000
+                pref.summary = getString(R.string.pref_clear_vocal_stems_summary, mb)
+            }
+            refresh()
+            pref.setOnPreferenceClickListener {
+                code.name.monkey.retromusic.vocal.VocalSeparator.clearStems(ctx)
+                refresh()
+                true
+            }
+        }
         val preference: Preference? = findPreference(LAST_ADDED_CUTOFF)
         preference?.setOnPreferenceChangeListener { lastAdded, newValue ->
             setSummary(lastAdded, newValue)

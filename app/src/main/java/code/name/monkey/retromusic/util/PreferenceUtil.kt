@@ -956,6 +956,10 @@ object PreferenceUtil {
     val lyricsWifiOnly: Boolean
         get() = sharedPreferences.getBoolean(LYRICS_WIFI_ONLY, false)
 
+    var miniPlayerLocked: Boolean
+        get() = sharedPreferences.getBoolean("mini_player_locked", false)
+        set(v) = sharedPreferences.edit { putBoolean("mini_player_locked", v) }
+
     /** Names of artists pinned to the top of the artists list. */
     var pinnedArtists: Set<String>
         get() = sharedPreferences.getString("pinned_artists", "").orEmpty()

@@ -655,4 +655,10 @@
     <string name="vocal_processing">فصل الصوت %1$d%%</string>
     <string name="vocal_error">فشل فصل الصوت</string>
     <string name="show_all_songs">عرض كل الأغاني (%1$d)</string>
+    <string name="mini_move">تحريك</string>
+    <string name="mini_lock">تثبيت المكان</string>
+    <string name="mini_unlock">فك التثبيت</string>
+    <string name="mini_reset_position">إعادة ضبط المكان</string>
+    <string name="pref_clear_vocal_stems_title">مسح ملفات فصل الصوت</string>
+    <string name="pref_clear_vocal_stems_summary">هيفضي %1$d ميجا. الملفات بتتعمل تاني لما تحتاجها.</string>
 </resources>

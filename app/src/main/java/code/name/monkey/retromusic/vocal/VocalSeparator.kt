@@ -62,6 +62,29 @@ object VocalSeparator {
         return File(dir, "${song.id}_${song.dateModified}.wav")
     }
 
+    /** Deletes every saved vocal track. Returns the freed bytes. */
+    fun clearStems(context: Context): Long {
+        var freed = 0L
+        File(context.filesDir, "vocal_stems").listFiles()?.forEach {
+            freed += it.length(); it.delete()
+        }
+        return freed
+    }
+
+    fun stemsSize(context: Context): Long =
+        File(context.filesDir, "vocal_stems").listFiles()?.sumOf { it.length() } ?: 0L
+
+    /** Keeps the stems folder under [maxBytes] by removing the oldest ones (never [keep]). */
+    private fun trimStems(context: Context, keep: File, maxBytes: Long = 1_000_000_000L) {
+        val files = File(context.filesDir, "vocal_stems").listFiles() ?: return
+        var total = files.sumOf { it.length() }
+        for (f in files.sortedBy { it.lastModified() }) {
+            if (total <= maxBytes) break
+            if (f == keep) continue
+            total -= f.length(); f.delete()
+        }
+    }
+
     private fun modelFile(context: Context): File {
         val dir = File(context.filesDir, "models")
         dir.mkdirs()
@@ -132,6 +155,7 @@ object VocalSeparator {
                     return@launch
                 }
                 tmp.renameTo(out)
+                trimStems(c, out)
                 _status.value = Status.Ready(song.id)
                 onStemReady?.invoke(song.id)
             } catch (e: InterruptedException) {
