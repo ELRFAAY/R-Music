@@ -323,3 +323,8 @@ The user watches the CI himself on his computer; do not sleep-poll long. Rules: 
 - Oval Player shape: nothing changed here, see the open question in Session 16 (which APK / which shape).
 - 23:20 ArtistPopup rewritten: arrow is part of one bubble path (BubbleDrawable) with a thin outline; root forced LTR (the arrow was placed from the wrong side in RTL, it pointed at the neighbour cover); menu stays above `miniPlayerFragment`/`navigationView` (bottomLimit) and flips up when there is no room. Not compiled/tested.
 - 23:35 ArtistPopup is now glass: blurred snapshot of the screen behind (1/8 scale box blur, `captureBlurred`) + translucent surface tint, an icon beside every entry (`iconFor`, new ic_menu_* vectors) and a staggered fade/slide + icon pop animation. Not compiled/tested. Fallback when the snapshot fails = 90% opaque surface.
+
+### Session 17b — Muzio swipe video comparison (no code change)
+- Compared user's recording (docs/reference/Screenrecorder-2026-11-16-23-22-40-29.mp4) with the Muzio reference video.
+- The flat "wall" cutting the sliding cover in his recording = APK older than commit e4fcbf2 (clipChildren=false on ringCoverArea). Current code already has it; ring moves with its cover, incoming ring starts empty (progress 0, knob at top), background tint crossfades 350 ms.
+- Needs user to install newest R-Music-fast-apk and re-record if the wall is still there.
