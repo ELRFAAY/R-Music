@@ -105,6 +105,9 @@ class CoverLrcView @JvmOverloads constructor(
                     invalidate()
                     return true
                 }
+                // No timed lyrics: only a label ("no lyrics" or plain text) is drawn. Still take the
+                // touch, otherwise the up event never arrives and a tap never reaches the click listener.
+                if (hasOnClickListeners()) return true
                 return super.onDown(e)
             }
 
