@@ -497,9 +497,18 @@ class CoverLrcView @JvmOverloads constructor(
         super.onDetachedFromWindow()
     }
 
+    /** "off", "en" or "ar": the pronunciation of Korean lines is drawn under them. */
+    var pronunciationMode: String = "off"
+
     private fun onLrcLoaded(entryList: List<LrcEntry>?) {
         if (entryList != null && entryList.isNotEmpty()) {
             mLrcEntryList.addAll(entryList)
+        }
+        if (pronunciationMode != "off") {
+            for (e in mLrcEntryList) {
+                code.name.monkey.retromusic.util.KoreanRomanizer
+                    .pronounce(e.text, pronunciationMode)?.let { e.setSecondText(it) }
+            }
         }
         mLrcEntryList.sort()
         initEntryList()

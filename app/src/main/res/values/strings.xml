@@ -671,4 +671,8 @@
     <string name="pref_clear_vocal_stems_title">Delete separated vocals</string>
     <string name="pref_clear_vocal_stems_summary">Frees %1$d MB. Vocal tracks are made again when needed.</string>
     <string name="mini_to_oval">Turn into the small player</string>
+    <string name="pref_title_korean_pronunciation">Korean pronunciation</string>
+    <string name="pronunciation_english">English letters</string>
+    <string name="pronunciation_arabic">Arabic letters</string>
+    <string name="pronunciation_off">Off</string>
 </resources>

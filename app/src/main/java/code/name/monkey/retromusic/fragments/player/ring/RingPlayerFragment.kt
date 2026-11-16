@@ -255,6 +255,12 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
             lyricsScaleIndex = (lyricsScaleIndex + 1) % lyricsScales.size
             binding.ringLyrics.setTextScale(lyricsScales[lyricsScaleIndex])
         }
+        binding.lyricsPron.setOnClickListener {
+            PreferenceUtil.koreanPronunciation = when (PreferenceUtil.koreanPronunciation) {
+                "en" -> "ar"; "ar" -> "off"; else -> "en"
+            }
+            updateLyrics()
+        }
         binding.lyricsClose.setOnClickListener { setLyricsVisible(false) }
     }
 
@@ -455,7 +461,7 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
             b.queueButton, b.favoriteButton, b.previousButton, b.nextButton,
             b.shareButton, b.equalizerButton, b.toolsArrow, b.lyricsFullscreen, b.lyricsClose
         ).forEach { it.imageTintList = tint }
-        listOf(b.lyricsSearch, b.lyricsEdit, b.lyricsFont).forEach { it.setTextColor(c) }
+        listOf(b.lyricsSearch, b.lyricsEdit, b.lyricsFont, b.lyricsPron).forEach { it.setTextColor(c) }
         b.playPauseButton.backgroundTintList = tint
         b.playPauseButton.imageTintList = ColorStateList.valueOf(onContent)
         b.progressRing.circleColor = ColorUtils.setAlphaComponent(c, 0x33)
@@ -595,17 +601,29 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
                 lyricsSynced = lrcFile != null || embedded != null
                 // Synced lyrics: a tap on a line jumps to it. Plain text keeps the tap for "back to the cover".
                 view.seekOnLineTap = lyricsSynced
+                val pron = PreferenceUtil.koreanPronunciation
+                view.pronunciationMode = pron
+                binding.lyricsPron.text = when (pron) { "ar" -> "ع"; "off" -> "–"; else -> "EN" }
                 when {
                     lrcFile != null -> view.loadLrc(lrcFile)
                     embedded != null -> view.loadLrc(embedded)
                     else -> {
                         view.reset()
-                        view.setLabel(plain ?: getString(R.string.ring_no_lyrics))
+                        view.setLabel(
+                            plain?.let { withPronunciation(it, pron) } ?: getString(R.string.ring_no_lyrics)
+                        )
                     }
                 }
             }
         }
     }
+
+    /** Plain lyrics: a pronunciation line under every Korean line. */
+    private fun withPronunciation(text: String, mode: String): String =
+        text.lines().joinToString("\n") { line ->
+            val p = code.name.monkey.retromusic.util.KoreanRomanizer.pronounce(line, mode)
+            if (p == null) line else "$line\n$p"
+        }
 
     private fun updatePlayPause() {
         binding.playPauseButton.setImageResource(

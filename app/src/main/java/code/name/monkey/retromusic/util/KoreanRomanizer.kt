@@ -59,4 +59,41 @@ object KoreanRomanizer {
         }
         return out.toString()
     }
+
+    // Latin (Revised Romanization) pieces to Arabic letters, longest first. Approximate by nature:
+    // Arabic has no p / eo / eu, so the nearest letters are used.
+    private val arabicPieces = listOf(
+        "yeo" to "يو", "yae" to "يي", "wae" to "وي", "kk" to "ك", "tt" to "ت", "pp" to "ب",
+        "ss" to "س", "jj" to "ج", "ch" to "تش", "ng" to "نغ", "sh" to "ش", "eo" to "و", "eu" to "ِ",
+        "ae" to "ي", "ya" to "يا", "ye" to "يي", "yo" to "يو", "yu" to "يو", "wa" to "وا",
+        "wo" to "وو", "we" to "وي", "wi" to "وي", "oe" to "وي", "ui" to "وي",
+        "a" to "ا", "e" to "ي", "i" to "ي", "o" to "و", "u" to "و",
+        "g" to "ك", "k" to "ك", "n" to "ن", "d" to "د", "t" to "ت", "r" to "ر", "l" to "ل",
+        "m" to "م", "b" to "ب", "p" to "ب", "s" to "س", "j" to "ج", "h" to "ه"
+    )
+
+    /** Arabic letters for already romanized Korean text; anything that is not a letter stays. */
+    fun romanToArabic(roman: String): String {
+        val low = roman.lowercase()
+        val out = StringBuilder()
+        var i = 0
+        while (i < low.length) {
+            val hit = arabicPieces.firstOrNull { low.startsWith(it.first, i) }
+            if (hit != null) {
+                out.append(hit.second)
+                i += hit.first.length
+            } else {
+                out.append(low[i])
+                i++
+            }
+        }
+        return out.toString()
+    }
+
+    /** Pronunciation of one line: mode "en" = Latin letters, "ar" = Arabic letters. Null when the line has no Hangul. */
+    fun pronounce(text: String, mode: String): String? {
+        if (mode == "off" || !containsHangul(text)) return null
+        val roman = romanize(text)
+        return if (mode == "ar") romanToArabic(roman) else roman
+    }
 }

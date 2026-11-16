@@ -959,6 +959,11 @@ object PreferenceUtil {
     val lyricsWifiOnly: Boolean
         get() = sharedPreferences.getBoolean(LYRICS_WIFI_ONLY, false)
 
+    /** Korean lyrics: show the pronunciation under each line. "off", "en" (Latin) or "ar" (Arabic letters). */
+    var koreanPronunciation: String
+        get() = sharedPreferences.getString("korean_pronunciation", "en") ?: "en"
+        set(v) = sharedPreferences.edit { putString("korean_pronunciation", v) }
+
     var miniPlayerLocked: Boolean
         get() = sharedPreferences.getBoolean("mini_player_locked", false)
         set(v) = sharedPreferences.edit { putBoolean("mini_player_locked", v) }

@@ -284,6 +284,14 @@
             android:textStyle="bold"
             tools:ignore="HardcodedText" />
 
+        <TextView
+            android:id="@+id/lyricsPron"
+            style="@style/RingLyricsToolText"
+            android:contentDescription="@string/pref_title_korean_pronunciation"
+            android:text="EN"
+            android:textStyle="bold"
+            tools:ignore="HardcodedText" />
+
         <ImageView
             android:id="@+id/lyricsClose"
             style="@style/RingLyricsToolIcon"

@@ -662,4 +662,8 @@
     <string name="pref_clear_vocal_stems_title">مسح ملفات فصل الصوت</string>
     <string name="pref_clear_vocal_stems_summary">هيفضي %1$d ميجا. الملفات بتتعمل تاني لما تحتاجها.</string>
     <string name="mini_to_oval">تحويل لميني بلاير صغير</string>
+    <string name="pref_title_korean_pronunciation">نطق الكلمات الكورية</string>
+    <string name="pronunciation_english">حروف إنجليزي</string>
+    <string name="pronunciation_arabic">حروف عربي</string>
+    <string name="pronunciation_off">إيقاف</string>
 </resources>

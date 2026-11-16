@@ -337,4 +337,14 @@
         <item>2</item>
         <item>3</item>
     </string-array>
+    <string-array name="pref_korean_pronunciation_entries">
+        <item>@string/pronunciation_english</item>
+        <item>@string/pronunciation_arabic</item>
+        <item>@string/pronunciation_off</item>
+    </string-array>
+    <string-array name="pref_korean_pronunciation_values" translatable="false">
+        <item>en</item>
+        <item>ar</item>
+        <item>off</item>
+    </string-array>
 </resources>
