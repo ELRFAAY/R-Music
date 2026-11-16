@@ -20,7 +20,7 @@
         android:id="@+id/action_grid_size"
         android:icon="@drawable/ic_grid_size"
         android:title="@string/action_grid_size"
-        app:showAsAction="never">
+        app:showAsAction="ifRoom">
         <menu>
             <group android:checkableBehavior="single">
                 <item
@@ -54,7 +54,7 @@
         android:id="@+id/action_layout_type"
         android:icon="@drawable/ic_dashboard"
         android:title="@string/grid_style_label"
-        app:showAsAction="never">
+        app:showAsAction="ifRoom">
         <menu>
             <group android:checkableBehavior="single">
                 <item
@@ -82,7 +82,7 @@
         android:id="@+id/action_sort_order"
         android:icon="@drawable/ic_sort"
         android:title="@string/action_sort_order"
-        app:showAsAction="never">
+        app:showAsAction="ifRoom">
         <menu></menu>
     </item>
     <item
