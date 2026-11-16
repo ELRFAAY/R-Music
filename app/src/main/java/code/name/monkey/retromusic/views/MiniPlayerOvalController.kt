@@ -72,6 +72,8 @@ class MiniPlayerOvalController(
         binding.root.setOnClickListener { onOpen() }
         setUpTouch()
         binding.ovalPlayPause.setOnClickListener(PlayPauseButtonOnClickHandler())
+        binding.ovalPrev.setOnClickListener { MusicPlayerRemote.playPreviousSong() }
+        binding.ovalNext.setOnClickListener { MusicPlayerRemote.playNextSong() }
         applySettings()
     }
 
@@ -198,9 +200,25 @@ class MiniPlayerOvalController(
         }
         binding.ovalPlayHolder.isGone = shape == SHAPE_CIRCLE
         binding.ovalTitle.isVisible = shape == SHAPE_PILL
+        // "Player" shape: previous / play / next beside the cover, the name scrolls under the cover.
+        val player = shape == SHAPE_PLAYER
+        binding.ovalPrev.isVisible = player
+        binding.ovalNext.isVisible = player
+        binding.ovalTitleUnder.isVisible = player
+        if (player) {
+            for (button in listOf(binding.ovalPrev, binding.ovalNext)) {
+                button.updateLayoutParams<ViewGroup.LayoutParams> {
+                    width = playPx
+                    height = playPx
+                }
+            }
+            binding.ovalTitleUnder.updateLayoutParams<ViewGroup.LayoutParams> {
+                width = holderPx + playPx * 3 + dp(12)
+            }
+        }
 
         binding.ovalRow.setPadding(pad, pad, pad, pad)
-        binding.root.radius = (holderPx + pad * 2) / 2f
+        binding.root.radius = if (player) dp(30).toFloat() else (holderPx + pad * 2) / 2f
 
         applyColors()
         updateSong()
@@ -227,6 +245,9 @@ class MiniPlayerOvalController(
         binding.root.cardElevation = if (transparent) 0f else dp(6).toFloat()
 
         binding.ovalTitle.setTextColor(onColor)
+        binding.ovalTitleUnder.setTextColor(onColor)
+        binding.ovalPrev.imageTintList = ColorStateList.valueOf(onColor)
+        binding.ovalNext.imageTintList = ColorStateList.valueOf(onColor)
         if (transparent) {
             binding.ovalTitle.setShadowLayer(dp(3).toFloat(), 0f, 1f, Color.BLACK)
         } else {
@@ -256,6 +277,8 @@ class MiniPlayerOvalController(
         val artist = ArtistSeparator.split(song.artistName).joinToString(", ")
         binding.ovalTitle.text = "${song.title} • $artist"
         binding.ovalTitle.isSelected = true
+        binding.ovalTitleUnder.text = "${song.title} • $artist"
+        binding.ovalTitleUnder.isSelected = true
         Glide.with(context)
             .asBitmapPalette()
             .songCoverOptions(song)
@@ -330,6 +353,7 @@ class MiniPlayerOvalController(
     companion object {
         private const val SHAPE_PILL = 1
         private const val SHAPE_CIRCLE = 2
+        private const val SHAPE_PLAYER = 3
         private const val BG_COVER = 0
         private const val BG_TRANSPARENT = 1
         private const val BG_DARK = 2

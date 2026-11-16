@@ -302,12 +302,14 @@
         <item>@string/mini_player_shape_oval</item>
         <item>@string/mini_player_shape_pill</item>
         <item>@string/mini_player_shape_circle</item>
+        <item>@string/mini_player_shape_player</item>
     </string-array>
 
     <string-array name="pref_mini_player_shape_values" translatable="false">
         <item>0</item>
         <item>1</item>
         <item>2</item>
+        <item>3</item>
     </string-array>
 
     <string-array name="pref_mini_player_size_titles">

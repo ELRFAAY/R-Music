@@ -25,6 +25,13 @@
     tools:visibility="visible">
 
     <LinearLayout
+        android:id="@+id/ovalColumn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layoutDirection="ltr"
+        android:orientation="vertical">
+
+    <LinearLayout
         android:id="@+id/ovalRow"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -80,6 +87,16 @@
             android:visibility="gone"
             tools:text="Song title • Artist" />
 
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/ovalPrev"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="?roundSelector"
+            android:padding="7dp"
+            android:visibility="gone"
+            app:srcCompat="@drawable/ic_skip_previous"
+            tools:ignore="ContentDescription" />
+
         <FrameLayout
             android:id="@+id/ovalPlayHolder"
             android:layout_width="36dp"
@@ -96,5 +113,33 @@
                 app:srcCompat="@drawable/ic_pause"
                 tools:ignore="ContentDescription" />
         </FrameLayout>
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/ovalNext"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="?roundSelector"
+            android:padding="7dp"
+            android:visibility="gone"
+            app:srcCompat="@drawable/ic_skip_next"
+            tools:ignore="ContentDescription" />
+    </LinearLayout>
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/ovalTitleUnder"
+            android:layout_width="160dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="8dp"
+            android:ellipsize="marquee"
+            android:focusable="false"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            tools:text="Song title • Artist" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>
