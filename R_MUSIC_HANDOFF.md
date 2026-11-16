@@ -236,3 +236,13 @@ His new requests, in the order he wants them:
 10. Vocal/instrumental separation: a button; tap = only the singer's voice (no music), tap again = normal. Offline as much as possible (download a model once, then free/offline; online the first time is OK). Biggest item.
 11. Oval mini player (step 4): add more than one theme: (a) cover + pause button only; (b) name UNDER the cover, the player buttons beside the cover at the end of the oval, the name scrolls (marquee).
 12. Lyrics: when none is found, offer a button to add them by hand.
+
+## Session 12 progress (account A, 2026-11-16)
+DONE + pushed (d2fd67c, 50b8415), CI not verified by me, none tested on device:
+- Wall (TiltedCoverGridView) saves rounded covers to filesDir/wall_cache and draws them instantly on open.
+- Folders: "save last directory" default now true (code + pref_advanced.xml).
+- Muzio: arrow before the toolbar icons hides/shows all tools (pref muzio_tools_hidden); heart, prev/play/next stay.
+- Artists list: long-press on a cover opens ArtistPopup (arrow next to the cover): pin (pref pinned_artists, pinned sort first), play next, queue, playlist, merge, rename, select. Details-screen 3-dot menu left as is.
+NEXT (in this order, for the next account): 
+1. Lyrics: manual add when none found (+ auto-fetch Wi-Fi only setting), lyrics translation, artist info + translation (Korean romanization). 
+2. Notification card bigger. 3. Oval mini player themes. 4. Muzio animation vs docs/reference/theme-ring-reference-video.mp4. 5. Launcher icon picker (3 variants, preview first). 6. Vocal separation toggle (confirm approach). 7. Package rename LAST. Progress bar styles: dropped.
