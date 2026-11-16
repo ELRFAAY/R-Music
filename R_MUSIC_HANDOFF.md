@@ -270,3 +270,9 @@ LEFT, in this order: (1) Muzio animation vs docs/reference/theme-ring-reference-
 - notification-design-cobra.jpg = notification card design; cobra-logo-source.jpg = the ring-cobra logo used for the icons.
 - bug-report-muzio-menu-crash-fixed.txt = the crash report that led to the fix in 2f16201.
 - user-images/ = older screenshots and logo drafts from 2026-11-14 (DroidDeck screenshot, R logo sketches, Retro logo); look only for layout reference, do not copy those brands' art.
+
+## Session 13 (2026-11-16 10:50, account C): Muzio fixes from the user's screenshots (written, CI not checked, not tested on a phone)
+- Tools arrow: now a separate ImageView `toolsArrow` (not a menu item) at the END edge of the top bar, always the same place, SIDEWAYS (`ic_chevron_left/right_tools`, direction depends on RTL); toolbar has marginEnd 48dp. Title ("Playing from") moved out of the toolbar into `playingFromBox` centred on the screen, so it no longer shifts when tools are hidden.
+- Bottom row (share / counter / ex-equalizer) gets bottom margin = 16dp + navigation bar inset (the phone's 3 buttons covered the counter). The user would prefer the nav buttons to hide (swipe up to show): NOT done, the row is just raised.
+- `CoverGestureLayout.gesturesEnabled`: false while lyrics are shown, so dragging over lyrics scrolls them instead of changing volume (and ring seek / double tap are off there). Volume drag + double tap ±10 s stay on the cover.
+- Bottom corner button `equalizerButton` now has the wave icon `ic_vocal_wave` = vocal separation button; for now it only shows a toast "not ready". The equalizer is still in the player 3-dot menu. Real feature (offline model, stems cache) still to build, ask the user to confirm the approach first.
