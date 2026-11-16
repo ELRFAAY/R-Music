@@ -379,22 +379,32 @@ class CoverLrcView @JvmOverloads constructor(
         }
     }
 
+    private var labelLayout: StaticLayout? = null
+    private var labelKey: Triple<CharSequence?, Int, Float>? = null
+
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         val centerY = height / 2
 
         if (!hasLrc()) {
             mLrcPaint.color = mCurrentTextColor
-            @Suppress("Deprecation")
-            @SuppressLint("DrawAllocation") val staticLayout = StaticLayout(
-                mDefaultLabel,
-                mLrcPaint,
-                lrcWidth.toInt(),
-                Layout.Alignment.ALIGN_CENTER,
-                1f,
-                0f,
-                false
-            )
+            // The label can be a whole song's text: build its layout once, not on every frame.
+            val key = Triple(mDefaultLabel, lrcWidth.toInt(), mLrcPaint.textSize)
+            var staticLayout = labelLayout
+            if (staticLayout == null || labelKey != key) {
+                @Suppress("Deprecation")
+                staticLayout = StaticLayout(
+                    mDefaultLabel,
+                    mLrcPaint,
+                    lrcWidth.toInt(),
+                    Layout.Alignment.ALIGN_CENTER,
+                    1f,
+                    0f,
+                    false
+                )
+                labelLayout = staticLayout
+                labelKey = key
+            }
             drawText(canvas, staticLayout, centerY.toFloat())
             return
         }
