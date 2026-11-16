@@ -498,7 +498,7 @@ abstract class AbsSlidingMusicPanelActivity : AbsMusicServiceActivity(),
     }
 
     open fun onPanelExpanded() {
-        if (nowPlayingScreen == Ring) setNavBarHidden(true)
+        if (nowPlayingScreen == Muzio) setNavBarHidden(true)
         setMiniPlayerAlphaProgress(1F)
         onPaletteColorChanged()
         //playerFragment?.onShow()
