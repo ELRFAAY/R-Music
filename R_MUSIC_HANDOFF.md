@@ -246,3 +246,15 @@ DONE + pushed (d2fd67c, 50b8415), CI not verified by me, none tested on device:
 NEXT (in this order, for the next account): 
 1. Lyrics: manual add when none found (+ auto-fetch Wi-Fi only setting), lyrics translation, artist info + translation (Korean romanization). 
 2. Notification card bigger. 3. Oval mini player themes. 4. Muzio animation vs docs/reference/theme-ring-reference-video.mp4. 5. Launcher icon picker (3 variants, preview first). 6. Vocal separation toggle (confirm approach). 7. Package rename LAST. Progress bar styles: dropped.
+
+## Session 12 progress, account B (2026-11-16 10:25) - READ FIRST
+User: the app-icon picker (item 5) is CANCELLED. Progress bar styles also dropped. The fast APK is the user's main build; he follows the CI himself on his computer (do not sleep-poll for minutes, he interrupts it).
+DONE + pushed (all compile; none tested on a device): 
+- e06294f lyrics: "Add lyrics manually" button when none are found + "Edit lyrics" button (LyricsSheetFragment dialog; text with [mm:ss.xx] lines = synced .lrc, otherwise plain .txt; stored in filesDir/lyrics; Muzio refreshes via fragment result `lyrics_updated`), setting `lyrics_wifi_only` (Now Playing settings; Get button still works).
+- 7693b23 lyrics translation: sheet button "Translate" -> to Arabic / to English (ML Kit translate + language-id, `lyrics/LyricsTranslator.kt`, model downloaded once then offline) and "Romanize Korean" (`util/KoreanRomanizer.kt`, simplified Revised Romanization); result shown as original line + translated line in the plain view, "Show original" goes back. (Its CI run was cancelled by the runner, the code compiled fine in the debug and fast tasks.)
+- 1d3a849 artist info: player 3-dot menu "Artist info" -> `ArtistInfoSheetFragment` (Last.fm bio via Repository.artistInfo, cached in filesDir/artist_info, translate ar/en). Artist details page already had its own bio card.
+- 9d89e09 CI: two PARALLEL jobs `debug` (artifact R-Music-debug-apk) and `fast` (R-Music-fast-apk), the fast one no longer hides failures.
+- cacfa20 notification card bigger (cover 120dp, text 24/19sp, taller bar, bigger head).
+- 2f16201 FIX: Muzio crashed on open ("order does not contain a valid category": menu.add order -1 -> 0). Found from the user's bug report.
+- 0af538f oval mini player: new shape 3 "Player" (prev/play/next beside the cover, name marquee under the cover); shape 0 = cover + play (theme a). Settings > UI > Mini player.
+LEFT, in this order: (1) Muzio animation vs docs/reference/theme-ring-reference-video.mp4 (ask the user WHICH animation differs), (2) vocal/instrumental separation toggle (confirm the approach first, see item D above), (3) package rename LAST, then the final release build with a permanent key in GitHub Secrets.
