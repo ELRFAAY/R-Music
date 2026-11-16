@@ -218,3 +218,21 @@ Working rules: reply in short Egyptian Arabic; wait for "go" before a step (he o
 - Songs screen toolbar has a folder button (action_open_folders, hidden in every other screen) that opens the Folders screen (R.id.action_folder). WRITTEN, not tested.
 - Session 11 (00:30-01:30, c6b1e71, CI green, WRITTEN not tested on a device): (1) Muzio theme (`RingPlayerFragment`): the heart next to the title now uses the app's animated `avd_favorite`/`avd_unfavorite` (fills / breaks on tap); the toolbar copy of the heart is hidden. (2) Artist merges are remembered by name: `ArtistMerger` (now takes a Fragment OR a ComponentActivity, has `mergeGroups(Map<newName, songs>)` with ONE write permission request) records old name -> new name in the existing Room table `artist_aliases` (inert: `ArtistGroups.snapshot()` is still empty, so no in-app grouping) after every successful tag write. The backup already carried that table (BackupContent.ARTIST_GROUPS). After a restore, `BackupHelper.restoreArtistGroups` writes the marker file `filesDir/pending_artist_merge`; `MainActivity.checkPendingArtistMerge()` at the next start finds songs whose artist/album artist tag is a remembered old name (`ArtistMerger.findPendingGroups()`, null = no songs yet so the marker stays) and asks "Write the merged names into the tags now?" (Not now deletes the marker). Merges done BEFORE this build were not recorded, so they are not in backups; redo them once or ask the user.
 - Notification (2026-11-16 09:30, user's phone showed the cobra card working but small, heavy, and the bar cannot be dragged): a custom RemoteViews notification can NEVER be dragged (only tapped), Android 12+ also wraps it in the system template (header + padding), so full width is impossible. Done: bigger card (cover 84dp, text 19/16sp, taller buttons), 20 tap segments instead of 10 (cached PendingIntents, cached rounded cover and head bitmap, bar bitmap 800x64, re-post every 2 s instead of 1 s), and a switch in Settings > Advanced "System player notification" (`SYSTEM_PLAYER_NOTIFICATION`, default off) that uses the MediaStyle notification whose bar the system lets you drag (Android 13+; the session already has ACTION_SEEK_TO). Not tested on a phone.
+
+## Session 12 (2026-11-16 10:00): user's answers and NEW ORDER (READ FIRST, overrides older lists)
+The old public repo RetroMusicPlayer is DELETED long ago; every account asks about it: ignore it, only ELRFAAY/R-Music exists.
+User feedback on the fast APK: "much better than the other". Names: the cover wall on Home is now called "قائمة العرض" (display list / slideshow list).
+Tested by the user, OK: Muzio heart, artist merge + tags + backup, folder button works.
+His new requests, in the order he wants them:
+ 1. Display list (wall) on Home: it stays black for a few seconds before the covers show. Must show at once (cache the last covers on disk and draw them immediately).
+ 2. Muzio: an arrow BEFORE the moon icon and the other top icons. Tap it: hides every tool and leaves only previous / next / (play) and the heart. Tap again shows them. Remember the state.
+ 3. Muzio: the animation is not like the reference video (he did not say which one: ask or compare with docs/reference/theme-ring-reference-video.mp4).
+ 4. Notification card: still small; try to make it bigger.
+ 5. App icon picker with 3 choices: (a) the current cobra scene, (b) same but WITHOUT the cobra head, (c) the one with the cobra head. (his wording is unclear: confirm with a preview before building the picker.)
+ 6. Folders screen: when leaving a folder and coming back, stay in the same folder (remember the path).
+ 7. Package rename: LAST thing, only when everything else is done.
+ 8. Artist info and lyrics translation (incl. Korean romanization): focus on these this time. Offline after a one-time download is fine.
+ 9. Progress bar styles: DROP it.
+10. Vocal/instrumental separation: a button; tap = only the singer's voice (no music), tap again = normal. Offline as much as possible (download a model once, then free/offline; online the first time is OK). Biggest item.
+11. Oval mini player (step 4): add more than one theme: (a) cover + pause button only; (b) name UNDER the cover, the player buttons beside the cover at the end of the oval, the name scrolls (marquee).
+12. Lyrics: when none is found, offer a button to add them by hand.
