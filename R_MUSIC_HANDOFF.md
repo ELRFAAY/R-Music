@@ -292,3 +292,4 @@ Package `code.name.monkey.retromusic.vocal`: `VocalSeparator` (state, model down
 ## Session 15 (2026-11-16 16:10, account A): menus
 - Sort / grid size / layout type are now icons in the top bar (`menu_main.xml` showAsAction ifRoom) instead of the 3-dot overflow. Settings stays in the overflow.
 - Artists list long press already opens `ArtistPopup` (arrow next to the cover: pin, play next, queue, playlist, merge, rename, select) since 50b8415, so the black action bar only appears after choosing "Select". Not tested on a phone. Same per-item popup for albums/songs lists NOT done.
+- 16:20 account A: albums list long press now opens the same arrow popup (play next, queue, playlist, select). Songs list not done. Muzio center tap answers at once (no double-tap wait in the middle 40%), hiding tools uses INVISIBLE so the title stays centred (bcab451).

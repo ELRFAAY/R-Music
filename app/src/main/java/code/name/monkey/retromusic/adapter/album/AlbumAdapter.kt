@@ -191,7 +191,26 @@ open class AlbumAdapter(
         }
 
         override fun onLongClick(v: View?): Boolean {
-            return toggleChecked(layoutPosition)
+            if (isInQuickSelectMode) return toggleChecked(layoutPosition)
+            val pos = layoutPosition
+            if (pos < 0 || pos >= dataSet.size) return true
+            val songs = dataSet[pos].songs
+            code.name.monkey.retromusic.adapter.artist.ArtistPopup.show(
+                image ?: itemView,
+                listOf(
+                    activity.getString(R.string.action_play_next) to {
+                        SongsMenuHelper.handleMenuClick(activity, songs, R.id.action_play_next)
+                    },
+                    activity.getString(R.string.action_add_to_playing_queue) to {
+                        SongsMenuHelper.handleMenuClick(activity, songs, R.id.action_add_to_current_playing)
+                    },
+                    activity.getString(R.string.action_add_to_playlist) to {
+                        SongsMenuHelper.handleMenuClick(activity, songs, R.id.action_add_to_playlist)
+                    },
+                    activity.getString(R.string.artist_select) to { toggleChecked(layoutPosition) }
+                )
+            )
+            return true
         }
     }
 
