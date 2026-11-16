@@ -68,8 +68,11 @@ object ArtistPopup {
         val arrowLp = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
         )
-        if (showBelow) { root.addView(arrow, arrowLp); root.addView(card) }
-        else { root.addView(card); root.addView(arrow, arrowLp) }
+        // Fixed card width: with "wrap" the match-parent rows collapsed to the arrow's width and the
+        // menu showed as a thin black strip.
+        val cardLp = LinearLayout.LayoutParams((210 * d).toInt(), ViewGroup.LayoutParams.WRAP_CONTENT)
+        if (showBelow) { root.addView(arrow, arrowLp); root.addView(card, cardLp) }
+        else { root.addView(card, cardLp); root.addView(arrow, arrowLp) }
 
         root.measure(
             View.MeasureSpec.makeMeasureSpec(screenW, View.MeasureSpec.AT_MOST),
