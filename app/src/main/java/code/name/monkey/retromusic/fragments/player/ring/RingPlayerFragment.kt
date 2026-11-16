@@ -195,7 +195,7 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
                 MusicPlayerRemote.resumePlaying()
                 true
             }
-            // Synced lyrics: a tap on a line jumps there (the X chip closes). Plain text: a tap goes back to the cover.
+            // Synced lyrics: a tap on a line jumps there (seekOnLineTap, the X chip closes). Plain text: a tap goes back to the cover.
             setOnClickListener { if (!lyricsSynced) setLyricsVisible(false) }
         }
     }
@@ -593,6 +593,8 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
             withContext(Dispatchers.Main) {
                 val view = _binding?.ringLyrics ?: return@withContext
                 lyricsSynced = lrcFile != null || embedded != null
+                // Synced lyrics: a tap on a line jumps to it. Plain text keeps the tap for "back to the cover".
+                view.seekOnLineTap = lyricsSynced
                 when {
                     lrcFile != null -> view.loadLrc(lrcFile)
                     embedded != null -> view.loadLrc(embedded)

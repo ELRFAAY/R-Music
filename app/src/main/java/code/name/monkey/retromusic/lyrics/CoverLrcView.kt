@@ -71,6 +71,9 @@ class CoverLrcView @JvmOverloads constructor(
     private var mOnPlayClickListener: OnPlayClickListener? = null
     private var mAnimator: ValueAnimator? = null
     private var mGestureDetector: GestureDetector? = null
+
+    /** When true, a tap on a line calls the play listener with that line's time (synced lyrics). */
+    var seekOnLineTap = false
     private var mScroller: Scroller? = null
     private var mOffset = 0f
     private var mCurrentLine = 0
@@ -167,6 +170,19 @@ class CoverLrcView @JvmOverloads constructor(
                         return true
                     }
                 } else {
+                    // Synced lyrics (when the screen asks for it): a tap on a line jumps there.
+                    if (seekOnLineTap && hasLrc() && mOnPlayClickListener != null) {
+                        val line = lineAt(e.y - mOffset)
+                        if (line >= 0 && mOnPlayClickListener!!.onPlayClick(mLrcEntryList[line].time)) {
+                            isShowTimeline = false
+                            removeCallbacks(hideTimelineRunnable)
+                            mCurrentLine = line
+                            smoothScrollTo(line)
+                            animateCurrentTextSize()
+                            invalidate()
+                            return true
+                        }
+                    }
                     callOnClick()
                     return true
                 }
@@ -406,6 +422,23 @@ class CoverLrcView @JvmOverloads constructor(
             }
             drawText(canvas, mLrcEntryList[i].staticLayout, y)
         }
+    }
+
+    /**
+     * Index of the line drawn at [y] (content coordinates, i.e. the touch y minus the scroll
+     * offset), or -1 for a gap. Uses the same line centres as [onDraw].
+     */
+    private fun lineAt(y: Float): Int {
+        var center = 0f
+        for (i in mLrcEntryList.indices) {
+            if (i > 0) {
+                center += ((mLrcEntryList[i - 1].height + mLrcEntryList[i].height shr 1)
+                        + mDividerHeight)
+            }
+            val half = (mLrcEntryList[i].height + mDividerHeight) / 2f
+            if (abs(y - center) <= half) return i
+        }
+        return -1
     }
 
     private fun drawText(canvas: Canvas, staticLayout: StaticLayout, y: Float) {
