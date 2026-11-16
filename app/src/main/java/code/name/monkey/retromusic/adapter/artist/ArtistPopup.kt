@@ -19,7 +19,7 @@ import com.google.android.material.color.MaterialColors
 /** Small menu that opens right next to a cover, with an arrow pointing at it. */
 object ArtistPopup {
 
-    fun show(anchor: View, entries: List<Pair<String, () -> Unit>>) {
+    fun show(anchor: View, entries: List<Pair<String, () -> Unit>>): PopupWindow {
         val ctx = anchor.context
         val d = ctx.resources.displayMetrics.density
         // Opaque card; text colour picked from the card's own brightness so it is always readable
@@ -87,11 +87,13 @@ object ArtistPopup {
             (14 * d).toInt(), (w - (32 * d).toInt()).coerceAtLeast((14 * d).toInt())
         )
 
-        popup = PopupWindow(root, w, h, true).apply {
+        val window = PopupWindow(root, w, h, true).apply {
             setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
             isOutsideTouchable = true
             elevation = 0f
             showAtLocation(anchor.rootView, Gravity.NO_GRAVITY, x, y.coerceAtLeast(0))
         }
+        popup = window
+        return window
     }
 }

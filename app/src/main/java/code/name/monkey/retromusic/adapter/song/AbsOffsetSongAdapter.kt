@@ -79,8 +79,25 @@ abstract class AbsOffsetSongAdapter(
 
         override fun onLongClick(v: View?): Boolean {
             if (itemViewType == OFFSET_ITEM) return false
-            toggleChecked(layoutPosition)
+            if (isInQuickSelectMode) { toggleChecked(layoutPosition); return true }
+            val songs = listOf(dataSet[layoutPosition - 1])
+            code.name.monkey.retromusic.adapter.artist.ArtistPopup.show(
+                image ?: itemView,
+                listOf(
+                    activity.getString(R.string.action_play_next) to {
+                        code.name.monkey.retromusic.helper.menu.SongsMenuHelper.handleMenuClick(activity, songs, R.id.action_play_next)
+                    },
+                    activity.getString(R.string.action_add_to_playing_queue) to {
+                        code.name.monkey.retromusic.helper.menu.SongsMenuHelper.handleMenuClick(activity, songs, R.id.action_add_to_current_playing)
+                    },
+                    activity.getString(R.string.action_add_to_playlist) to {
+                        code.name.monkey.retromusic.helper.menu.SongsMenuHelper.handleMenuClick(activity, songs, R.id.action_add_to_playlist)
+                    },
+                    activity.getString(R.string.artist_select) to { toggleChecked(layoutPosition) }
+                )
+            )
             return true
+
         }
     }
 

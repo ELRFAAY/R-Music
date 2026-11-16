@@ -15,6 +15,8 @@
 package code.name.monkey.retromusic.fragments.artists
 
 import android.os.Bundle
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import android.view.*
 import androidx.core.os.bundleOf
 import androidx.navigation.fragment.FragmentNavigatorExtras
@@ -39,6 +41,19 @@ import code.name.monkey.retromusic.util.RetroUtil
 class ArtistsFragment : AbsRecyclerViewCustomGridSizeFragment<ArtistAdapter, GridLayoutManager>(),
     IArtistClickListener, IAlbumArtistClickListener {
     private val artistMerger = ArtistMerger(this)
+    private var imageArtist: code.name.monkey.retromusic.model.Artist? = null
+    private val pickImage = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        val a = imageArtist
+        if (uri != null && a != null) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                code.name.monkey.retromusic.util.CustomArtistImageUtil.getInstance(requireContext())
+                    .setCustomArtistImage(a, uri)
+                libraryViewModel.forceReload(ReloadType.Artists)
+            }
+        }
+    }
 
     private fun showRename(artist: code.name.monkey.retromusic.model.Artist) {
         val ctx = requireContext()
@@ -138,7 +153,15 @@ class ArtistsFragment : AbsRecyclerViewCustomGridSizeFragment<ArtistAdapter, Gri
             this,
             this,
             onMerge = { showMerge(it) },
-            onRename = { showRename(it) }
+            onRename = { showRename(it) },
+            onImage = {
+                imageArtist = it
+                pickImage.launch(
+                    androidx.activity.result.PickVisualMediaRequest(
+                        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
+                    )
+                )
+            }
         )
     }
 

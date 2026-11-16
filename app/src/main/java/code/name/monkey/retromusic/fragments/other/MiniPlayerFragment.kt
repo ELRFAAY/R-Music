@@ -64,10 +64,29 @@ open class MiniPlayerFragment : AbsMusicServiceFragment(R.layout.fragment_mini_p
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentMiniPlayerBinding.bind(view)
-        view.setOnTouchListener(FlingPlayBackController(requireContext()))
-        // long press on the bar: turn it back into the small floating player
+        val fling = FlingPlayBackController(requireContext())
+        var popup: android.widget.PopupWindow? = null
+        var longPressed = false
+        var downY = 0f
+        view.setOnTouchListener { v, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> { downY = event.rawY; longPressed = false }
+                MotionEvent.ACTION_MOVE -> {
+                    // long press, then drag up: the bar turns into the small floating player
+                    if (longPressed && downY - event.rawY > 80 * resources.displayMetrics.density) {
+                        longPressed = false
+                        popup?.dismiss()
+                        PreferenceUtil.setMiniPlayerStyle("1")
+                    }
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> longPressed = false
+            }
+            fling.onTouch(v, event)
+        }
+        // long press on the bar: menu, or drag it up to turn it back into the small floating player
         view.setOnLongClickListener {
-            code.name.monkey.retromusic.adapter.artist.ArtistPopup.show(
+            longPressed = true
+            popup = code.name.monkey.retromusic.adapter.artist.ArtistPopup.show(
                 view,
                 listOf(getString(R.string.mini_to_oval) to {
                     PreferenceUtil.setMiniPlayerStyle("1")
