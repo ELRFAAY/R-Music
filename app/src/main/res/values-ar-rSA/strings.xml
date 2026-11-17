@@ -693,6 +693,8 @@
     <string name="artist_view_grid_4">شبكة، 4 أعمدة</string>
     <string name="artist_view_mode">العرض</string>
     <string name="incognito_mode">وضع التخفي</string>
-    <string name="incognito_on_msg">وضع التخفي شغال: اللي بتشغله مش هيتسجل في السجل ولا عدد المرات ولا الإحصائيات ولا قائمة العرض</string>
+    <string name="incognito_on_msg">وضع التخفي شغال: الأغاني اللي بتشغلها دلوقتي مش هتظهر في قائمة العرض في الرئيسية</string>
     <string name="incognito_off_msg">وضع التخفي اتقفل: التشغيل بيتسجل تاني</string>
+    <string name="incognito_notification_text">الأغاني اللي بتشغلها مش هتظهر في قائمة العرض في الرئيسية</string>
+    <string name="incognito_turn_off">إيقاف</string>
 </resources>

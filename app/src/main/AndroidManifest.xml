@@ -216,6 +216,10 @@
         </provider>
 
         <receiver
+            android:name=".util.IncognitoMode$OffReceiver"
+            android:exported="false" />
+
+        <receiver
             android:name=".service.MediaButtonIntentReceiver"
             android:exported="true">
             <intent-filter>

@@ -887,7 +887,13 @@ object PreferenceUtil {
         get() = sharedPreferences.getInt(AUTO_BACKUP_KEEP, 5)
         set(value) = sharedPreferences.edit { putInt(AUTO_BACKUP_KEEP, value) }
 
-    /** Incognito: nothing played is added to history, play counts, stats or the display list. */
+    /** Songs played while incognito: they are left out of the home display list until played normally. */
+    var incognitoHidden: Set<Long>
+        get() = sharedPreferences.getString("incognito_hidden_ids", "").orEmpty()
+            .split(",").mapNotNull { it.toLongOrNull() }.toSet()
+        set(v) = sharedPreferences.edit { putString("incognito_hidden_ids", v.joinToString(",")) }
+
+    /** Incognito: songs played now are kept out of the home display list (everything else is recorded). */
     var incognito: Boolean
         get() = sharedPreferences.getBoolean(INCOGNITO_MODE, false)
         set(v) = sharedPreferences.edit { putBoolean(INCOGNITO_MODE, v) }

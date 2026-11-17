@@ -130,7 +130,9 @@ class LibraryViewModel(
                 pinnedIds.mapNotNull { byId[it] }
             }
             val pinnedAlbums = pinned.map { it.albumId }.toSet()
-            val rest = primary.filter { it.albumId !in pinnedAlbums }.distinctBy { it.albumId }
+            val hidden = PreferenceUtil.incognitoHidden
+            val rest = primary.filter { it.albumId !in pinnedAlbums && it.id !in hidden }
+                .distinctBy { it.albumId }
             var picked = pinned + rest.take((count - pinned.size).coerceAtLeast(0))
             if (picked.isEmpty()) {
                 picked = repository.allSongs().distinctBy { it.albumId }.shuffled().take(count)

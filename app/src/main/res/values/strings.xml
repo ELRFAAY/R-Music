@@ -702,6 +702,8 @@
     <string name="artist_view_grid_4">Grid, 4 columns</string>
     <string name="artist_view_mode">View</string>
     <string name="incognito_mode">Incognito mode</string>
-    <string name="incognito_on_msg">Incognito on: what you play is not added to history, play counts, stats or the display list</string>
+    <string name="incognito_on_msg">Incognito on: songs you play now are kept out of the home display list</string>
     <string name="incognito_off_msg">Incognito off: plays are recorded again</string>
+    <string name="incognito_notification_text">Songs you play are kept out of the home display list</string>
+    <string name="incognito_turn_off">Turn off</string>
 </resources>
