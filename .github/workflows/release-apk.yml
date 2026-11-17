@@ -4,6 +4,8 @@ name: Release APK (signed)
 # the repository secrets SIGNING_KEYSTORE_GITHUB / SIGNING_PROPERTIES_GITHUB (never in the repo).
 on:
   workflow_dispatch:
+  push:
+    branches: [ release ]  # push the branch "release" to build a signed APK
 
 env:
   SIGNING_KEYSTORE_GITHUB: ${{ secrets.SIGNING_KEYSTORE_GITHUB }}
