@@ -126,24 +126,38 @@ class MdxSeparator(modelFile: File) : AutoCloseable {
     private val specRe = DoubleArray(nFft)
     private val specIm = DoubleArray(nFft)
 
-    /** Layout of [out]: [ch0.re, ch0.im, ch1.re, ch1.im][bin < dimF][frame]. */
+    /**
+     * Layout of [out]: [ch0.re, ch0.im, ch1.re, ch1.im][bin < dimF][frame].
+     * Both channels go through ONE complex FFT (left = real part, right = imaginary part) and are
+     * pulled apart afterwards: half the FFT work.
+     */
     private fun stft(ch: Array<FloatArray>, out: FloatArray) {
-        for (c in 0..1) {
-            val x = ch[c]
-            for (t in 0 until dimT) {
-                val s0 = t * hop - nFft / 2
-                for (i in 0 until nFft) {
-                    var p = s0 + i
-                    if (p < 0) p = -p
-                    if (p >= chunk) p = 2 * (chunk - 1) - p
-                    frameRe[i] = x[p] * window[i]
-                    frameIm[i] = 0.0
-                }
-                fft.forward(frameRe, frameIm, specRe, specIm)
-                for (f in 0 until dimF) {
-                    out[((c * 2) * dimF + f) * dimT + t] = specRe[f].toFloat()
-                    out[((c * 2 + 1) * dimF + f) * dimT + t] = specIm[f].toFloat()
-                }
+        val xl = ch[0]
+        val xr = ch[1]
+        for (t in 0 until dimT) {
+            val s0 = t * hop - nFft / 2
+            for (i in 0 until nFft) {
+                var p = s0 + i
+                if (p < 0) p = -p
+                if (p >= chunk) p = 2 * (chunk - 1) - p
+                frameRe[i] = xl[p] * window[i]
+                frameIm[i] = xr[p] * window[i]
+            }
+            fft.forward(frameRe, frameIm, specRe, specIm)
+            for (f in 0 until dimF) {
+                val g = if (f == 0) 0 else nFft - f
+                val aRe = specRe[f]
+                val aIm = specIm[f]
+                val bRe = specRe[g]
+                val bIm = -specIm[g]            // conj(Z[N-f])
+                val lRe = (aRe + bRe) * 0.5     // left  = (a + b) / 2
+                val lIm = (aIm + bIm) * 0.5
+                val dRe = (aRe - bRe) * 0.5     // right = (a - b) / 2i
+                val dIm = (aIm - bIm) * 0.5
+                out[(0 * dimF + f) * dimT + t] = lRe.toFloat()
+                out[(1 * dimF + f) * dimT + t] = lIm.toFloat()
+                out[(2 * dimF + f) * dimT + t] = dIm.toFloat()
+                out[(3 * dimF + f) * dimT + t] = (-dRe).toFloat()
             }
         }
     }
@@ -151,29 +165,40 @@ class MdxSeparator(modelFile: File) : AutoCloseable {
     private val accRe = DoubleArray(nFft)
     private val accIm = DoubleArray(nFft)
 
+    /** Inverse of [stft] for both channels with one FFT per frame (left = real, right = imaginary). */
     private fun istft(flat: FloatArray, out: Array<FloatArray>) {
         val len = nFft + hop * (dimT - 1)
         val env = DoubleArray(len)
         for (t in 0 until dimT) for (i in 0 until nFft) env[t * hop + i] += window[i] * window[i]
-        for (c in 0..1) {
-            val sig = DoubleArray(len)
-            for (t in 0 until dimT) {
-                // conj trick: inverse = conj(fft(conj(X))) / n ; X is Hermitian so only bins < nBins matter
-                for (f in 0 until nBins) {
-                    val re = if (f < dimF) flat[((c * 2) * dimF + f) * dimT + t].toDouble() else 0.0
-                    val im = if (f < dimF) flat[((c * 2 + 1) * dimF + f) * dimT + t].toDouble() else 0.0
-                    accRe[f] = re
-                    accIm[f] = -im
-                    if (f in 1 until nFft - nBins + 1) {
-                        accRe[nFft - f] = re
-                        accIm[nFft - f] = im   // conj of the mirrored conj
-                    }
-                }
-                fft.forward(accRe, accIm, specRe, specIm)
-                for (i in 0 until nFft) {
-                    sig[t * hop + i] += (specRe[i] / nFft) * window[i]
+        val sigL = DoubleArray(len)
+        val sigR = DoubleArray(len)
+        val mirrorEnd = nFft - nBins + 1
+        for (t in 0 until dimT) {
+            java.util.Arrays.fill(accRe, 0.0)
+            java.util.Arrays.fill(accIm, 0.0)
+            for (f in 0 until nBins) {
+                if (f >= dimF) break
+                val lre = flat[(0 * dimF + f) * dimT + t].toDouble()
+                val lim = flat[(1 * dimF + f) * dimT + t].toDouble()
+                val rre = flat[(2 * dimF + f) * dimT + t].toDouble()
+                val rim = flat[(3 * dimF + f) * dimT + t].toDouble()
+                // Z = XL + i*XR, then conj for the "inverse by forward FFT" trick
+                accRe[f] = lre - rim
+                accIm[f] = -(lim + rre)
+                if (f in 1 until mirrorEnd) {
+                    // Z[N-f] built from the Hermitian mirrors conj(XL[f]), conj(XR[f])
+                    accRe[nFft - f] = lre + rim
+                    accIm[nFft - f] = lim - rre
                 }
             }
+            fft.forward(accRe, accIm, specRe, specIm)
+            for (i in 0 until nFft) {
+                sigL[t * hop + i] += (specRe[i] / nFft) * window[i]
+                sigR[t * hop + i] += (-specIm[i] / nFft) * window[i]
+            }
+        }
+        for (c in 0..1) {
+            val sig = if (c == 0) sigL else sigR
             val o = out[c]
             for (i in 0 until chunk) {
                 val e = env[i + nFft / 2]
