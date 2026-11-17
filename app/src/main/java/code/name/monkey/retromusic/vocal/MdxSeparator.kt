@@ -14,22 +14,25 @@ import kotlin.math.cos
 /** MDX-Net (Kim_Vocal_2) vocal extraction: STFT -> ONNX -> inverse STFT, chunk by chunk. */
 class MdxSeparator(modelFile: File) : AutoCloseable {
     private val env = OrtEnvironment.getEnvironment()
-    private val session: OrtSession
-    private val inputName: String
-    private val dimF: Int
-    private val dimT: Int
+    private val session: OrtSession = createSession(modelFile)
+    private val inputName: String = session.inputNames.first()
+    private val inputShape =
+        (session.inputInfo[inputName]!!.info as ai.onnxruntime.TensorInfo).shape
+    private val dimF: Int = inputShape[2].toInt()
+    private val dimT: Int = inputShape[3].toInt()
 
-    private val nFft = 7680
+    // Kim_Vocal_2 (dim_f 3072) uses a 7680 window, the lighter UVR_MDXNET_9482 (dim_f 2048) 6144.
+    private val nFft = if (dimF <= 2048) 6144 else 7680
     private val hop = 1024
     private val nBins = nFft / 2 + 1
-    private val chunk: Int
+    private val chunk: Int = hop * (dimT - 1)
     private val trim = nFft / 2
-    private val gen: Int
+    private val gen: Int = chunk - 2 * trim
 
     private val fft = MixedFft(nFft)
     private val window = DoubleArray(nFft) { 0.5 - 0.5 * cos(2.0 * PI * it / nFft) }
 
-    init {
+    private fun createSession(modelFile: File): OrtSession {
         val opts = OrtSession.SessionOptions()
         val threads = Runtime.getRuntime().availableProcessors().coerceIn(2, 4)
         opts.setIntraOpNumThreads(threads)
@@ -38,13 +41,7 @@ class MdxSeparator(modelFile: File) : AutoCloseable {
             opts.addXnnpack(mapOf("intra_op_num_threads" to threads.toString()))
         } catch (_: Throwable) {
         }
-        session = env.createSession(modelFile.absolutePath, opts)
-        inputName = session.inputNames.first()
-        val shape = (session.inputInfo[inputName]!!.info as ai.onnxruntime.TensorInfo).shape
-        dimF = shape[2].toInt()
-        dimT = shape[3].toInt()
-        chunk = hop * (dimT - 1)
-        gen = chunk - 2 * trim
+        return env.createSession(modelFile.absolutePath, opts)
     }
 
     /** Writes the vocals of [pcm] as a 16-bit stereo WAV. [progress] gets 0..100. */

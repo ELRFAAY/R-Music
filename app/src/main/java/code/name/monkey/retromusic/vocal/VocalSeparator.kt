@@ -24,9 +24,16 @@ import java.net.URL
  */
 object VocalSeparator {
     private const val TAG = "VocalSeparator"
-    private const val MODEL_URL =
-        "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/Kim_Vocal_2.onnx"
-    private const val MODEL_MIN_BYTES = 60_000_000L
+    private const val MODEL_BASE =
+        "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/"
+
+    /** "fast" = UVR_MDXNET_9482 (30 MB, about 2.7x faster), "high" = Kim_Vocal_2 (67 MB, better). */
+    private val quality: String
+        get() = code.name.monkey.retromusic.util.PreferenceUtil.vocalQuality
+    private val modelName: String
+        get() = if (quality == "high") "Kim_Vocal_2.onnx" else "UVR_MDXNET_9482.onnx"
+    private val modelUrl: String get() = MODEL_BASE + modelName
+    private val modelMinBytes: Long get() = if (quality == "high") 60_000_000L else 25_000_000L
     private const val MAX_MINUTES = 15
 
     sealed class Status {
@@ -59,7 +66,7 @@ object VocalSeparator {
     private fun stemFile(context: Context, song: Song): File {
         val dir = File(context.filesDir, "vocal_stems")
         dir.mkdirs()
-        return File(dir, "${song.id}_${song.dateModified}.wav")
+        return File(dir, "${song.id}_${song.dateModified}${if (quality == "high") "" else "_f"}.wav")
     }
 
     /** Deletes every saved vocal track. Returns the freed bytes. */
@@ -88,7 +95,7 @@ object VocalSeparator {
     private fun modelFile(context: Context): File {
         val dir = File(context.filesDir, "models")
         dir.mkdirs()
-        return File(dir, "Kim_Vocal_2.onnx")
+        return File(dir, modelName)
     }
 
     fun hasStem(song: Song): Boolean {
@@ -138,7 +145,7 @@ object VocalSeparator {
                     return@launch
                 }
                 val model = modelFile(c)
-                if (!model.exists() || model.length() < MODEL_MIN_BYTES) {
+                if (!model.exists() || model.length() < modelMinBytes) {
                     stage = "download"
                     download(model)
                 }
@@ -184,7 +191,7 @@ object VocalSeparator {
         val part = File(target.parentFile, target.name + ".part")
         var conn: HttpURLConnection? = null
         try {
-            conn = (URL(MODEL_URL).openConnection() as HttpURLConnection).apply {
+            conn = (URL(modelUrl).openConnection() as HttpURLConnection).apply {
                 connectTimeout = 20_000
                 readTimeout = 30_000
                 instanceFollowRedirects = true
@@ -210,7 +217,7 @@ object VocalSeparator {
                     }
                 }
             }
-            if (part.length() < MODEL_MIN_BYTES) {
+            if (part.length() < modelMinBytes) {
                 part.delete()
                 throw IllegalStateException("model download incomplete")
             }

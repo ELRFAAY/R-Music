@@ -62,6 +62,18 @@
             android:title="@string/pref_system_player_notification_title"
             app:icon="@drawable/ic_notification" />
 
+        <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEListPreference
+            android:defaultValue="fast"
+            android:entries="@array/pref_vocal_quality_entries"
+            android:entryValues="@array/pref_vocal_quality_values"
+            android:key="vocal_quality"
+            android:layout="@layout/list_item_view"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:summary="@string/pref_vocal_quality_summary"
+            android:title="@string/pref_vocal_quality_title"
+            app:icon="@drawable/ic_vocal_wave" />
+
         <androidx.preference.Preference
             android:key="clear_vocal_stems"
             android:layout="@layout/list_item_view"

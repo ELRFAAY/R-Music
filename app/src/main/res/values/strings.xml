@@ -692,4 +692,8 @@
     <string name="stats_row_detail">%1$d plays · %2$s</string>
     <string name="stats_no_data">Nothing here yet</string>
     <string name="vocal_processing_eta">Separating %1$d%% • about %2$d min left</string>
+    <string name="pref_vocal_quality_title">Voice separation quality</string>
+    <string name="pref_vocal_quality_summary">Fast model is about 2.7x quicker; the high one sounds cleaner</string>
+    <string name="vocal_quality_fast">Fast (30 MB)</string>
+    <string name="vocal_quality_high">High (67 MB, slower)</string>
 </resources>

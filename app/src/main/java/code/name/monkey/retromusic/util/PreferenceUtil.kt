@@ -964,6 +964,10 @@ object PreferenceUtil {
         get() = sharedPreferences.getString("korean_pronunciation", "en") ?: "en"
         set(v) = sharedPreferences.edit { putString("korean_pronunciation", v) }
 
+    /** Vocal separation model: "fast" (default) or "high". */
+    val vocalQuality: String
+        get() = sharedPreferences.getString("vocal_quality", "fast") ?: "fast"
+
     var miniPlayerLocked: Boolean
         get() = sharedPreferences.getBoolean("mini_player_locked", false)
         set(v) = sharedPreferences.edit { putBoolean("mini_player_locked", v) }

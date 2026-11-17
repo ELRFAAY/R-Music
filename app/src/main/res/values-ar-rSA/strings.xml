@@ -683,4 +683,8 @@
     <string name="stats_row_detail">%1$d مرة · %2$s</string>
     <string name="stats_no_data">لسه مفيش حاجة</string>
     <string name="vocal_processing_eta">جاري الفصل %1$d%% • باقي حوالي %2$d دقيقة</string>
+    <string name="pref_vocal_quality_title">جودة فصل الصوت</string>
+    <string name="pref_vocal_quality_summary">السريع أسرع حوالي 2.7 مرة، والعالي أنضف في الصوت</string>
+    <string name="vocal_quality_fast">سريع (30 ميجا)</string>
+    <string name="vocal_quality_high">عالي (67 ميجا، أبطأ)</string>
 </resources>
