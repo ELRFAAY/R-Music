@@ -127,7 +127,7 @@ class CoverGestureLayout @JvmOverloads constructor(
                 val dx = ev.x - downX
                 val dy = ev.y - downY
                 if (mode == Mode.NONE) {
-                    if (abs(dy) > slop && abs(dy) > abs(dx) * 1.5f) {
+                    if (abs(dy) > slop * 2 && abs(dy) > abs(dx) * 1.5f) {
                         mode = Mode.VOLUME
                         cancelChildren(ev)
                     } else if (abs(dx) > slop) {
@@ -175,7 +175,7 @@ class CoverGestureLayout @JvmOverloads constructor(
 
     private fun isShortTap(ev: MotionEvent): Boolean =
         ev.eventTime - downTime < longPressTimeout &&
-                abs(ev.x - downX) <= slop && abs(ev.y - downY) <= slop
+                abs(ev.x - downX) <= slop * 2 && abs(ev.y - downY) <= slop * 2
 
     /** First tap: hold it back. Second tap in time: double tap. */
     private fun handleTapUp(ev: MotionEvent): Boolean {

@@ -166,18 +166,26 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         // On the cover: a tap swaps the cover for the lyrics and back. A horizontal drag moves the
         // cover with the finger and the next/previous cover comes in from the side (swipe RIGHT =
         // next song, LEFT = previous; physical directions, the same in Arabic and English).
-        val coverGestures = GestureDetector(
-            requireContext(),
-            object : GestureDetector.SimpleOnGestureListener() {
-                override fun onDown(e: MotionEvent): Boolean = true
-
-                override fun onSingleTapUp(e: MotionEvent): Boolean {
-                    setLyricsVisible(!showingLyrics)
-                    return true
-                }
-            })
+        // Own tap detection (GestureDetector dropped taps that were held a little long or drifted a few
+        // pixels, so the lyrics sometimes did not open): a tap = finger up within 1.2 s and 2x touch slop.
+        val tapSlop = ViewConfiguration.get(requireContext()).scaledTouchSlop * 2
+        var tapDownX = 0f
+        var tapDownY = 0f
+        var tapDownT = 0L
+        var tapMoved = false
         binding.ringCover.setOnTouchListener { _, event ->
-            coverGestures.onTouchEvent(event)
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    tapDownX = event.rawX; tapDownY = event.rawY
+                    tapDownT = event.eventTime; tapMoved = false
+                }
+                MotionEvent.ACTION_MOVE ->
+                    if (abs(event.rawX - tapDownX) > tapSlop || abs(event.rawY - tapDownY) > tapSlop) tapMoved = true
+                MotionEvent.ACTION_UP ->
+                    if (!tapMoved && !dragging && event.eventTime - tapDownT < 1200L) {
+                        setLyricsVisible(!showingLyrics)
+                    }
+            }
             handleCoverDrag(event)
             true
         }
@@ -635,6 +643,9 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
 
     private fun updateLyrics() {
         val song = MusicPlayerRemote.currentSong
+        // Until the new song's lyrics are known a tap on the lyrics goes back to the cover.
+        lyricsSynced = false
+        _binding?.ringLyrics?.seekOnLineTap = false
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val lrcFile = LyricUtil.getSyncedLyricsFile(song)
             val embedded = if (lrcFile == null) LyricUtil.getEmbeddedSyncedLyrics(song.data) else null
