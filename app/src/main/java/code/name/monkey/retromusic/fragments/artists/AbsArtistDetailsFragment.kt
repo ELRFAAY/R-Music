@@ -533,9 +533,7 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
             SortOrder.ArtistAlbumSortOrder.ALBUM_YEAR -> sortOrder.findItem(R.id.action_sort_order_year_desc).isChecked =
                 true
 
-            else -> {
-                throw IllegalArgumentException("invalid $savedAlbumSortOrder")
-            }
+            else -> {}
         }
     }
 
@@ -556,9 +554,7 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
             SortOrder.ArtistSongSortOrder.SONG_DURATION -> sortOrder.findItem(R.id.action_sort_order_song_duration).isChecked =
                 true
 
-            else -> {
-                throw IllegalArgumentException("invalid $savedSongSortOrder")
-            }
+            else -> {}
         }
     }
 

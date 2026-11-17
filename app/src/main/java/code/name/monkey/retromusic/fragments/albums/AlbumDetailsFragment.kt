@@ -445,7 +445,7 @@ class AlbumDetailsFragment : AbsMainActivityFragment(R.layout.fragment_album_det
                 )
             }
 
-            else -> throw IllegalArgumentException("invalid $sortOrder")
+            else -> album.songs // unknown saved value: keep the order
         }
         album = album.copy(songs = songs)
         simpleSongAdapter.swapDataSet(album.songs)

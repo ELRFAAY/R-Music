@@ -93,9 +93,7 @@ data class Artist(
                         )
                     }
 
-                    else -> {
-                        throw IllegalArgumentException("invalid ${PreferenceUtil.artistDetailSongSortOrder}")
-                    }
+                    else -> { _, _ -> 0 } // unknown saved value: keep the order as it is
                 })
         }
 
@@ -120,9 +118,7 @@ data class Artist(
                         o2.year.compareTo(o1.year)
                     }
 
-                    else -> {
-                        throw IllegalArgumentException("invalid ${PreferenceUtil.artistAlbumSortOrder}")
-                    }
+                    else -> { _, _ -> 0 } // unknown saved value: keep the order as it is
                 })
         }
 
