@@ -56,6 +56,11 @@ class ArtistAdapter(
     var albumArtistsOnly = false
     private var rawDataSet: List<Artist> = dataSet
 
+    /** Pinned artists are piled into one cell until the user taps it. */
+    private var stackExpanded = false
+    private var stackHead: Artist? = null
+    private var stackRest: List<Artist> = emptyList()
+
     init {
         this.setHasStableIds(true)
     }
@@ -64,8 +69,18 @@ class ArtistAdapter(
     fun swapDataSet(dataSet: List<Artist>) {
         rawDataSet = dataSet
         val pinned = PreferenceUtil.pinnedArtists
-        this.dataSet = if (pinned.isEmpty()) dataSet
+        val sorted = if (pinned.isEmpty()) dataSet
         else dataSet.sortedBy { if (it.name in pinned) 0 else 1 }
+        val pinnedList = sorted.filter { it.name in pinned }
+        if (pinnedList.size >= 2 && !stackExpanded) {
+            stackHead = pinnedList[0]
+            stackRest = pinnedList.drop(1)
+            this.dataSet = listOf(pinnedList[0]) + sorted.filter { it.name !in pinned }
+        } else {
+            stackHead = null
+            stackRest = emptyList()
+            this.dataSet = sorted
+        }
         notifyDataSetChanged()
         albumArtistsOnly = PreferenceUtil.albumArtistsOnly
     }
@@ -93,6 +108,9 @@ class ArtistAdapter(
         val isChecked = isChecked(artist)
         holder.itemView.isActivated = isChecked
         holder.title?.text = artist.name
+        val isStack = stackHead === artist && stackRest.isNotEmpty()
+        if (isStack) holder.title?.text = "${artist.name} +${stackRest.size}"
+        bindPile(holder, if (isStack) stackRest.take(2) else emptyList())
         markPinned(holder, artist.name in PreferenceUtil.pinnedArtists)
         holder.text?.hide()
         val transitionName =
@@ -103,6 +121,37 @@ class ArtistAdapter(
             holder.image?.transitionName = transitionName
         }
         loadArtistImage(artist, holder)
+    }
+
+    /** Draws up to two more covers behind the cell, tilted, so a pile shows. */
+    private fun bindPile(holder: ViewHolder, behind: List<Artist>) {
+        val img = holder.image ?: return
+        val parent = img.parent as? androidx.constraintlayout.widget.ConstraintLayout ?: return
+        for (i in parent.childCount - 1 downTo 0) {
+            if (parent.getChildAt(i).tag == PILE_TAG) parent.removeViewAt(i)
+        }
+        parent.clipChildren = false
+        parent.clipToPadding = false
+        val d = parent.resources.displayMetrics.density
+        behind.forEachIndexed { i, a ->
+            val v = code.name.monkey.retromusic.views.RetroShapeableImageView(activity)
+            v.tag = PILE_TAG
+            v.scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+            val lp = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams(0, 0)
+            lp.dimensionRatio = "1:1"
+            lp.startToStart = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID
+            lp.endToEnd = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID
+            lp.topToTop = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID
+            v.layoutParams = lp
+            val sign = if (i == 0) 1 else -1
+            v.rotation = sign * (7f + 3f * i)
+            v.translationX = sign * 6f * d
+            v.translationY = 2f * d * (i + 1)
+            v.alpha = 0.9f
+            parent.addView(v, 0)
+            Glide.with(activity).load(RetroGlideExtension.getArtistModel(a))
+                .artistImageOptions(a).into(v)
+        }
     }
 
     /** A small pin before the name of a pinned artist. */
@@ -193,6 +242,11 @@ class ArtistAdapter(
                 toggleChecked(layoutPosition)
             } else {
                 val artist = dataSet[layoutPosition]
+                if (stackHead === artist && stackRest.isNotEmpty()) {
+                    stackExpanded = true
+                    swapDataSet(rawDataSet)
+                    return
+                }
                 image?.let {
                     if (albumArtistsOnly && IAlbumArtistClickListener != null) {
                         IAlbumArtistClickListener.onAlbumArtist(artist.name, imageContainer ?: it)
@@ -211,29 +265,36 @@ class ArtistAdapter(
             val pinned = PreferenceUtil.pinnedArtists
             val isPinned = artist.name in pinned
             val songs = artist.songs
-            ArtistPopup.show(
-                image ?: itemView,
-                listOf(
-                    activity.getString(if (isPinned) R.string.artist_unpin else R.string.artist_pin) to {
-                        PreferenceUtil.pinnedArtists =
-                            if (isPinned) pinned - artist.name else pinned + artist.name
-                        swapDataSet(rawDataSet)
-                    },
-                    activity.getString(R.string.action_play_next) to {
-                        SongsMenuHelper.handleMenuClick(activity, songs, R.id.action_play_next)
-                    },
-                    activity.getString(R.string.action_add_to_playing_queue) to {
-                        SongsMenuHelper.handleMenuClick(activity, songs, R.id.action_add_to_current_playing)
-                    },
-                    activity.getString(R.string.action_add_to_playlist) to {
-                        SongsMenuHelper.handleMenuClick(activity, songs, R.id.action_add_to_playlist)
-                    },
-                    activity.getString(R.string.merge_artist) to { onMerge?.invoke(artist) },
-                    activity.getString(R.string.edit_artist_title) to { onRename?.invoke(artist) },
-                    activity.getString(R.string.artist_select) to { toggleChecked(layoutPosition) }
-                )
-            )
+            val entries = mutableListOf<Pair<String, () -> Unit>>()
+            entries.add(activity.getString(if (isPinned) R.string.artist_unpin else R.string.artist_pin) to {
+                PreferenceUtil.pinnedArtists =
+                    if (isPinned) pinned - artist.name else pinned + artist.name
+                swapDataSet(rawDataSet)
+            })
+            if (isPinned && stackExpanded && pinned.size >= 2) {
+                entries.add(activity.getString(R.string.artist_stack_pinned) to {
+                    stackExpanded = false
+                    swapDataSet(rawDataSet)
+                })
+            }
+            entries.add(activity.getString(R.string.action_play_next) to {
+                SongsMenuHelper.handleMenuClick(activity, songs, R.id.action_play_next)
+            })
+            entries.add(activity.getString(R.string.action_add_to_playing_queue) to {
+                SongsMenuHelper.handleMenuClick(activity, songs, R.id.action_add_to_current_playing)
+            })
+            entries.add(activity.getString(R.string.action_add_to_playlist) to {
+                SongsMenuHelper.handleMenuClick(activity, songs, R.id.action_add_to_playlist)
+            })
+            entries.add(activity.getString(R.string.merge_artist) to { onMerge?.invoke(artist) })
+            entries.add(activity.getString(R.string.edit_artist_title) to { onRename?.invoke(artist) })
+            entries.add(activity.getString(R.string.artist_select) to { toggleChecked(layoutPosition) })
+            ArtistPopup.show(image ?: itemView, entries)
             return true
         }
+    }
+
+    companion object {
+        private const val PILE_TAG = "artist_pile"
     }
 }
