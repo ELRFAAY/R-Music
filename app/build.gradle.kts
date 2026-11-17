@@ -25,7 +25,8 @@ android {
             useSupportLibrary = true
         }
 
-        applicationId = namespace
+        // Own package id: installs as a separate app from Retro Music. Code package stays `namespace`.
+        applicationId = "com.elrfaay.rmusic"
         versionCode = 10703
         versionName = "7.0.3"
 
@@ -34,7 +35,7 @@ android {
     val signingProperties = getProperties("retro.properties")
     val theSigningConfig = if (signingProperties != null) {
         signingConfigs.create("release") {
-            storeFile = file(getProperty(signingProperties, "storeFile"))
+            storeFile = rootProject.file(getProperty(signingProperties, "storeFile"))
             keyAlias = getProperty(signingProperties, "keyAlias")
             storePassword = getProperty(signingProperties, "storePassword")
             keyPassword = getProperty(signingProperties, "keyPassword")
