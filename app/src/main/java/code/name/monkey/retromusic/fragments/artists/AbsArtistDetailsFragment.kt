@@ -111,6 +111,7 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
             }
         }
         setupSongSortButton()
+        setupSongViewButton()
         setupAlbumSortButton()
         binding.appBarLayout?.statusBarForeground =
             MaterialShapeDrawable.createWithElevationOverlay(requireContext())
@@ -125,13 +126,74 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
         }
         // item_list shows the cover of every song; item_song only shows the track number, which
         // makes no sense across several albums.
+        applySongView()
+    }
+
+    private fun songItemLayout(): Int = when (PreferenceUtil.artistDetailSongStyle) {
+        1 -> R.layout.item_grid
+        2 -> R.layout.item_card
+        3 -> R.layout.item_card_color
+        4 -> R.layout.item_grid_circle
+        else -> R.layout.item_list
+    }
+
+    /** Builds the songs list with the style / columns the user picked for artist pages. */
+    private fun applySongView() {
+        val isList = PreferenceUtil.artistDetailSongStyle == 0
         songAdapter = SimpleSongAdapter(
-            requireActivity(), ArrayList(), R.layout.item_list, showAlbumAsSubtitle = true
+            requireActivity(), ArrayList(), songItemLayout(), showAlbumAsSubtitle = true
         )
         binding.fragmentArtistContent.recyclerView.apply {
             itemAnimator = DefaultItemAnimator()
-            layoutManager = LinearLayoutManager(this.context)
+            layoutManager = if (isList) LinearLayoutManager(this.context)
+            else GridLayoutManager(this.context, PreferenceUtil.artistDetailSongColumns)
             adapter = songAdapter
+        }
+        if (::artist.isInitialized) {
+            allSongsShown = false
+            showArtist(artist)
+        }
+    }
+
+    private fun setupSongViewButton() {
+        binding.fragmentArtistContent.songViewMode.setOnClickListener {
+            PopupMenu(requireContext(), binding.fragmentArtistContent.songViewMode).apply {
+                inflate(R.menu.menu_artist_songs_view)
+                val style = PreferenceUtil.artistDetailSongStyle
+                val cols = PreferenceUtil.artistDetailSongColumns
+                menu.findItem(
+                    when (style) {
+                        1 -> when (cols) {
+                            3 -> R.id.view_grid_3
+                            4 -> R.id.view_grid_4
+                            else -> R.id.view_grid_2
+                        }
+                        2 -> R.id.view_card
+                        3 -> R.id.view_card_color
+                        4 -> R.id.view_circular
+                        else -> R.id.view_list
+                    }
+                ).isChecked = true
+                setOnMenuItemClickListener { item ->
+                    when (item.itemId) {
+                        R.id.view_list -> PreferenceUtil.artistDetailSongStyle = 0
+                        R.id.view_grid_2, R.id.view_grid_3, R.id.view_grid_4 -> {
+                            PreferenceUtil.artistDetailSongStyle = 1
+                            PreferenceUtil.artistDetailSongColumns = when (item.itemId) {
+                                R.id.view_grid_3 -> 3
+                                R.id.view_grid_4 -> 4
+                                else -> 2
+                            }
+                        }
+                        R.id.view_card -> PreferenceUtil.artistDetailSongStyle = 2
+                        R.id.view_card_color -> PreferenceUtil.artistDetailSongStyle = 3
+                        R.id.view_circular -> PreferenceUtil.artistDetailSongStyle = 4
+                    }
+                    applySongView()
+                    true
+                }
+                show()
+            }
         }
     }
 

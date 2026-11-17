@@ -24,7 +24,9 @@ import code.name.monkey.retromusic.ALBUM_SONG_SORT_ORDER
 import code.name.monkey.retromusic.ALBUM_SORT_ORDER
 import code.name.monkey.retromusic.APPBAR_MODE
 import code.name.monkey.retromusic.ARTIST_ALBUM_SORT_ORDER
+import code.name.monkey.retromusic.ARTIST_DETAIL_SONG_COLUMNS
 import code.name.monkey.retromusic.ARTIST_DETAIL_SONG_SORT_ORDER
+import code.name.monkey.retromusic.ARTIST_DETAIL_SONG_STYLE
 import code.name.monkey.retromusic.ARTIST_GRID_SIZE
 import code.name.monkey.retromusic.ARTIST_GRID_SIZE_LAND
 import code.name.monkey.retromusic.ARTIST_GRID_STYLE
@@ -272,6 +274,16 @@ object PreferenceUtil {
             AlbumSongSortOrder.SONG_TRACK_LIST
         )
         set(value) = sharedPreferences.edit { putString(ALBUM_DETAIL_SONG_SORT_ORDER, value) }
+
+    /** Songs on an artist page: 0 list, 1 grid, 2 card, 3 coloured card, 4 circular. */
+    var artistDetailSongStyle: Int
+        get() = sharedPreferences.getInt(ARTIST_DETAIL_SONG_STYLE, 0).coerceIn(0, 4)
+        set(value) = sharedPreferences.edit { putInt(ARTIST_DETAIL_SONG_STYLE, value) }
+
+    /** Columns of the grid styles on an artist page (2..4). */
+    var artistDetailSongColumns: Int
+        get() = sharedPreferences.getInt(ARTIST_DETAIL_SONG_COLUMNS, 2).coerceIn(2, 4)
+        set(value) = sharedPreferences.edit { putInt(ARTIST_DETAIL_SONG_COLUMNS, value) }
 
     var artistDetailSongSortOrder
         get() = sharedPreferences.getStringOrDefault(

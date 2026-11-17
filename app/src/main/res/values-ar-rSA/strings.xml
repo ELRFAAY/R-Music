@@ -687,4 +687,9 @@
     <string name="pref_vocal_quality_summary">السريع أسرع حوالي 2.7 مرة، والعالي أنضف في الصوت</string>
     <string name="vocal_quality_fast">سريع (30 ميجا)</string>
     <string name="vocal_quality_high">عالي (67 ميجا، أبطأ)</string>
+    <string name="artist_view_list">قائمة</string>
+    <string name="artist_view_grid_2">شبكة، عمودين</string>
+    <string name="artist_view_grid_3">شبكة، 3 أعمدة</string>
+    <string name="artist_view_grid_4">شبكة، 4 أعمدة</string>
+    <string name="artist_view_mode">العرض</string>
 </resources>

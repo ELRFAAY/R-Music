@@ -696,4 +696,9 @@
     <string name="pref_vocal_quality_summary">Fast model is about 2.7x quicker; the high one sounds cleaner</string>
     <string name="vocal_quality_fast">Fast (30 MB)</string>
     <string name="vocal_quality_high">High (67 MB, slower)</string>
+    <string name="artist_view_list">List</string>
+    <string name="artist_view_grid_2">Grid, 2 columns</string>
+    <string name="artist_view_grid_3">Grid, 3 columns</string>
+    <string name="artist_view_grid_4">Grid, 4 columns</string>
+    <string name="artist_view_mode">View</string>
 </resources>
