@@ -61,9 +61,13 @@ class ArtistAdapter(
     }
 
     @SuppressLint("NotifyDataSetChanged")
+    /** Read once per data set instead of once per bound row (the getter parses a string). */
+    private var pinnedNames: Set<String> = PreferenceUtil.pinnedArtists
+
     fun swapDataSet(dataSet: List<Artist>) {
         rawDataSet = dataSet
         val pinned = PreferenceUtil.pinnedArtists
+        pinnedNames = pinned
         this.dataSet = if (pinned.isEmpty()) dataSet
         else dataSet.sortedBy { if (it.name in pinned) 0 else 1 }
         notifyDataSetChanged()
@@ -92,8 +96,9 @@ class ArtistAdapter(
         val artist = dataSet[position]
         val isChecked = isChecked(artist)
         holder.itemView.isActivated = isChecked
-        holder.title?.text = artist.name
-        markPinned(holder, artist.name in PreferenceUtil.pinnedArtists)
+        val artistName = artist.name
+        holder.title?.text = artistName
+        markPinned(holder, artistName in pinnedNames)
         holder.text?.hide()
         val transitionName =
             if (albumArtistsOnly) artist.name else artist.id.toString()
