@@ -393,3 +393,7 @@ RULES: short Egyptian Arabic replies, no long polling of CI, commits carry the C
 
 ### Session 21d (2026-11-17 night): card menu inside an opened stack (written, NOT compiled/tested)
 - Long press on a card of a spread-out stack → glass menu: Move (drag the card onto another card's slot to change the order; `TiltedCoverGridView.startMove` / `onStackReordered` → `HomeFragment.saveStackOrder`), Take out of the stack, Unpin, Play this song (`onStackMemberLongClick` → `showStackCardMenu`). After a reorder the wall reloads and the stack folds back (its top card changes); tap it again to spread it.
+
+### Session 21e (2026-11-17 night): stats colours (written, NOT compiled/tested)
+- User: the stats screen is all dark; wanted a break in the middle. `ListeningStatsFragment.applyPalette()` colours each card with a hue-rotated accent (time card solid accent, others tinted), hours chart in another hue (`BarChartView.barColor`), and a gradient "most played song" highlight card (`highlightCard`) between the charts and the top lists.
+- Build failures seen at 22:37 (stacks + online picture search) were compile errors, fixed in the next commit: duplicate `wallMenu`, local `val text` shadowing `TextView.text`, `createDefaultOkHttpClient()` returns a Builder (`.build()`).

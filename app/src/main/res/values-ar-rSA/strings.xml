@@ -725,4 +725,5 @@
     <string name="wall_move_hint">اسحب الكارت لمكانه الجديد في الكومة</string>
     <string name="wall_remove_from_stack">إخراج من الكومة</string>
     <string name="wall_play_this">تشغيل الأغنية دي</string>
+    <string name="stats_highlight_label">أكتر أغنية سمعتها</string>
 </resources>

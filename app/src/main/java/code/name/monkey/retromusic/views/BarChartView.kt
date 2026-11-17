@@ -32,6 +32,10 @@ class BarChartView @JvmOverloads constructor(
     private var maxLabel: String = ""
     private var highlight = -1
 
+    /** Colour of the bars; the theme accent when not set. */
+    var barColor: Int? = null
+        set(v) { field = v; invalidate() }
+
     private val density = resources.displayMetrics.density
     private val barPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -52,7 +56,7 @@ class BarChartView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         if (values.isEmpty()) return
-        val accent = ThemeStore.accentColor(context)
+        val accent = barColor ?: ThemeStore.accentColor(context)
         val tv = TypedValue()
         context.theme.resolveAttribute(android.R.attr.textColorSecondary, tv, true)
         val textColor = context.getColor(tv.resourceId.takeIf { it != 0 } ?: android.R.color.darker_gray)

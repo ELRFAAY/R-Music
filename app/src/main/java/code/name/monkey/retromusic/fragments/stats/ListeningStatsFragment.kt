@@ -86,6 +86,7 @@ class ListeningStatsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         applyToolbar(binding.toolbar)
+        applyPalette()
         binding.toolbar.setNavigationOnClickListener { findNavController().navigateUp() }
 
         binding.periodGroup.setOnCheckedStateChangeListener { _, checkedIds ->
@@ -109,6 +110,7 @@ class ListeningStatsFragment : Fragment() {
         }
         viewModel.topSongs.observe(viewLifecycleOwner) {
             songs = it
+            showHighlight(it.firstOrNull())
             fillRows(binding.topSongsContainer, it, PREVIEW_ROWS, showSubtitle = true, kind = KIND_SONG)
         }
         viewModel.topArtists.observe(viewLifecycleOwner) {
@@ -219,6 +221,70 @@ class ListeningStatsFragment : Fragment() {
             setOnDismissListener { viewModel.recent.removeObserver(observer) }
             show()
         }
+    }
+
+    private fun hueShift(color: Int, shift: Float): Int {
+        val hsl = FloatArray(3)
+        androidx.core.graphics.ColorUtils.colorToHSL(color, hsl)
+        hsl[0] = (hsl[0] + shift) % 360f
+        hsl[1] = hsl[1].coerceAtLeast(0.55f)
+        hsl[2] = hsl[2].coerceIn(0.42f, 0.58f)
+        return androidx.core.graphics.ColorUtils.HSLToColor(hsl)
+    }
+
+    private fun onColor(color: Int): Int =
+        if (androidx.core.graphics.ColorUtils.calculateLuminance(color) > 0.55) 0xFF111111.toInt()
+        else 0xFFFFFFFF.toInt()
+
+    /** Gives every card its own colour (rotated from the accent) so the screen is not all dark. */
+    private fun applyPalette() {
+        val b = binding
+        val accent = ThemeStore.accentColor(requireContext())
+        fun tint(value: TextView, color: Int, solid: Boolean = false) {
+            val card = value.parent.parent as com.google.android.material.card.MaterialCardView
+            val box = value.parent as ViewGroup
+            if (solid) {
+                card.setCardBackgroundColor(color)
+                val on = onColor(color)
+                for (i in 0 until box.childCount) (box.getChildAt(i) as? TextView)?.setTextColor(on)
+            } else {
+                card.setCardBackgroundColor(androidx.core.graphics.ColorUtils.setAlphaComponent(color, 0x38))
+                value.setTextColor(color)
+            }
+        }
+        tint(b.cardTimeValue, accent, solid = true)
+        tint(b.cardPlaysValue, hueShift(accent, 45f))
+        tint(b.cardSongsValue, hueShift(accent, 90f))
+        tint(b.cardTodayValue, hueShift(accent, 200f))
+        tint(b.tileAvg, hueShift(accent, 120f))
+        tint(b.tileStreak, hueShift(accent, 170f))
+        tint(b.tileHour, hueShift(accent, 235f))
+        tint(b.tileDay, hueShift(accent, 290f))
+        b.chart.barColor = accent
+        b.hoursChart.barColor = hueShift(accent, 150f)
+        // the colourful break in the middle of the screen
+        val from = accent
+        val to = hueShift(accent, 70f)
+        b.highlightCard.background = android.graphics.drawable.GradientDrawable(
+            android.graphics.drawable.GradientDrawable.Orientation.TL_BR, intArrayOf(from, to)
+        ).apply { cornerRadius = 20f * resources.displayMetrics.density }
+        val on = onColor(androidx.core.graphics.ColorUtils.blendARGB(from, to, 0.5f))
+        b.highlightLabel.setTextColor(on)
+        b.highlightTitle.setTextColor(on)
+        b.highlightSub.setTextColor(on)
+    }
+
+    private fun showHighlight(row: TopRow?) {
+        val b = _binding ?: return
+        val card = b.highlightCard.parent as View
+        if (row == null) {
+            card.visibility = View.GONE
+            return
+        }
+        card.visibility = View.VISIBLE
+        b.highlightTitle.text = row.name.ifBlank { "-" }
+        b.highlightSub.text = (if (row.subtitle.isNotBlank()) row.subtitle + " · " else "") +
+            getString(R.string.stats_row_detail, row.plays, formatDuration(row.totalMs))
     }
 
     /** Tiles, the compare line and the time-of-day chart. */

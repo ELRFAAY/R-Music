@@ -734,4 +734,5 @@
     <string name="wall_move_hint">Drag the card to its new place in the stack</string>
     <string name="wall_remove_from_stack">Take out of the stack</string>
     <string name="wall_play_this">Play this song</string>
+    <string name="stats_highlight_label">Your most played song</string>
 </resources>
