@@ -19,6 +19,13 @@ private const val BASE_URL = "https://api.deezer.com/"
 
 interface DeezerService {
 
+    /** Several artists for one name, used to suggest pictures. */
+    @GET(BASE_QUERY_ARTIST)
+    fun searchArtists(
+        @Query("q") artistName: String,
+        @Query("limit") limit: Int = 8
+    ): Call<DeezerResponse>
+
     @GET("$BASE_QUERY_ARTIST&limit=1")
     fun getArtistImage(
         @Query("q") artistName: String

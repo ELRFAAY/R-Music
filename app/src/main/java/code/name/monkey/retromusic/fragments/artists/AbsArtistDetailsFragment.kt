@@ -349,6 +349,92 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
         forceDownload = true
     }
 
+    /**
+     * Suggests pictures for the artist from the internet (searched for the artist name at once; the
+     * name can be changed and searched again). A tap on a picture makes it the artist picture.
+     */
+    private fun showOnlineImages(initialQuery: String) {
+        val ctx = requireContext()
+        val d = resources.displayMetrics.density
+        val pad = (16 * d).toInt()
+        val sheet = com.google.android.material.bottomsheet.BottomSheetDialog(ctx)
+        val query = android.widget.EditText(ctx).apply {
+            setText(initialQuery)
+            setSingleLine()
+            imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH
+        }
+        val go = com.google.android.material.button.MaterialButton(ctx).apply {
+            setText(R.string.action_search)
+        }
+        val row = android.widget.LinearLayout(ctx).apply {
+            orientation = android.widget.LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            addView(query, android.widget.LinearLayout.LayoutParams(0, -2, 1f))
+            addView(go)
+        }
+        val status = android.widget.TextView(ctx).apply {
+            setPadding(0, pad / 2, 0, pad / 2)
+            alpha = 0.7f
+        }
+        val grid = android.widget.GridLayout(ctx).apply { columnCount = 3 }
+        val column = android.widget.LinearLayout(ctx).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(pad, pad, pad, pad)
+            addView(row)
+            addView(status)
+            addView(grid)
+        }
+        sheet.setContentView(androidx.core.widget.NestedScrollView(ctx).apply { addView(column) })
+
+        fun search() {
+            grid.removeAllViews()
+            status.setText(R.string.edit_artist_searching)
+            val text = query.text.toString()
+            viewLifecycleOwner.lifecycleScope.launch {
+                val found = code.name.monkey.retromusic.network.ArtistImageSearch.search(ctx, text)
+                if (!sheet.isShowing) return@launch
+                status.setText(
+                    if (found.isEmpty()) R.string.edit_artist_no_results else R.string.edit_artist_pick_one
+                )
+                val size = ((resources.displayMetrics.widthPixels - pad * 2) / 3) - (8 * d).toInt()
+                found.forEach { c ->
+                    val cell = android.widget.LinearLayout(ctx).apply {
+                        orientation = android.widget.LinearLayout.VERTICAL
+                        setPadding((4 * d).toInt(), (4 * d).toInt(), (4 * d).toInt(), (4 * d).toInt())
+                    }
+                    val img = android.widget.ImageView(ctx).apply {
+                        scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                        layoutParams = android.widget.LinearLayout.LayoutParams(size, size)
+                    }
+                    com.bumptech.glide.Glide.with(ctx).load(c.url).centerCrop().into(img)
+                    val cap = android.widget.TextView(ctx).apply {
+                        text = c.title + " · " + c.source
+                        textSize = 11f
+                        maxLines = 1
+                        ellipsize = android.text.TextUtils.TruncateAt.END
+                        layoutParams = android.widget.LinearLayout.LayoutParams(size, -2)
+                    }
+                    cell.addView(img)
+                    cell.addView(cap)
+                    cell.setOnClickListener {
+                        sheet.dismiss()
+                        showToast(resources.getString(R.string.updating))
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            CustomArtistImageUtil.getInstance(ctx)
+                                .setCustomArtistImage(artist, android.net.Uri.parse(c.url))
+                            detailsViewModel.refreshArtistInfo()
+                        }
+                    }
+                    grid.addView(cell)
+                }
+            }
+        }
+        go.setOnClickListener { search() }
+        query.setOnEditorActionListener { _, _, _ -> search(); true }
+        sheet.show()
+        search()
+    }
+
     private fun showEditArtistDialog() {
         val ctx = requireContext()
         val pad = (20 * resources.displayMetrics.density).toInt()
@@ -369,6 +455,12 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
             setText(R.string.edit_artist_change_image)
             setOnClickListener { pickArtistImage() }
         }
+        val online = com.google.android.material.button.MaterialButton(
+            ctx, null, com.google.android.material.R.attr.materialButtonOutlinedStyle
+        ).apply {
+            setText(R.string.edit_artist_search_online)
+            setOnClickListener { showOnlineImages(artist.name) }
+        }
         val remove = com.google.android.material.button.MaterialButton(
             ctx, null, com.google.android.material.R.attr.materialButtonOutlinedStyle
         ).apply {
@@ -381,6 +473,7 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
             addView(input)
             addView(note)
             addView(change)
+            addView(online)
             addView(remove)
         }
         materialDialog(R.string.edit_artist_title)

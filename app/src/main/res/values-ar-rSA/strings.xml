@@ -717,4 +717,8 @@
     <string name="wall_play_stack">تشغيل الكومة</string>
     <string name="wall_ungroup">فك الجمع</string>
     <string name="wall_unpin_all">إلغاء تثبيت الكل</string>
+    <string name="edit_artist_search_online">ابحث عن صورة على الإنترنت</string>
+    <string name="edit_artist_searching">جاري البحث…</string>
+    <string name="edit_artist_no_results">ما لقيتش صور. جرّب كتابة تانية للاسم.</string>
+    <string name="edit_artist_pick_one">اضغط على صورة عشان تستخدمها</string>
 </resources>

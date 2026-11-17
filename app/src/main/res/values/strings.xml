@@ -726,4 +726,8 @@
     <string name="wall_play_stack">Play stack</string>
     <string name="wall_ungroup">Ungroup</string>
     <string name="wall_unpin_all">Unpin all</string>
+    <string name="edit_artist_search_online">Search a picture online</string>
+    <string name="edit_artist_searching">Searching…</string>
+    <string name="edit_artist_no_results">No pictures found. Try another spelling.</string>
+    <string name="edit_artist_pick_one">Tap a picture to use it</string>
 </resources>
