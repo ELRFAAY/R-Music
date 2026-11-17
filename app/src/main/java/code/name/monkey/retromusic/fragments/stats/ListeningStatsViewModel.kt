@@ -13,7 +13,7 @@ package code.name.monkey.retromusic.fragments.stats
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
+import androidx.lifecycle.switchMap
 import androidx.lifecycle.ViewModel
 import code.name.monkey.retromusic.db.ListeningEventDao
 import code.name.monkey.retromusic.db.ListeningEventEntity
@@ -32,13 +32,13 @@ class ListeningStatsViewModel(private val dao: ListeningEventDao) : ViewModel() 
         since.value = if (days == 0) 0L else daysAgo(days)
     }
 
-    val stats: LiveData<ListeningStats> = Transformations.switchMap(since) { dao.stats(it) }
+    val stats: LiveData<ListeningStats> = since.switchMap { dao.stats(it) }
     val topSongs: LiveData<List<TopRow>> =
-        Transformations.switchMap(since) { dao.topSongs(it, TOP_LIMIT) }
+        since.switchMap { dao.topSongs(it, TOP_LIMIT) }
     val topArtists: LiveData<List<TopRow>> =
-        Transformations.switchMap(since) { dao.topArtists(it, TOP_LIMIT) }
+        since.switchMap { dao.topArtists(it, TOP_LIMIT) }
     val topAlbums: LiveData<List<TopRow>> =
-        Transformations.switchMap(since) { dao.topAlbums(it, TOP_LIMIT) }
+        since.switchMap { dao.topAlbums(it, TOP_LIMIT) }
 
     val today: LiveData<ListeningStats> = dao.stats(startOfToday())
 
