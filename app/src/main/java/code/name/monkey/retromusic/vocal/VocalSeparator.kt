@@ -25,7 +25,7 @@ import java.net.URL
 object VocalSeparator {
     private const val TAG = "VocalSeparator"
     private const val MODEL_URL =
-        "https://huggingface.co/huangjackson/Kim_Vocal_2/resolve/main/Kim_Vocal_2.onnx"
+        "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/Kim_Vocal_2.onnx"
     private const val MODEL_MIN_BYTES = 60_000_000L
     private const val MAX_MINUTES = 15
 
