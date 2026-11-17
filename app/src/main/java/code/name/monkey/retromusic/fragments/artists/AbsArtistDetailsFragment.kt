@@ -389,9 +389,9 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
         fun search() {
             grid.removeAllViews()
             status.setText(R.string.edit_artist_searching)
-            val text = query.text.toString()
+            val queryText = query.text.toString()
             viewLifecycleOwner.lifecycleScope.launch {
-                val found = code.name.monkey.retromusic.network.ArtistImageSearch.search(ctx, text)
+                val found = code.name.monkey.retromusic.network.ArtistImageSearch.search(ctx, queryText)
                 if (!sheet.isShowing) return@launch
                 status.setText(
                     if (found.isEmpty()) R.string.edit_artist_no_results else R.string.edit_artist_pick_one

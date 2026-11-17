@@ -411,12 +411,7 @@ class HomeFragment :
         )
     }
 
-    private var wallMenu: PopupWindow? = null
 
-    /**
-     * Long press on a cover: the same glass menu as the artist covers, with its arrow pointing at that
-     * cover: pin / unpin and go-to-song. The wall stops drifting while it is open.
-     */
     /** Pinned covers ticked for grouping (kept only while the home screen is open). */
     private val wallSelection = LinkedHashSet<Long>()
 

@@ -18,7 +18,7 @@ object ArtistImageSearch {
         withContext(Dispatchers.IO) {
             val name = query.trim()
             if (name.isEmpty()) return@withContext emptyList()
-            val client = DeezerService.createDefaultOkHttpClient(context)
+            val client = DeezerService.createDefaultOkHttpClient(context).build()
             val out = ArrayList<ArtistImageCandidate>()
             runCatching { out += deezer(client, name) }
             runCatching { out += wikipedia(client, "en", name) }
