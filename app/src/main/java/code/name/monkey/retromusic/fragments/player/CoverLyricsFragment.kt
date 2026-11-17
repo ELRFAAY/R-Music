@@ -70,14 +70,16 @@ class CoverLyricsFragment : AbsMusicServiceFragment(R.layout.fragment_cover_lyri
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String?) {
+        // The listener can fire after the view is gone (preference writes are delivered later).
+        val b = _binding ?: return
         if (key == SHOW_LYRICS) {
             if (sharedPreferences.getBoolean(key, false) == true) {
                 progressViewUpdateHelper?.start()
-                binding.root.isVisible = true
+                b.root.isVisible = true
                 updateLyrics()
             } else {
                 progressViewUpdateHelper?.stop()
-                binding.root.isVisible = false
+                b.root.isVisible = false
             }
         }
     }
