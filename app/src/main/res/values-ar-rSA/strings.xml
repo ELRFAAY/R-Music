@@ -721,4 +721,8 @@
     <string name="edit_artist_searching">جاري البحث…</string>
     <string name="edit_artist_no_results">ما لقيتش صور. جرّب كتابة تانية للاسم.</string>
     <string name="edit_artist_pick_one">اضغط على صورة عشان تستخدمها</string>
+    <string name="wall_move">تحريك</string>
+    <string name="wall_move_hint">اسحب الكارت لمكانه الجديد في الكومة</string>
+    <string name="wall_remove_from_stack">إخراج من الكومة</string>
+    <string name="wall_play_this">تشغيل الأغنية دي</string>
 </resources>

@@ -730,4 +730,8 @@
     <string name="edit_artist_searching">Searching…</string>
     <string name="edit_artist_no_results">No pictures found. Try another spelling.</string>
     <string name="edit_artist_pick_one">Tap a picture to use it</string>
+    <string name="wall_move">Move</string>
+    <string name="wall_move_hint">Drag the card to its new place in the stack</string>
+    <string name="wall_remove_from_stack">Take out of the stack</string>
+    <string name="wall_play_this">Play this song</string>
 </resources>

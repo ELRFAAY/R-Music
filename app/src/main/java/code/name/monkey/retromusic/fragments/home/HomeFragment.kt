@@ -131,6 +131,10 @@ class HomeFragment :
         binding.coverGrid.onStackMemberClick = { songs, position ->
             MusicPlayerRemote.openQueue(songs, position, true)
         }
+        binding.coverGrid.onStackMemberLongClick = { songs, position, rect ->
+            showStackCardMenu(songs, position, rect)
+        }
+        binding.coverGrid.onStackReordered = { newOrder -> saveStackOrder(newOrder) }
         binding.coverGrid.onSongLongClick = { songs, hit -> showWallMenu(songs, hit) }
 
         loadProfile()
@@ -355,6 +359,58 @@ class HomeFragment :
         )
     }
 
+    /** Stores a new order for the songs of one stack (the first one is the card on top). */
+    private fun saveStackOrder(order: List<Song>) {
+        val ids = order.map { it.id }
+        val idSet = ids.toSet()
+        PreferenceUtil.homeCoversStacks = PreferenceUtil.homeCoversStacks.map { g ->
+            if (g.any { it in idSet }) ids else g
+        }
+        reloadWallCovers()
+    }
+
+    /** Long press on one card of an opened stack: move it, take it out of the stack, unpin it, play it. */
+    private fun showStackCardMenu(songs: List<Song>, position: Int, rect: android.graphics.RectF) {
+        val song = songs.getOrNull(position) ?: return
+        val loc = IntArray(2)
+        binding.coverGrid.getLocationOnScreen(loc)
+        val target = android.graphics.Rect(
+            (loc[0] + rect.left).toInt(), (loc[1] + rect.top).toInt(),
+            (loc[0] + rect.right).toInt(), (loc[1] + rect.bottom).toInt()
+        )
+        fun withoutSong(unpinToo: Boolean) {
+            val ids = songs.map { it.id }.toSet()
+            PreferenceUtil.homeCoversStacks = PreferenceUtil.homeCoversStacks.map { g ->
+                if (g.any { it in ids }) g.filterNot { it == song.id } else g
+            }.filter { it.size >= 2 }
+            if (unpinToo) PreferenceUtil.homeCoversPinned =
+                PreferenceUtil.homeCoversPinned.filterNot { it == song.id }
+            reloadWallCovers()
+        }
+        code.name.monkey.retromusic.adapter.artist.ArtistPopup.showEntries(
+            binding.coverGrid,
+            listOf(
+                code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(getString(R.string.wall_move), R.drawable.ic_menu_merge) {
+                    binding.coverGrid.startMove(position)
+                    android.widget.Toast.makeText(
+                        requireContext(), R.string.wall_move_hint, android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                },
+                code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(getString(R.string.wall_remove_from_stack), R.drawable.ic_menu_unlock) {
+                    withoutSong(false)
+                },
+                code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(getString(R.string.wall_unpin), R.drawable.ic_menu_pin) {
+                    withoutSong(true)
+                },
+                code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(getString(R.string.wall_play_this), R.drawable.ic_play_arrow) {
+                    MusicPlayerRemote.openQueue(songs, position, true)
+                    mainActivity.expandPanel()
+                }
+            ),
+            target = target
+        )
+    }
+
     private var wallMenu: PopupWindow? = null
 
     /**
@@ -416,7 +472,7 @@ class HomeFragment :
         if (group != null) {
             val ids = group.map { it.id }.toSet()
             entries.add(
-                code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
+                code.name.monkey.retromusic.adapter.artist.Artistcode.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
                     getString(R.string.wall_play_stack), R.drawable.ic_play_arrow
                 ) {
                     MusicPlayerRemote.openQueue(group, 0, true)
@@ -424,7 +480,7 @@ class HomeFragment :
                 }
             )
             entries.add(
-                code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
+                code.name.monkey.retromusic.adapter.artist.Artistcode.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
                     getString(R.string.wall_ungroup), R.drawable.ic_menu_merge
                 ) {
                     PreferenceUtil.homeCoversStacks =
@@ -433,7 +489,7 @@ class HomeFragment :
                 }
             )
             entries.add(
-                code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
+                code.name.monkey.retromusic.adapter.artist.Artistcode.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
                     getString(R.string.wall_unpin_all), R.drawable.ic_menu_pin
                 ) {
                     PreferenceUtil.homeCoversStacks =
@@ -444,7 +500,7 @@ class HomeFragment :
             )
         } else {
             entries.add(
-                code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
+                code.name.monkey.retromusic.adapter.artist.Artistcode.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
                     getString(if (isPinned) R.string.wall_unpin else R.string.wall_pin),
                     R.drawable.ic_menu_pin
                 ) {
@@ -457,7 +513,7 @@ class HomeFragment :
             )
             if (isPinned) {
                 entries.add(
-                    code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
+                    code.name.monkey.retromusic.adapter.artist.Artistcode.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
                         getString(
                             if (song.id in wallSelection) R.string.wall_unselect else R.string.wall_select
                         ),
@@ -467,20 +523,20 @@ class HomeFragment :
             }
             if (wallSelection.size >= 2) {
                 entries.add(
-                    code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
+                    code.name.monkey.retromusic.adapter.artist.Artistcode.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
                         getString(R.string.wall_group_n, wallSelection.size), R.drawable.ic_menu_merge
                     ) { groupSelection() }
                 )
             }
             if (wallSelection.isNotEmpty()) {
                 entries.add(
-                    code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
+                    code.name.monkey.retromusic.adapter.artist.Artistcode.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
                         getString(R.string.wall_clear_selection), R.drawable.ic_menu_unlock
                     ) { clearSelection() }
                 )
             }
             entries.add(
-                code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
+                code.name.monkey.retromusic.adapter.artist.Artistcode.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
                     getString(R.string.wall_go_to_song), R.drawable.ic_play_arrow
                 ) {
                     MusicPlayerRemote.openQueue(songs, hit.index, true)

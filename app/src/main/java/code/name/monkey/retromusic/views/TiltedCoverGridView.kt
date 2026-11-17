@@ -71,6 +71,17 @@ class TiltedCoverGridView @JvmOverloads constructor(
     /** A tap on a card of an opened stack: the songs of that stack and the position of the card. */
     var onStackMemberClick: ((songs: List<Song>, position: Int) -> Unit)? = null
 
+    /** A long press on a card of an opened stack: the stack's songs, the card position, and where it is drawn. */
+    var onStackMemberLongClick: ((songs: List<Song>, position: Int, rect: RectF) -> Unit)? = null
+
+    /** The cards of an opened stack were dragged into a new order (top card first). */
+    var onStackReordered: ((newOrder: List<Song>) -> Unit)? = null
+
+    // Moving a card inside an opened stack: the card follows the finger, the drop slot decides the order.
+    private var movingIndex = -1
+    private var moveX = 0f
+    private var moveY = 0f
+
     /** Stacks on the wall: the song shown on top (its id) -> all songs of the stack, top first. */
     private var stacks: Map<Long, List<Song>> = emptyMap()
     private var memberCovers: Map<Long, List<Bitmap>> = emptyMap()
@@ -123,7 +134,15 @@ class TiltedCoverGridView @JvmOverloads constructor(
             }
 
             override fun onLongPress(e: MotionEvent) {
-                if (isExpanded || coverSongs.size != covers.size) return
+                if (isExpanded) {
+                    val i = expandedRects.indexOfFirst { it.contains(e.x, e.y) }
+                    if (i >= 0 && expandProgress > 0.9f && movingIndex < 0) {
+                        performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                        onStackMemberLongClick?.invoke(expandedSongs, i, RectF(expandedRects[i]))
+                    }
+                    return
+                }
+                if (coverSongs.size != covers.size) return
                 val hit = findHit(e.x, e.y) ?: return
                 performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                 onSongLongClick?.invoke(coverSongs, hit)
@@ -529,6 +548,46 @@ class TiltedCoverGridView @JvmOverloads constructor(
         }
     }
 
+    /** Starts moving the card at [index] of the opened stack: drag it onto another card's slot and let go. */
+    fun startMove(index: Int) {
+        if (!isExpanded || index !in expandedSongs.indices) return
+        movingIndex = index
+        val r = expandedRects.getOrNull(index)
+        moveX = r?.centerX() ?: width / 2f
+        moveY = r?.centerY() ?: height / 2f
+        invalidate()
+    }
+
+    private fun handleMoveTouch(event: MotionEvent): Boolean {
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
+                moveX = event.x
+                moveY = event.y
+                invalidate()
+            }
+            MotionEvent.ACTION_UP -> {
+                val from = movingIndex
+                val to = expandedRects.indexOfFirst { it.contains(event.x, event.y) }
+                movingIndex = -1
+                if (to >= 0 && to != from) {
+                    val songs = expandedSongs.toMutableList()
+                    val bitmaps = expandedBitmaps.toMutableList()
+                    songs.add(to, songs.removeAt(from))
+                    bitmaps.add(to, bitmaps.removeAt(from))
+                    expandedSongs = songs
+                    expandedBitmaps = bitmaps
+                    onStackReordered?.invoke(songs)
+                }
+                invalidate()
+            }
+            MotionEvent.ACTION_CANCEL -> {
+                movingIndex = -1
+                invalidate()
+            }
+        }
+        return true
+    }
+
     /** Folds the opened stack back into its place. */
     fun closeStack() {
         if (!isExpanded) return
@@ -589,9 +648,17 @@ class TiltedCoverGridView @JvmOverloads constructor(
             val rect = RectF(x, y, x + size, y + size)
             expandedRects.add(RectF(tx, ty, tx + e, ty + e))
             val bm = expandedBitmaps[i]
-            tilePaint.alpha = (255 * (0.35f + 0.65f * t)).toInt()
+            tilePaint.alpha = if (i == movingIndex) 90 else (255 * (0.35f + 0.65f * t)).toInt()
             canvas.drawBitmap(bm, Rect(0, 0, bm.width, bm.height), rect, tilePaint)
             tilePaint.alpha = 255
+        }
+        if (movingIndex in 0 until n) {
+            val half = e * 0.55f
+            val bm = expandedBitmaps[movingIndex]
+            canvas.drawBitmap(
+                bm, Rect(0, 0, bm.width, bm.height),
+                RectF(moveX - half, moveY - half, moveX + half, moveY + half), tilePaint
+            )
         }
     }
 
@@ -637,6 +704,7 @@ class TiltedCoverGridView @JvmOverloads constructor(
     fun tapAtScreen(rawX: Float, rawY: Float): Boolean {
         val loc = IntArray(2)
         getLocationOnScreen(loc)
+        if (movingIndex >= 0) return true
         if (isExpanded) return handleExpandedTap(rawX - loc[0], rawY - loc[1])
         val hit = findHit(rawX - loc[0], rawY - loc[1]) ?: return false
         if (coverSongs.size != covers.size) return false
@@ -645,6 +713,7 @@ class TiltedCoverGridView @JvmOverloads constructor(
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (movingIndex >= 0) return handleMoveTouch(event)
         return tapDetector.onTouchEvent(event) || super.onTouchEvent(event)
     }
 

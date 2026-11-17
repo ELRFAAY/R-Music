@@ -390,3 +390,6 @@ RULES: short Egyptian Arabic replies, no long polling of CI, commits carry the C
 ### Session 21c (2026-11-17 night): artist picture from the internet (written, NOT compiled/tested)
 - Artist "Edit" dialog (`AbsArtistDetailsFragment.showEditArtistDialog`) has a new button "Search a picture online" → `showOnlineImages(name)`: bottom sheet that searches at once for the artist name (editable) and shows a 3-column grid; a tap sets the picture through `CustomArtistImageUtil.setCustomArtistImage(artist, Uri.parse(url))`.
 - `network/ArtistImageSearch.kt`: Deezer (`DeezerService.searchArtists`, `picture_xl`, skips empty-hash images) + Wikipedia pageimages (en, plus ar when the name has Arabic letters). No keys needed.
+
+### Session 21d (2026-11-17 night): card menu inside an opened stack (written, NOT compiled/tested)
+- Long press on a card of a spread-out stack → glass menu: Move (drag the card onto another card's slot to change the order; `TiltedCoverGridView.startMove` / `onStackReordered` → `HomeFragment.saveStackOrder`), Take out of the stack, Unpin, Play this song (`onStackMemberLongClick` → `showStackCardMenu`). After a reorder the wall reloads and the stack folds back (its top card changes); tap it again to spread it.
