@@ -37,6 +37,7 @@ import code.name.monkey.retromusic.helper.MusicPlayerRemote
 import code.name.monkey.retromusic.helper.SortOrder
 import code.name.monkey.retromusic.interfaces.IAlbumClickListener
 import code.name.monkey.retromusic.model.Artist
+import code.name.monkey.retromusic.model.Song
 import code.name.monkey.retromusic.network.Result
 import code.name.monkey.retromusic.network.model.LastFmArtist
 import code.name.monkey.retromusic.repository.RealRepository
@@ -123,19 +124,19 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
             layoutManager = GridLayoutManager(this.context, 1, GridLayoutManager.HORIZONTAL, false)
             adapter = albumAdapter
         }
-        // item_list shows the cover of every song; item_song only shows the track number, which
-        // makes no sense across several albums.
+        // Colored cards (the same look as the colored-card songs list): every card has the song's
+        // own cover and colors, and the album as subtitle (the artist is the same on every card).
         songAdapter = SimpleSongAdapter(
-            requireActivity(), ArrayList(), R.layout.item_list, showAlbumAsSubtitle = true
+            requireActivity(), ArrayList(), R.layout.item_card_color, showAlbumAsSubtitle = true
         )
         binding.fragmentArtistContent.recyclerView.apply {
             itemAnimator = DefaultItemAnimator()
-            layoutManager = LinearLayoutManager(this.context)
+            layoutManager = GridLayoutManager(this.context, 2)
             adapter = songAdapter
         }
     }
 
-    private var allSongsShown = false
+    private var shownSongCount = FIRST_SONGS
 
     private fun showArtist(artist: Artist) {
         if (artist.songCount == 0) {
@@ -161,24 +162,27 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
         )
         binding.fragmentArtistContent.songTitle.text = songText
         binding.fragmentArtistContent.albumTitle.text = albumText
-        // Hundreds of rows with covers inside a scrolling page froze the screen: show the first
-        // ones and let the user expand the rest.
-        val allSongs = artist.sortedSongs
-        val showAll = binding.fragmentArtistContent.showAllSongs
-        if (!allSongsShown && allSongs.size > FIRST_SONGS) {
-            songAdapter.swapDataSet(allSongs.take(FIRST_SONGS))
-            showAll.text = getString(R.string.show_all_songs, allSongs.size)
-            showAll.isVisible = true
-            showAll.setOnClickListener {
-                allSongsShown = true
-                showAll.isVisible = false
-                songAdapter.swapDataSet(allSongs)
+        // Hundreds of cards with covers inside a scrolling page froze the screen: show the first
+        // ones and let the user add the next batch.
+        bindSongs(artist.sortedSongs)
+        albumAdapter.swapDataSet(artist.albums)
+    }
+
+    /** Shows the first [shownSongCount] songs; a button adds the next batch (cards are heavy). */
+    private fun bindSongs(allSongs: List<Song>) {
+        val showMore = binding.fragmentArtistContent.showAllSongs
+        songAdapter.swapDataSet(allSongs.take(shownSongCount))
+        val remaining = allSongs.size - shownSongCount
+        if (remaining > 0) {
+            showMore.text = getString(R.string.show_more_songs, minOf(remaining, FIRST_SONGS))
+            showMore.isVisible = true
+            showMore.setOnClickListener {
+                shownSongCount += FIRST_SONGS
+                bindSongs(allSongs)
             }
         } else {
-            showAll.isVisible = false
-            songAdapter.swapDataSet(allSongs)
+            showMore.isVisible = false
         }
-        albumAdapter.swapDataSet(artist.albums)
     }
 
     private fun loadBiography(
@@ -425,7 +429,7 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
 
     private fun setSaveSortOrder(sortOrder: String) {
         PreferenceUtil.artistDetailSongSortOrder = sortOrder
-        songAdapter.swapDataSet(artist.sortedSongs)
+        bindSongs(artist.sortedSongs)
     }
 
     private fun setupAlbumSortButton() {

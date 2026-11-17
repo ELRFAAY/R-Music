@@ -664,6 +664,7 @@
     <string name="vocal_processing">Separating voice %1$d%%</string>
     <string name="vocal_error">Separation failed</string>
     <string name="show_all_songs">Show all %1$d songs</string>
+    <string name="show_more_songs">Show %1$d more songs</string>
     <string name="mini_move">Move</string>
     <string name="mini_lock">Lock position</string>
     <string name="mini_unlock">Unlock position</string>

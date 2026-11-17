@@ -655,6 +655,7 @@
     <string name="vocal_processing">فصل الصوت %1$d%%</string>
     <string name="vocal_error">فشل فصل الصوت</string>
     <string name="show_all_songs">عرض كل الأغاني (%1$d)</string>
+    <string name="show_more_songs">عرض %1$d أغنية أخرى</string>
     <string name="mini_move">تحريك</string>
     <string name="mini_lock">تثبيت المكان</string>
     <string name="mini_unlock">فك التثبيت</string>
