@@ -706,4 +706,16 @@
     <string name="incognito_off_msg">Incognito off: plays are recorded again</string>
     <string name="incognito_notification_text">Songs you play are kept out of the home display list</string>
     <string name="incognito_turn_off">Turn off</string>
+    <string name="stats_tile_avg">Daily average</string>
+    <string name="stats_tile_streak">Day streak</string>
+    <string name="stats_tile_hour">Favourite time</string>
+    <string name="stats_tile_day">Favourite day</string>
+    <string name="stats_days_n">%1$d days</string>
+    <string name="stats_hours_title">When you listen</string>
+    <string name="stats_compare_more">▲ %1$s more than the previous period</string>
+    <string name="stats_compare_less">▼ %1$s less than the previous period</string>
+    <string name="stats_compare_same">Same as the previous period</string>
+    <string name="stats_share">Share summary</string>
+    <string name="stats_share_title">My listening on R Music</string>
+    <string name="stats_song_not_found">Song not found in your library</string>
 </resources>

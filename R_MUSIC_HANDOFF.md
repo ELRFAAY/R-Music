@@ -377,3 +377,6 @@ RULES: short Egyptian Arabic replies, no long polling of CI, commits carry the C
 ### Session 20c (2026-11-17 22:20): stats "History" button was empty
 - `ListeningStatsFragment.showHistory()` read `viewModel.recent.value` of a Room LiveData that nobody observed (always null → empty sheet). Now observes `recent` while the sheet is open. Written, CI not checked, not tested.
 - Incognito answer given to the user: history, play counts and stats ARE recorded while incognito is on; only the home display list hides those songs (`PreferenceUtil.incognitoHidden`).
+
+### Session 21 (2026-11-17 night): stats additions (written, NOT compiled/tested until CI says so)
+- Period filter (7/30/all) already existed. Added on `ListeningStatsFragment` / `ListeningStatsViewModel`: `extras` (MediatorLiveData over `dao.allEventsLive()` + period) → compare line under total time (vs previous equal period, hidden for "all"), 4 tiles (daily average, day streak, favourite hour, favourite weekday), 24-bar "when you listen" chart (`BarChartView.setData(..., highlight)`), tap on a top-song row plays it / artist+album rows open their page (`openRow`, matched by name in `repository.allSongs()`), "Share summary" button drawing a 1080x1350 gradient PNG (cache file via FileProvider; `provider_paths.xml` got `<cache-path>`).

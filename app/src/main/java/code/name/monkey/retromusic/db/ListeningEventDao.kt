@@ -17,6 +17,9 @@ interface ListeningEventDao {
     @Query("SELECT * FROM ListeningEventEntity ORDER BY played_at DESC")
     suspend fun allEvents(): List<ListeningEventEntity>
 
+    @Query("SELECT * FROM ListeningEventEntity")
+    fun allEventsLive(): LiveData<List<ListeningEventEntity>>
+
     @Query("SELECT * FROM ListeningEventEntity ORDER BY played_at DESC LIMIT :limit")
     fun recentEvents(limit: Int): LiveData<List<ListeningEventEntity>>
 

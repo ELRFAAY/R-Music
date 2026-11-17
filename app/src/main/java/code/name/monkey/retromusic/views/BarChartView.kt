@@ -30,6 +30,7 @@ class BarChartView @JvmOverloads constructor(
     private var values: List<Float> = emptyList()
     private var labels: List<String> = emptyList()
     private var maxLabel: String = ""
+    private var highlight = -1
 
     private val density = resources.displayMetrics.density
     private val barPaint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -41,7 +42,8 @@ class BarChartView @JvmOverloads constructor(
     private val rect = RectF()
 
     /** [values] and [labels] have the same length; the last bar is today. [maxLabel] is shown top left. */
-    fun setData(values: List<Float>, labels: List<String>, maxLabel: String) {
+    fun setData(values: List<Float>, labels: List<String>, maxLabel: String, highlight: Int = values.size - 1) {
+        this.highlight = highlight
         this.values = values
         this.labels = labels
         this.maxLabel = maxLabel
@@ -74,7 +76,7 @@ class BarChartView @JvmOverloads constructor(
         values.forEachIndexed { i, v ->
             val cx = slot * i + slot / 2f
             val barH = (v / max * chartH).coerceAtLeast(if (v > 0f) 2 * density else 0f)
-            barPaint.color = if (i == values.lastIndex) accent else (accent and 0x00FFFFFF) or 0x88000000.toInt()
+            barPaint.color = if (i == highlight) accent else (accent and 0x00FFFFFF) or 0x88000000.toInt()
             rect.set(cx - barW / 2f, chartBottom - barH, cx + barW / 2f, chartBottom)
             canvas.drawRoundRect(rect, 4 * density, 4 * density, barPaint)
             labels.getOrNull(i)?.let { canvas.drawText(it, cx, height - 4 * density, textPaint) }

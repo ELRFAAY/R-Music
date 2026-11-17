@@ -697,4 +697,16 @@
     <string name="incognito_off_msg">وضع التخفي اتقفل: التشغيل بيتسجل تاني</string>
     <string name="incognito_notification_text">الأغاني اللي بتشغلها مش هتظهر في قائمة العرض في الرئيسية</string>
     <string name="incognito_turn_off">إيقاف</string>
+    <string name="stats_tile_avg">المتوسط اليومي</string>
+    <string name="stats_tile_streak">أيام متتالية</string>
+    <string name="stats_tile_hour">وقتك المفضل</string>
+    <string name="stats_tile_day">يومك المفضل</string>
+    <string name="stats_days_n">%1$d يوم</string>
+    <string name="stats_hours_title">امتى بتسمع</string>
+    <string name="stats_compare_more">▲ أكتر بـ %1$s من الفترة اللي قبلها</string>
+    <string name="stats_compare_less">▼ أقل بـ %1$s من الفترة اللي قبلها</string>
+    <string name="stats_compare_same">زي الفترة اللي قبلها</string>
+    <string name="stats_share">مشاركة الملخص</string>
+    <string name="stats_share_title">استماعي على R Music</string>
+    <string name="stats_song_not_found">الأغنية مش موجودة في مكتبتك</string>
 </resources>
