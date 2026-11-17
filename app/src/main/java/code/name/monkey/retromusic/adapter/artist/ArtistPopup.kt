@@ -90,7 +90,32 @@ object ArtistPopup {
         override fun getOpacity() = PixelFormat.TRANSLUCENT
     }
 
+    /** One row of the menu. [icon] wins over [iconRes]; with neither, the row has no icon. */
+    class Entry(
+        val label: String,
+        val iconRes: Int = 0,
+        val icon: android.graphics.drawable.Drawable? = null,
+        val action: () -> Unit
+    )
+
+    /** Label + action pairs; the icon is picked from the label (see [iconFor]). */
     fun show(anchor: View, entries: List<Pair<String, () -> Unit>>) {
+        showEntries(
+            anchor,
+            entries.map { Entry(it.first, iconFor(anchor.context, it.first), null, it.second) }
+        )
+    }
+
+    /**
+     * The glass menu with an arrow. [target] (screen coordinates) is the thing the arrow points at,
+     * when that is not the whole [anchor] (for example one cover on the home wall).
+     */
+    fun showEntries(
+        anchor: View,
+        entries: List<Entry>,
+        target: Rect? = null,
+        onDismiss: (() -> Unit)? = null
+    ) {
         val ctx = anchor.context
         val d = ctx.resources.displayMetrics.density
         // Opaque card; text colour picked from the card's own brightness so it is always readable
@@ -107,7 +132,9 @@ object ArtistPopup {
             setPadding(0, (6 * d).toInt(), 0, (6 * d).toInt())
         }
         var popup: PopupWindow? = null
-        entries.forEachIndexed { index, (label, action) ->
+        entries.forEachIndexed { index, entry ->
+            val label = entry.label
+            val action = entry.action
             val row = LinearLayout(ctx).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
@@ -118,9 +145,9 @@ object ArtistPopup {
                 setBackgroundResource(tv.resourceId)
                 setOnClickListener { popup?.dismiss(); action() }
             }
-            val iconRes = iconFor(ctx, label)
             val icon = ImageView(ctx).apply {
-                if (iconRes != 0) setImageResource(iconRes)
+                if (entry.icon != null) setImageDrawable(entry.icon.mutate())
+                else if (entry.iconRes != 0) setImageResource(entry.iconRes)
                 imageTintList = android.content.res.ColorStateList.valueOf(onSurface)
                 alpha = 0.9f
             }
@@ -159,7 +186,15 @@ object ArtistPopup {
         }
         val loc = IntArray(2)
         anchor.getLocationOnScreen(loc)
-        val anchorCx = loc[0] + anchor.width / 2
+        var anchorW = anchor.width
+        var anchorH = anchor.height
+        if (target != null) {
+            loc[0] = target.left
+            loc[1] = target.top
+            anchorW = target.width()
+            anchorH = target.height()
+        }
+        val anchorCx = loc[0] + anchorW / 2
 
         val root = LinearLayout(ctx).apply {
             orientation = LinearLayout.VERTICAL
@@ -176,13 +211,13 @@ object ArtistPopup {
         val w = cardW
 
         val topLimit = (24 * d).toInt()
-        val spaceBelow = bottomLimit - (loc[1] + anchor.height)
+        val spaceBelow = bottomLimit - (loc[1] + anchorH)
         val spaceAbove = loc[1] - topLimit
         val showBelow = spaceBelow >= h || spaceBelow >= spaceAbove
 
         val margin = (8 * d).toInt()
         val x = (anchorCx - w / 2).coerceIn(margin, (screenW - w - margin).coerceAtLeast(margin))
-        var y = if (showBelow) loc[1] + anchor.height - (3 * d).toInt() else loc[1] + (3 * d).toInt() - h
+        var y = if (showBelow) loc[1] + anchorH - (3 * d).toInt() else loc[1] + (3 * d).toInt() - h
         y = y.coerceIn(topLimit, (bottomLimit - h - margin).coerceAtLeast(topLimit))
 
         val blurred = captureBlurred(rootView, screenW, screenH)
@@ -207,6 +242,7 @@ object ArtistPopup {
             setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
             isOutsideTouchable = true
             elevation = 0f
+            setOnDismissListener { onDismiss?.invoke() }
             showAtLocation(rootView, Gravity.NO_GRAVITY, x, y)
         }
     }

@@ -36,6 +36,34 @@ interface ListeningEventDao {
     )
     fun stats(since: Long): LiveData<ListeningStats>
 
+    /** The most played songs since [since]; the song is told apart by title and artist. */
+    @Query(
+        "SELECT title AS name, artist_name AS subtitle, COUNT(*) AS plays, " +
+                "COALESCE(SUM(listened_ms), 0) AS totalMs FROM ListeningEventEntity " +
+                "WHERE played_at >= :since GROUP BY title, artist_name " +
+                "ORDER BY plays DESC, totalMs DESC LIMIT :limit"
+    )
+    fun topSongs(since: Long, limit: Int): LiveData<List<TopRow>>
+
+    @Query(
+        "SELECT artist_name AS name, '' AS subtitle, COUNT(*) AS plays, " +
+                "COALESCE(SUM(listened_ms), 0) AS totalMs FROM ListeningEventEntity " +
+                "WHERE played_at >= :since GROUP BY artist_name " +
+                "ORDER BY plays DESC, totalMs DESC LIMIT :limit"
+    )
+    fun topArtists(since: Long, limit: Int): LiveData<List<TopRow>>
+
+    @Query(
+        "SELECT album_name AS name, artist_name AS subtitle, COUNT(*) AS plays, " +
+                "COALESCE(SUM(listened_ms), 0) AS totalMs FROM ListeningEventEntity " +
+                "WHERE played_at >= :since GROUP BY album_name, artist_name " +
+                "ORDER BY plays DESC, totalMs DESC LIMIT :limit"
+    )
+    fun topAlbums(since: Long, limit: Int): LiveData<List<TopRow>>
+
+    @Query("SELECT * FROM ListeningEventEntity WHERE played_at >= :since")
+    fun eventsSince(since: Long): LiveData<List<ListeningEventEntity>>
+
     @Query("DELETE FROM ListeningEventEntity")
     suspend fun clear()
 }

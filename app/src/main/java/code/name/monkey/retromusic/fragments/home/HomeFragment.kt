@@ -349,66 +349,44 @@ class HomeFragment :
     private var wallMenu: PopupWindow? = null
 
     /**
-     * Long press on a cover: a small menu next to that cover (not a full-screen dialog) with
-     * pin / unpin and go-to-song. The wall stops drifting while it is open.
+     * Long press on a cover: the same glass menu as the artist covers, with its arrow pointing at that
+     * cover: pin / unpin and go-to-song. The wall stops drifting while it is open.
      */
-    @SuppressLint("RtlHardcoded")
     private fun showWallMenu(songs: List<Song>, hit: TiltedCoverGridView.WallHit) {
         val song = songs.getOrNull(hit.index) ?: return
         val pinned = PreferenceUtil.homeCoversPinned
         val isPinned = song.id in pinned
-        wallMenu?.dismiss()
 
-        val content = layoutInflater.inflate(R.layout.popup_wall_menu, null)
-        val pinItem = content.findViewById<TextView>(R.id.wall_pin_item)
-        val goItem = content.findViewById<TextView>(R.id.wall_go_item)
-        pinItem.setText(if (isPinned) R.string.wall_unpin else R.string.wall_pin)
-
-        val popup = PopupWindow(
-            content, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true
-        ).apply {
-            isOutsideTouchable = true
-            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            setOnDismissListener {
-                _binding?.coverGrid?.setFrozen(false)
-                wallMenu = null
-            }
-        }
-        pinItem.setOnClickListener {
-            popup.dismiss()
-            PreferenceUtil.homeCoversPinned = if (isPinned) pinned - song.id else pinned + song.id
-            reloadWallCovers()
-        }
-        goItem.setOnClickListener {
-            popup.dismiss()
-            MusicPlayerRemote.openQueue(songs, hit.index, true)
-            mainActivity.expandPanel()
-        }
-
-        // Put the menu beside the cover: on its right if there is room, otherwise on its left.
-        content.measure(
-            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
-            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        )
-        val menuW = content.measuredWidth
-        val menuH = content.measuredHeight
-        val metrics = resources.displayMetrics
-        val margin = (8 * metrics.density).toInt()
         val loc = IntArray(2)
         binding.coverGrid.getLocationOnScreen(loc)
-        val centerX = loc[0] + hit.centerX
-        val centerY = loc[1] + hit.centerY
-        var x = (centerX + hit.half).toInt()
-        if (x + menuW > metrics.widthPixels - margin) {
-            x = (centerX - hit.half).toInt() - menuW
-        }
-        x = x.coerceIn(0, maxOf(0, metrics.widthPixels - menuW))
-        val y = (centerY - menuH / 2f).toInt()
-            .coerceIn(margin, maxOf(margin, metrics.heightPixels - menuH - margin))
+        val cx = (loc[0] + hit.centerX).toInt()
+        val cy = (loc[1] + hit.centerY).toInt()
+        val half = hit.half.toInt()
+        val target = android.graphics.Rect(cx - half, cy - half, cx + half, cy + half)
 
-        wallMenu = popup
         binding.coverGrid.setFrozen(true)
-        popup.showAtLocation(binding.coverGrid, Gravity.TOP or Gravity.LEFT, x, y)
+        code.name.monkey.retromusic.adapter.artist.ArtistPopup.showEntries(
+            binding.coverGrid,
+            listOf(
+                code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
+                    getString(if (isPinned) R.string.wall_unpin else R.string.wall_pin),
+                    R.drawable.ic_menu_pin
+                ) {
+                    PreferenceUtil.homeCoversPinned =
+                        if (isPinned) pinned - song.id else pinned + song.id
+                    reloadWallCovers()
+                },
+                code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
+                    getString(R.string.wall_go_to_song),
+                    R.drawable.ic_play_arrow
+                ) {
+                    MusicPlayerRemote.openQueue(songs, hit.index, true)
+                    mainActivity.expandPanel()
+                }
+            ),
+            target = target,
+            onDismiss = { _binding?.coverGrid?.setFrozen(false) }
+        )
     }
 
     private fun checkForMargins() {

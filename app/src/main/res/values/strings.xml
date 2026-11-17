@@ -537,8 +537,8 @@
     <string name="listening_duration_format">%1$d h %2$d min</string>
     <string name="listening_empty">Nothing recorded yet. Play some songs and come back.</string>
     <string name="home_logo_description">R Music logo, opens listening stats</string>
-    <string name="pref_title_home_covers">Home cover wall</string>
-    <string name="pref_summary_home_covers">Tilted album covers at the top of the home screen</string>
+    <string name="pref_title_home_covers">Display list</string>
+    <string name="pref_summary_home_covers">Tilted album covers on the home screen</string>
     <string name="pref_title_home_covers_source">Cover source</string>
     <string name="home_covers_last_played">Last played</string>
     <string name="home_covers_most_played">Most played</string>
@@ -571,8 +571,8 @@
     <string name="cover_seek_back">−10s</string>
 
     <string name="wall_cover_menu_title">Cover</string>
-    <string name="wall_pin">Pin to the wall</string>
-    <string name="wall_unpin">Unpin from the wall</string>
+    <string name="wall_pin">Pin to the display list</string>
+    <string name="wall_unpin">Unpin from the display list</string>
     <string name="wall_go_to_song">Go to song</string>
     <string name="backup_folder_title">Backup folder</string>
     <string name="backup_folder_choose">Choose</string>
@@ -676,4 +676,19 @@
     <string name="pronunciation_arabic">Arabic letters</string>
     <string name="pronunciation_off">Off</string>
     <string name="muzio_double_tap_hint">Double tap left or right to skip 10 seconds</string>
+    <string name="stats_period_7">7 days</string>
+    <string name="stats_period_30">30 days</string>
+    <string name="stats_period_all">All time</string>
+    <string name="stats_card_time">Listening time</string>
+    <string name="stats_card_plays">Plays</string>
+    <string name="stats_card_songs">Different songs</string>
+    <string name="stats_card_today">Today</string>
+    <string name="stats_chart_title">Listening per day, last 14 days</string>
+    <string name="stats_top_songs">Top songs</string>
+    <string name="stats_top_artists">Top artists</string>
+    <string name="stats_top_albums">Top albums</string>
+    <string name="stats_see_all">See all</string>
+    <string name="stats_history">History</string>
+    <string name="stats_row_detail">%1$d plays · %2$s</string>
+    <string name="stats_no_data">Nothing here yet</string>
 </resources>

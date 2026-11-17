@@ -528,8 +528,8 @@
     <string name="listening_duration_format">%1$d س %2$d د</string>
     <string name="listening_empty">لا يوجد شيء مسجل بعد. شغّل بعض الأغاني ثم عد إلى هنا.</string>
     <string name="home_logo_description">شعار R Music، يفتح إحصائيات الاستماع</string>
-    <string name="pref_title_home_covers">جدار الأغلفة في الرئيسية</string>
-    <string name="pref_summary_home_covers">أغلفة ألبومات مائلة في أعلى الشاشة الرئيسية</string>
+    <string name="pref_title_home_covers">قائمة العرض</string>
+    <string name="pref_summary_home_covers">أغلفة مائلة في الشاشة الرئيسية</string>
     <string name="pref_title_home_covers_source">مصدر الأغلفة</string>
     <string name="home_covers_last_played">آخر ما تم تشغيله</string>
     <string name="home_covers_most_played">الأكثر تشغيلاً</string>
@@ -562,8 +562,8 @@
     <string name="cover_seek_back">−10 ث</string>
 
     <string name="wall_cover_menu_title">الغلاف</string>
-    <string name="wall_pin">تثبيت على الحيطة</string>
-    <string name="wall_unpin">إلغاء التثبيت من الحيطة</string>
+    <string name="wall_pin">تثبيت في قائمة العرض</string>
+    <string name="wall_unpin">إلغاء التثبيت من قائمة العرض</string>
     <string name="wall_go_to_song">الذهاب إلى الأغنية</string>
     <string name="backup_folder_title">مجلد النسخ الاحتياطي</string>
     <string name="backup_folder_choose">اختيار</string>
@@ -667,4 +667,19 @@
     <string name="pronunciation_arabic">حروف عربي</string>
     <string name="pronunciation_off">إيقاف</string>
     <string name="muzio_double_tap_hint">اضغط مرتين يمين أو شمال لتقدّم أو ترجع 10 ثواني</string>
+    <string name="stats_period_7">٧ أيام</string>
+    <string name="stats_period_30">٣٠ يوم</string>
+    <string name="stats_period_all">الكل</string>
+    <string name="stats_card_time">وقت الاستماع</string>
+    <string name="stats_card_plays">مرات التشغيل</string>
+    <string name="stats_card_songs">أغاني مختلفة</string>
+    <string name="stats_card_today">النهارده</string>
+    <string name="stats_chart_title">الاستماع في اليوم، آخر ١٤ يوم</string>
+    <string name="stats_top_songs">أكتر الأغاني</string>
+    <string name="stats_top_artists">أكتر الفنانين</string>
+    <string name="stats_top_albums">أكتر الألبومات</string>
+    <string name="stats_see_all">عرض الكل</string>
+    <string name="stats_history">السجل</string>
+    <string name="stats_row_detail">%1$d مرة · %2$s</string>
+    <string name="stats_no_data">لسه مفيش حاجة</string>
 </resources>

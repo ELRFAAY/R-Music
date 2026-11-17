@@ -13,6 +13,7 @@
  */
 package code.name.monkey.retromusic.fragments.folder
 
+import code.name.monkey.retromusic.adapter.artist.GlassPopupMenu
 import android.content.Context
 import android.media.MediaScannerConnection
 import android.os.Bundle
@@ -217,7 +218,7 @@ class FoldersFragment : AbsMainActivityFragment(R.layout.fragment_folder),
     }
 
     override fun onFileMenuClicked(file: File, view: View) {
-        val popupMenu = PopupMenu(requireActivity(), view)
+        val popupMenu = GlassPopupMenu(requireActivity(), view)
         if (file.isDirectory) {
             popupMenu.inflate(R.menu.menu_item_directory)
             popupMenu.setOnMenuItemClickListener { item: MenuItem ->

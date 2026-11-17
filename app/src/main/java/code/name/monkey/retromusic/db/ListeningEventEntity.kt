@@ -37,3 +37,12 @@ data class ListeningStats(
     val plays: Int,
     val songs: Int
 )
+
+/** One line of a "top" list: a song, an artist or an album with how often and how long it was played. */
+data class TopRow(
+    val name: String,
+    val subtitle: String,
+    val plays: Int,
+    val totalMs: Long
+)
+
