@@ -122,6 +122,7 @@ abstract class AbsMusicServiceActivity : AbsBaseActivity(), IMusicServiceEventLi
         for (listener in mMusicServiceEventListeners) {
             listener.onPlayingMetaChanged()
         }
+        if (PreferenceUtil.incognito) return
         lifecycleScope.launch(Dispatchers.IO) {
             if (!PreferenceUtil.pauseHistory) {
                 repository.upsertSongInHistory(MusicPlayerRemote.currentSong)

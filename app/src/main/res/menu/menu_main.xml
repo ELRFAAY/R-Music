@@ -98,6 +98,11 @@
         android:visible="false"
         app:showAsAction="always" />
     <item
+        android:id="@+id/action_incognito"
+        android:icon="@drawable/ic_incognito"
+        android:title="@string/incognito_mode"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/action_cast"
         android:title="@string/action_cast"
         app:actionProviderClass="androidx.mediarouter.app.MediaRouteActionProvider"

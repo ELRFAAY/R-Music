@@ -364,3 +364,8 @@ NEXT (only if he asks / after his test)
 2. If the voice sounds wrong/instrumental: check `MdxSeparator` output stem (9482 verified as vocals in Python), compensate factor not applied.
 3. Reported earlier and not answered: "Player" oval shape showing buttons/name was checked by the user already ("made long ago").
 RULES: short Egyptian Arabic replies, no long polling of CI, commits carry the Co-Authored-By + Claude-Session trailers, fetch + ff-merge before work, never redo items the user says exist (check git log first).
+
+### Session 20 (2026-11-17 ~15:00): Incognito button (written, CI not checked, not tested)
+- User: "hidden browser" icon next to the cast icon in all lists; when on, plays are NOT added to the display list (home) and its look changes.
+- `menu_main.xml` has `action_incognito` (icons `ic_incognito` / `ic_incognito_on`, on = accent tint) before `action_cast`; `util/IncognitoMode.kt` (`applyState` after the toolbar tint helper, `handle` toggles + toast + invalidateMenu) is wired in HomeFragment, LibraryFragment, AbsRecyclerViewFragment (menu_main users). Pref `incognito_mode` (`PreferenceUtil.incognito`), skipped in backups (SETTINGS_SKIP_KEYS).
+- While on, NOT recorded: Room history + play count (`AbsMusicServiceActivity.onPlayingMetaChanged`), `HistoryStore`, `SongPlayCountStore`, listening events/stats (`MusicService`). Queue saving still happens. Artist/album detail toolbars do not have the button.

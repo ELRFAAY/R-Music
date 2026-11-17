@@ -18,6 +18,7 @@ import code.name.monkey.retromusic.REMEMBER_LAST_TAB
 import code.name.monkey.retromusic.TAB_TEXT_MODE
 import code.name.monkey.retromusic.TOGGLE_HOME_BANNER
 import code.name.monkey.retromusic.BACKUP_FOLDER_URI
+import code.name.monkey.retromusic.INCOGNITO_MODE
 import code.name.monkey.retromusic.USER_NAME
 import code.name.monkey.retromusic.R
 import code.name.monkey.retromusic.db.HistoryEntity
@@ -702,7 +703,7 @@ object BackupHelper : KoinComponent {
     private const val IMAGES_PATH = "userImages"
     private const val APP_SETTINGS_PATH = "appsettings"
     private const val APP_SETTINGS_FILE = "settings.json"
-    private val SETTINGS_SKIP_KEYS = setOf(BACKUP_FOLDER_URI)
+    private val SETTINGS_SKIP_KEYS = setOf(BACKUP_FOLDER_URI, INCOGNITO_MODE)
     private const val USER_DATA_PATH = "userdata"
     private const val USER_DATA_FILE = "user_data.json"
     private val USER_DATA_IMAGES = listOf(Constants.USER_PROFILE, Constants.USER_BANNER)

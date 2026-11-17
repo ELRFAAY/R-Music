@@ -73,6 +73,7 @@ import code.name.monkey.retromusic.MATERIAL_YOU
 import code.name.monkey.retromusic.NEW_BLUR_AMOUNT
 import code.name.monkey.retromusic.NEXT_SLEEP_TIMER_ELAPSED_REALTIME
 import code.name.monkey.retromusic.NOW_PLAYING_SCREEN_ID
+import code.name.monkey.retromusic.INCOGNITO_MODE
 import code.name.monkey.retromusic.PAUSE_HISTORY
 import code.name.monkey.retromusic.PAUSE_ON_ZERO_VOLUME
 import code.name.monkey.retromusic.PLAYBACK_PITCH
@@ -885,6 +886,11 @@ object PreferenceUtil {
     var autoBackupKeep: Int
         get() = sharedPreferences.getInt(AUTO_BACKUP_KEEP, 5)
         set(value) = sharedPreferences.edit { putInt(AUTO_BACKUP_KEEP, value) }
+
+    /** Incognito: nothing played is added to history, play counts, stats or the display list. */
+    var incognito: Boolean
+        get() = sharedPreferences.getBoolean(INCOGNITO_MODE, false)
+        set(v) = sharedPreferences.edit { putBoolean(INCOGNITO_MODE, v) }
 
     val pauseHistory: Boolean
         get() = sharedPreferences.getBoolean(

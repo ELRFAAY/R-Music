@@ -194,9 +194,11 @@ abstract class AbsRecyclerViewFragment<A : RecyclerView.Adapter<*>, LM : Recycle
             menu,
             ATHToolbarActivity.getToolbarBackgroundColor(toolbar)
         )
+        code.name.monkey.retromusic.util.IncognitoMode.applyState(menu, requireContext())
     }
 
     override fun onMenuItemSelected(item: MenuItem): Boolean {
+        if (code.name.monkey.retromusic.util.IncognitoMode.handle(item, requireActivity())) return true
         when (item.itemId) {
             R.id.action_settings -> findNavController().navigate(
                 R.id.settings_fragment,

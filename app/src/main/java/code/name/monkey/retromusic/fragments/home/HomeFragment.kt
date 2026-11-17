@@ -415,6 +415,7 @@ class HomeFragment :
             if (wallToolbarLight == true) Color.BLACK
             else ATHToolbarActivity.getToolbarBackgroundColor(binding.toolbar)
         )
+        code.name.monkey.retromusic.util.IncognitoMode.applyState(menu, requireContext())
         //Setting up cast button
         requireContext().setUpMediaRouteButton(menu)
     }
@@ -491,6 +492,7 @@ class HomeFragment :
     }
 
     override fun onMenuItemSelected(item: MenuItem): Boolean {
+        if (code.name.monkey.retromusic.util.IncognitoMode.handle(item, requireActivity())) return true
         when (item.itemId) {
             R.id.action_settings -> findNavController().navigate(
                 R.id.settings_fragment,

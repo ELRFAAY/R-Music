@@ -391,7 +391,7 @@ class MusicService : MediaBrowserServiceCompat(),
         }
         mediaSession?.isActive = false
         // serviceScope is cancelled below, so this one-off save uses its own short-lived scope.
-        listeningTracker.flush()?.let { event ->
+        listeningTracker.flush()?.takeUnless { code.name.monkey.retromusic.util.PreferenceUtil.incognito }?.let { event ->
             CoroutineScope(Job() + IO).launch { listeningEventDao.insert(event) }
         }
         quit()
@@ -1218,10 +1218,11 @@ class MusicService : MediaBrowserServiceCompat(),
                 // Closed here, on the calling thread, so the timing is not skewed by IO latency.
                 val finishedListening = listeningTracker.onSongChanged(currentSong, isPlaying)
                 serviceScope.launch(IO) {
-                    finishedListening?.let { listeningEventDao.insert(it) }
+                    val incognito = code.name.monkey.retromusic.util.PreferenceUtil.incognito
+                    if (!incognito) finishedListening?.let { listeningEventDao.insert(it) }
                     val currentSong = currentSong
-                    HistoryStore.getInstance(this@MusicService).addSongId(currentSong.id)
-                    if (songPlayCountHelper.shouldBumpPlayCount()) {
+                    if (!incognito) HistoryStore.getInstance(this@MusicService).addSongId(currentSong.id)
+                    if (!incognito && songPlayCountHelper.shouldBumpPlayCount()) {
                         SongPlayCountStore.getInstance(this@MusicService)
                             .bumpPlayCount(songPlayCountHelper.song.id)
                     }
