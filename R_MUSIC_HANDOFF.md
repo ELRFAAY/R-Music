@@ -373,3 +373,7 @@ RULES: short Egyptian Arabic replies, no long polling of CI, commits carry the C
 ### Session 20b (2026-11-17 15:30): Muzio center tap (written, CI not checked, not tested)
 - User: first tap on the cover sometimes did NOT open the lyrics (had to use the lyrics chip); with no lyrics (or plain text) a tap in the middle took a while to go back to the cover. Synced lyrics stay: tap a line = seek, X = back (his earlier spec).
 - Fix: `RingPlayerFragment` cover tap is now own detection (up within 1.2 s and 2x touch slop; GestureDetector dropped held/drifting taps); `CoverGestureLayout` vertical-drag (volume) slop and short-tap slop doubled; `CoverLrcView.onSingleTapUp` answers at once when there is no timed lyric (the old path waited for the double-tap timeout in `onSingleTapConfirmed`); `updateLyrics()` resets `lyricsSynced=false` while loading.
+
+### Session 20c (2026-11-17 22:20): stats "History" button was empty
+- `ListeningStatsFragment.showHistory()` read `viewModel.recent.value` of a Room LiveData that nobody observed (always null → empty sheet). Now observes `recent` while the sheet is open. Written, CI not checked, not tested.
+- Incognito answer given to the user: history, play counts and stats ARE recorded while incognito is on; only the home display list hides those songs (`PreferenceUtil.incognitoHidden`).

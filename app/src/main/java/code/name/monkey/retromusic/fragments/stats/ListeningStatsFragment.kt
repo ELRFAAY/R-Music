@@ -168,7 +168,12 @@ class ListeningStatsFragment : Fragment() {
     private fun showHistory() {
         val ctx = requireContext()
         val adapter = ListeningEventAdapter()
-        adapter.submitList(viewModel.recent.value ?: emptyList())
+        // A Room LiveData has no value until somebody observes it, so read it through an observer
+        // (reading `.value` directly always gave an empty list).
+        val observer = androidx.lifecycle.Observer<List<code.name.monkey.retromusic.db.ListeningEventEntity>> {
+            adapter.submitList(it)
+        }
+        viewModel.recent.observe(viewLifecycleOwner, observer)
         val list = RecyclerView(ctx).apply {
             layoutManager = LinearLayoutManager(ctx)
             this.adapter = adapter
@@ -179,6 +184,7 @@ class ListeningStatsFragment : Fragment() {
         }
         BottomSheetDialog(ctx).apply {
             setContentView(list)
+            setOnDismissListener { viewModel.recent.removeObserver(observer) }
             show()
         }
     }
