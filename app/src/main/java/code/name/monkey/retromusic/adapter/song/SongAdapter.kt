@@ -144,6 +144,9 @@ open class SongAdapter(
         holder.mask?.backgroundTintList = ColorStateList.valueOf(color.primaryTextColor)
     }
 
+    /** Pixel size covers are decoded at (0 = view size). Small = cheap palette on busy lists. */
+    protected open val coverSizePx: Int get() = 0
+
     protected open fun loadAlbumCover(song: Song, holder: ViewHolder) {
         if (holder.image == null) {
             return
@@ -151,6 +154,7 @@ open class SongAdapter(
         Glide.with(activity)
             .asBitmapPalette()
             .songCoverOptions(song)
+            .apply { if (coverSizePx > 0) override(coverSizePx) }
             .load(RetroGlideExtension.getSongModel(song))
             .into(object : RetroMusicColoredTarget(holder.image!!) {
                 override fun onColorReady(colors: MediaNotificationProcessor) {

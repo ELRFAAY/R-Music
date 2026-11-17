@@ -151,6 +151,7 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
         }
         if (::artist.isInitialized) {
             allSongsShown = false
+            songsStaged = true
             showArtist(artist)
         }
     }
@@ -198,6 +199,7 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
     }
 
     private var allSongsShown = false
+    private var songsStaged = false
 
     private fun showArtist(artist: Artist) {
         if (artist.songCount == 0) {
@@ -227,6 +229,17 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
         // ones and let the user expand the rest.
         val allSongs = artist.sortedSongs
         val showAll = binding.fragmentArtistContent.showAllSongs
+        if (!songsStaged && allSongs.size > STAGE_SONGS) {
+            // Opening the page used to freeze: binding 30+ covers in the same frame as the
+            // transition. Show a few now, the rest right after the transition.
+            songsStaged = true
+            songAdapter.swapDataSet(allSongs.take(STAGE_SONGS))
+            binding.root.postDelayed({
+                if (_binding != null && ::artist.isInitialized) showArtist(artist)
+            }, 400)
+            albumAdapter.swapDataSet(artist.albums)
+            return
+        }
         if (!allSongsShown && allSongs.size > FIRST_SONGS) {
             songAdapter.swapDataSet(allSongs.take(FIRST_SONGS))
             showAll.text = getString(R.string.show_all_songs, allSongs.size)
@@ -580,3 +593,4 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
     }
 }
 private const val FIRST_SONGS = 30
+private const val STAGE_SONGS = 9
