@@ -682,4 +682,5 @@
     <string name="stats_history">السجل</string>
     <string name="stats_row_detail">%1$d مرة · %2$s</string>
     <string name="stats_no_data">لسه مفيش حاجة</string>
+    <string name="vocal_processing_eta">جاري الفصل %1$d%% • باقي حوالي %2$d دقيقة</string>
 </resources>

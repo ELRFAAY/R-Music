@@ -691,4 +691,5 @@
     <string name="stats_history">History</string>
     <string name="stats_row_detail">%1$d plays · %2$s</string>
     <string name="stats_no_data">Nothing here yet</string>
+    <string name="vocal_processing_eta">Separating %1$d%% • about %2$d min left</string>
 </resources>

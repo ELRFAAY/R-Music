@@ -273,6 +273,13 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
             lyricsScaleIndex = (lyricsScaleIndex + 1) % lyricsScales.size
             binding.ringLyrics.setTextScale(lyricsScales[lyricsScaleIndex])
         }
+        // the sliding cover must never be cut at the cover area (checked on every parent too)
+        var anc: android.view.View? = binding.ringCoverArea
+        while (anc is android.view.ViewGroup) {
+            anc.clipChildren = false
+            anc.clipToPadding = false
+            anc = anc.parent as? android.view.View
+        }
         binding.lyricsPron.setOnClickListener {
             PreferenceUtil.koreanPronunciation = when (PreferenceUtil.koreanPronunciation) {
                 "en" -> "ar"; "ar" -> "off"; else -> "en"
@@ -804,7 +811,9 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         val b = _binding ?: return
         val text = when (st) {
             is code.name.monkey.retromusic.vocal.VocalSeparator.Status.Downloading -> getString(R.string.vocal_downloading, st.percent)
-            is code.name.monkey.retromusic.vocal.VocalSeparator.Status.Processing -> getString(R.string.vocal_processing, st.percent)
+            is code.name.monkey.retromusic.vocal.VocalSeparator.Status.Processing ->
+                if (st.etaSeconds >= 0) getString(R.string.vocal_processing_eta, st.percent, (st.etaSeconds + 59) / 60)
+                else getString(R.string.vocal_processing, st.percent)
             is code.name.monkey.retromusic.vocal.VocalSeparator.Status.Error ->
                 getString(R.string.vocal_error) + " (" + st.message.take(60) + ")"
             else -> null

@@ -32,7 +32,7 @@ object VocalSeparator {
     sealed class Status {
         object Idle : Status()
         data class Downloading(val percent: Int) : Status()
-        data class Processing(val songId: Long, val percent: Int) : Status()
+        data class Processing(val songId: Long, val percent: Int, val etaSeconds: Int = -1) : Status()
         data class Ready(val songId: Long) : Status()
         data class Error(val message: String) : Status()
     }
@@ -153,8 +153,12 @@ object VocalSeparator {
                 val tmp = File(out.parentFile, out.name + ".part")
                 MdxSeparator(model).use { sep ->
                     stage = "separate"
+                    val t0 = System.currentTimeMillis()
                     sep.separate(pcm, tmp, { !isActive }) { p ->
-                        _status.value = Status.Processing(song.id, p)
+                        val eta = if (p >= 3) {
+                            ((System.currentTimeMillis() - t0) / 1000.0 / p * (100 - p)).toInt()
+                        } else -1
+                        _status.value = Status.Processing(song.id, p, eta)
                     }
                 }
                 if (!isActive) {

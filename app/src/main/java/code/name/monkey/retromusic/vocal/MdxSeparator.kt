@@ -31,7 +31,13 @@ class MdxSeparator(modelFile: File) : AutoCloseable {
 
     init {
         val opts = OrtSession.SessionOptions()
-        opts.setIntraOpNumThreads(Runtime.getRuntime().availableProcessors().coerceIn(2, 4))
+        val threads = Runtime.getRuntime().availableProcessors().coerceIn(2, 4)
+        opts.setIntraOpNumThreads(threads)
+        // XNNPACK = faster CPU kernels for the convolutions; if this build cannot use it, carry on without
+        try {
+            opts.addXnnpack(mapOf("intra_op_num_threads" to threads.toString()))
+        } catch (_: Throwable) {
+        }
         session = env.createSession(modelFile.absolutePath, opts)
         inputName = session.inputNames.first()
         val shape = (session.inputInfo[inputName]!!.info as ai.onnxruntime.TensorInfo).shape
