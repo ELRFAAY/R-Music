@@ -116,7 +116,7 @@ class RealAlbumRepository(private val songRepository: RealSongRepository) :
             SortOrder.AlbumSongSortOrder.SONG_DURATION -> album.songs.sortedWith { o1, o2 ->
                 o1.duration.compareTo(o2.duration)
             }
-            else -> throw IllegalArgumentException("invalid ${PreferenceUtil.albumDetailSongSortOrder}")
+            else -> album.songs // unknown saved value: keep the order as it is
         }
         return album.copy(songs = songs)
     }
