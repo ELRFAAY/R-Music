@@ -52,7 +52,10 @@ class ArtistImageFetcher(
                         response: Response<DeezerResponse>
                     ) {
                         if (!response.isSuccessful) {
-                            throw IOException("Request failed with code: " + response.code())
+                            // Deezer answered with an error (rate limit, server error). Throwing
+                            // here runs on a network thread nobody catches and kills the app.
+                            callback.onDataReady(getFallbackAlbumImage())
+                            return
                         }
 
                         if (isCancelled) {
