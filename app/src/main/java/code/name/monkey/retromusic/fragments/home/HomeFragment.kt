@@ -106,7 +106,7 @@ class HomeFragment :
             homeAdapter.swapData(it)
         }
         libraryViewModel.getHomeCovers().observe(viewLifecycleOwner) {
-            binding.coverGrid.setCovers(it)
+            binding.coverGrid.setCovers(it, libraryViewModel.getHomeStacks().value.orEmpty())
         }
         // The wall fills the whole visible area; the lists start below it.
         binding.container.doOnLayout {
@@ -120,7 +120,16 @@ class HomeFragment :
         )
         // A tap only plays the song (the mini player shows it); it does not open Now Playing.
         binding.coverGrid.onSongClick = { songs, index ->
-            MusicPlayerRemote.openQueue(songs, index, true)
+            val song = songs.getOrNull(index)
+            if (wallSelection.isNotEmpty() && song != null) {
+                // While covers are being ticked a tap ticks / unticks (pinned covers only).
+                if (song.id in PreferenceUtil.homeCoversPinned) toggleSelection(song.id)
+            } else {
+                MusicPlayerRemote.openQueue(songs, index, true)
+            }
+        }
+        binding.coverGrid.onStackMemberClick = { songs, position ->
+            MusicPlayerRemote.openQueue(songs, position, true)
         }
         binding.coverGrid.onSongLongClick = { songs, hit -> showWallMenu(songs, hit) }
 
@@ -352,10 +361,49 @@ class HomeFragment :
      * Long press on a cover: the same glass menu as the artist covers, with its arrow pointing at that
      * cover: pin / unpin and go-to-song. The wall stops drifting while it is open.
      */
+    /** Pinned covers ticked for grouping (kept only while the home screen is open). */
+    private val wallSelection = LinkedHashSet<Long>()
+
+    private fun toggleSelection(id: Long) {
+        if (!wallSelection.remove(id)) wallSelection.add(id)
+        binding.coverGrid.selectedIds = wallSelection.toSet()
+        if (wallSelection.isNotEmpty()) {
+            android.widget.Toast.makeText(
+                requireContext(),
+                getString(R.string.wall_selected_n, wallSelection.size),
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    private fun clearSelection() {
+        wallSelection.clear()
+        _binding?.coverGrid?.selectedIds = emptySet()
+    }
+
+    /** Piles the ticked pinned covers into one stack (the first one pinned stays on top). */
+    private fun groupSelection() {
+        val order = PreferenceUtil.homeCoversPinned.filter { it in wallSelection }
+        if (order.size < 2) return
+        val rest = PreferenceUtil.homeCoversStacks
+            .map { g -> g.filterNot { it in wallSelection } }.filter { it.size >= 2 }
+        PreferenceUtil.homeCoversStacks = rest + listOf(order)
+        clearSelection()
+        reloadWallCovers()
+    }
+
+    private var wallMenu: PopupWindow? = null
+
+    /**
+     * Long press on a cover: the same glass menu as the artist covers, with its arrow pointing at that
+     * cover. A single cover: pin / unpin, tick for grouping, group the ticked ones, go to the song.
+     * A stack: play, ungroup, unpin all. The wall stops drifting while it is open.
+     */
     private fun showWallMenu(songs: List<Song>, hit: TiltedCoverGridView.WallHit) {
         val song = songs.getOrNull(hit.index) ?: return
         val pinned = PreferenceUtil.homeCoversPinned
         val isPinned = song.id in pinned
+        val group = libraryViewModel.getHomeStacks().value?.get(song.id)
 
         val loc = IntArray(2)
         binding.coverGrid.getLocationOnScreen(loc)
@@ -364,26 +412,87 @@ class HomeFragment :
         val half = hit.half.toInt()
         val target = android.graphics.Rect(cx - half, cy - half, cx + half, cy + half)
 
-        binding.coverGrid.setFrozen(true)
-        code.name.monkey.retromusic.adapter.artist.ArtistPopup.showEntries(
-            binding.coverGrid,
-            listOf(
+        val entries = ArrayList<code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry>()
+        if (group != null) {
+            val ids = group.map { it.id }.toSet()
+            entries.add(
+                code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
+                    getString(R.string.wall_play_stack), R.drawable.ic_play_arrow
+                ) {
+                    MusicPlayerRemote.openQueue(group, 0, true)
+                    mainActivity.expandPanel()
+                }
+            )
+            entries.add(
+                code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
+                    getString(R.string.wall_ungroup), R.drawable.ic_menu_merge
+                ) {
+                    PreferenceUtil.homeCoversStacks =
+                        PreferenceUtil.homeCoversStacks.filterNot { g -> g.any { it in ids } }
+                    reloadWallCovers()
+                }
+            )
+            entries.add(
+                code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
+                    getString(R.string.wall_unpin_all), R.drawable.ic_menu_pin
+                ) {
+                    PreferenceUtil.homeCoversStacks =
+                        PreferenceUtil.homeCoversStacks.filterNot { g -> g.any { it in ids } }
+                    PreferenceUtil.homeCoversPinned = pinned.filterNot { it in ids }
+                    reloadWallCovers()
+                }
+            )
+        } else {
+            entries.add(
                 code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
                     getString(if (isPinned) R.string.wall_unpin else R.string.wall_pin),
                     R.drawable.ic_menu_pin
                 ) {
+                    wallSelection.remove(song.id)
                     PreferenceUtil.homeCoversPinned =
                         if (isPinned) pinned - song.id else pinned + song.id
+                    binding.coverGrid.selectedIds = wallSelection.toSet()
                     reloadWallCovers()
-                },
+                }
+            )
+            if (isPinned) {
+                entries.add(
+                    code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
+                        getString(
+                            if (song.id in wallSelection) R.string.wall_unselect else R.string.wall_select
+                        ),
+                        R.drawable.ic_menu_merge
+                    ) { toggleSelection(song.id) }
+                )
+            }
+            if (wallSelection.size >= 2) {
+                entries.add(
+                    code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
+                        getString(R.string.wall_group_n, wallSelection.size), R.drawable.ic_menu_merge
+                    ) { groupSelection() }
+                )
+            }
+            if (wallSelection.isNotEmpty()) {
+                entries.add(
+                    code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
+                        getString(R.string.wall_clear_selection), R.drawable.ic_menu_unlock
+                    ) { clearSelection() }
+                )
+            }
+            entries.add(
                 code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
-                    getString(R.string.wall_go_to_song),
-                    R.drawable.ic_play_arrow
+                    getString(R.string.wall_go_to_song), R.drawable.ic_play_arrow
                 ) {
                     MusicPlayerRemote.openQueue(songs, hit.index, true)
                     mainActivity.expandPanel()
                 }
-            ),
+            )
+        }
+
+        binding.coverGrid.setFrozen(true)
+        code.name.monkey.retromusic.adapter.artist.ArtistPopup.showEntries(
+            binding.coverGrid,
+            entries,
             target = target,
             onDismiss = { _binding?.coverGrid?.setFrozen(false) }
         )

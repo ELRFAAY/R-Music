@@ -718,4 +718,12 @@
     <string name="stats_share">Share summary</string>
     <string name="stats_share_title">My listening on R Music</string>
     <string name="stats_song_not_found">Song not found in your library</string>
+    <string name="wall_select">Select</string>
+    <string name="wall_unselect">Unselect</string>
+    <string name="wall_selected_n">%1$d selected. Long press a cover to group them</string>
+    <string name="wall_group_n">Group %1$d covers into a stack</string>
+    <string name="wall_clear_selection">Clear selection</string>
+    <string name="wall_play_stack">Play stack</string>
+    <string name="wall_ungroup">Ungroup</string>
+    <string name="wall_unpin_all">Unpin all</string>
 </resources>

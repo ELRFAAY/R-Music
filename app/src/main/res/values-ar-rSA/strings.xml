@@ -709,4 +709,12 @@
     <string name="stats_share">مشاركة الملخص</string>
     <string name="stats_share_title">استماعي على R Music</string>
     <string name="stats_song_not_found">الأغنية مش موجودة في مكتبتك</string>
+    <string name="wall_select">تحديد</string>
+    <string name="wall_unselect">إلغاء التحديد</string>
+    <string name="wall_selected_n">تم تحديد %1$d. اضغط مطولًا على غلاف عشان تجمعهم</string>
+    <string name="wall_group_n">جمع %1$d أغلفة في كومة</string>
+    <string name="wall_clear_selection">مسح التحديد</string>
+    <string name="wall_play_stack">تشغيل الكومة</string>
+    <string name="wall_ungroup">فك الجمع</string>
+    <string name="wall_unpin_all">إلغاء تثبيت الكل</string>
 </resources>

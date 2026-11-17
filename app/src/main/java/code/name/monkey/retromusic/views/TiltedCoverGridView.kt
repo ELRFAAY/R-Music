@@ -19,6 +19,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.LinearGradient
 import android.graphics.Paint
+import android.graphics.PointF
 import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Shader
@@ -31,6 +32,7 @@ import android.view.GestureDetector
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
+import code.name.monkey.appthemehelper.ThemeStore
 import code.name.monkey.retromusic.glide.RetroGlideExtension
 import code.name.monkey.retromusic.model.Song
 import com.bumptech.glide.Glide
@@ -66,6 +68,33 @@ class TiltedCoverGridView @JvmOverloads constructor(
     /** Called with the songs on the wall and the index of the one that was long-pressed. */
     var onSongLongClick: ((songs: List<Song>, hit: WallHit) -> Unit)? = null
 
+    /** A tap on a card of an opened stack: the songs of that stack and the position of the card. */
+    var onStackMemberClick: ((songs: List<Song>, position: Int) -> Unit)? = null
+
+    /** Stacks on the wall: the song shown on top (its id) -> all songs of the stack, top first. */
+    private var stacks: Map<Long, List<Song>> = emptyMap()
+    private var memberCovers: Map<Long, List<Bitmap>> = emptyMap()
+
+    /** Songs ticked for grouping: they get a coloured frame and a check mark. */
+    var selectedIds: Set<Long> = emptySet()
+        set(value) {
+            field = value
+            invalidate()
+        }
+
+    // The opened stack: its cards spread out over the wall.
+    private var expandedSongs: List<Song> = emptyList()
+    private var expandedBitmaps: List<Bitmap> = emptyList()
+    private val expandedFrom = PointF()
+    private var expandedFromSize = 0f
+    private var expandProgress = 0f
+    private var expandAnimator: ValueAnimator? = null
+    private val expandedRects = ArrayList<RectF>()
+    private val accentPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val scrimPaint = Paint()
+
+    private val isExpanded get() = expandedSongs.isNotEmpty()
+
     /** A cover under the finger: its index and where it is drawn, in this view's coordinates. */
     class WallHit(val index: Int, val centerX: Float, val centerY: Float, val half: Float)
 
@@ -85,16 +114,16 @@ class TiltedCoverGridView @JvmOverloads constructor(
             override fun onDown(e: MotionEvent): Boolean = covers.isNotEmpty()
 
             override fun onSingleTapUp(e: MotionEvent): Boolean {
+                if (isExpanded) return handleExpandedTap(e.x, e.y)
                 if (coverSongs.size != covers.size) return false // only the saved picture is shown
-                val index = hitTest(e.x, e.y)
-                if (index < 0) return false
+                val hit = findHit(e.x, e.y) ?: return false
                 playSoundEffect(android.view.SoundEffectConstants.CLICK)
-                onSongClick?.invoke(coverSongs, index)
+                handleTap(hit)
                 return true
             }
 
             override fun onLongPress(e: MotionEvent) {
-                if (coverSongs.size != covers.size) return
+                if (isExpanded || coverSongs.size != covers.size) return
                 val hit = findHit(e.x, e.y) ?: return
                 performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                 onSongLongClick?.invoke(coverSongs, hit)
@@ -180,36 +209,66 @@ class TiltedCoverGridView @JvmOverloads constructor(
         }
     }
 
-    /** Loads the covers of [songs]. Does nothing if the same songs are already shown. */
-    fun setCovers(songs: List<Song>) {
-        val key = songs.map { it.id }
+    /**
+     * Loads the covers of [songs]. [stackMap] says which of them are stacks (top song id -> all songs);
+     * a stack is drawn as one pile of covers. Does nothing if the same wall is already shown.
+     */
+    fun setCovers(songs: List<Song>, stackMap: Map<Long, List<Song>> = emptyMap()) {
+        val key = songs.map { it.id } +
+            stackMap.flatMap { listOf(-1L, it.key) + it.value.map { s -> s.id } }
         if (key == loadedKey) return
         loadedKey = key
         clearTargets()
+        closeStackNow()
         if (songs.isEmpty()) {
             loading = false
             covers = emptyList()
             coverSongs = emptyList()
+            stacks = emptyMap()
+            memberCovers = emptyMap()
             invalidate()
             return
         }
         loading = true
         val size = (120 * density).toInt()
         val myGeneration = ++generation
-        val loaded = arrayOfNulls<Bitmap>(songs.size)
+        // every song that needs a cover, stack members included
+        val flat = ArrayList<Song>()
+        songs.forEach { s -> flat.addAll(stackMap[s.id] ?: listOf(s)) }
+        val loaded = arrayOfNulls<Bitmap>(flat.size)
         var finished = 0
         fun onOneFinished() {
             finished++
-            if (finished == songs.size) {
+            if (finished == flat.size) {
                 loading = false
-                val keep = loaded.indices.filter { loaded[it] != null }
-                covers = keep.map { loaded[it]!! }
-                coverSongs = keep.map { songs[it] }
+                val outCovers = ArrayList<Bitmap>()
+                val outSongs = ArrayList<Song>()
+                val members = HashMap<Long, List<Bitmap>>()
+                var pos = 0
+                for (s in songs) {
+                    val group = stackMap[s.id]
+                    if (group == null) {
+                        loaded[pos]?.let { outCovers.add(it); outSongs.add(s) }
+                        pos++
+                    } else {
+                        val bitmaps = group.indices.mapNotNull { loaded[pos + it] }
+                        pos += group.size
+                        if (bitmaps.isNotEmpty()) {
+                            outCovers.add(if (bitmaps.size == 1) bitmaps[0] else stackBitmap(bitmaps))
+                            outSongs.add(s)
+                            members[s.id] = bitmaps
+                        }
+                    }
+                }
+                covers = outCovers
+                coverSongs = outSongs
+                stacks = stackMap.filterKeys { it in members }
+                memberCovers = members
                 invalidate()
                 saveToDisk(coverSongs.map { it.id }, covers)
             }
         }
-        songs.forEachIndexed { index, song ->
+        flat.forEachIndexed { index, song ->
             val cached = roundedCache.get(song.id)
             if (cached != null) {
                 loaded[index] = cached
@@ -251,6 +310,45 @@ class TiltedCoverGridView @JvmOverloads constructor(
                 .centerCrop()
                 .into(target)
         }
+    }
+
+    /** A pile of up to four covers, slightly turned, with a count badge: how a stack looks on the wall. */
+    private fun stackBitmap(bitmaps: List<Bitmap>): Bitmap {
+        val size = bitmaps[0].width
+        val out = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(out)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+        val border = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xE6FFFFFF.toInt() }
+        val angles = floatArrayOf(0f, -9f, 8f, -16f)
+        val shifts = floatArrayOf(0f, -0.04f, 0.04f, -0.02f)
+        val card = size * 0.78f
+        val shown = min(4, bitmaps.size)
+        for (k in shown - 1 downTo 0) {
+            val saved = canvas.save()
+            canvas.rotate(angles[k], size / 2f, size / 2f)
+            val left = (size - card) / 2f + shifts[k] * size
+            val top = (size - card) / 2f
+            val box = RectF(left, top, left + card, top + card)
+            val r = card * 0.1f
+            val frame = RectF(box)
+            frame.inset(-size * 0.012f, -size * 0.012f)
+            canvas.drawRoundRect(frame, r, r, border)
+            val bm = bitmaps[k]
+            canvas.drawBitmap(bm, Rect(0, 0, bm.width, bm.height), box, paint)
+            canvas.restoreToCount(saved)
+        }
+        // count badge
+        val badge = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = ThemeStore.accentColor(context) }
+        val br = size * 0.13f
+        canvas.drawCircle(size * 0.86f, size * 0.86f, br, badge)
+        val text = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            textSize = br * 1.25f
+            textAlign = Paint.Align.CENTER
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+        }
+        canvas.drawText(bitmaps.size.toString(), size * 0.86f, size * 0.86f + br * 0.42f, text)
+        return out
     }
 
     private fun roundedCopy(source: Bitmap): Bitmap {
@@ -303,6 +401,7 @@ class TiltedCoverGridView @JvmOverloads constructor(
         }
         canvas.drawRect(0f, 0f, w, h, shadePaint)
         canvas.drawRect(0f, h * 0.7f, w, h, fadePaint)
+        if (isExpanded) drawExpanded(canvas, w, h)
 
         if (shouldAnimate(list)) {
             val now = System.nanoTime()
@@ -359,9 +458,141 @@ class TiltedCoverGridView @JvmOverloads constructor(
                 src.set(0, 0, bitmap.width, bitmap.height)
                 dst.set(x, y, x + g.tile, y + g.tile)
                 canvas.drawBitmap(bitmap, src, dst, tilePaint)
+                if (selectedIds.isNotEmpty() && coverSongs.size == list.size) {
+                    val id = coverSongs[Math.floorMod(row - shift + col * 3, list.size)].id
+                    if (id in selectedIds) drawSelectionMark(canvas, dst)
+                }
             }
         }
         canvas.restoreToCount(saved)
+    }
+
+    private fun drawSelectionMark(canvas: Canvas, box: RectF) {
+        val accent = ThemeStore.accentColor(context)
+        accentPaint.style = Paint.Style.STROKE
+        accentPaint.strokeWidth = 3.5f * density
+        accentPaint.color = accent
+        val r = box.width() * 0.1f
+        canvas.drawRoundRect(box, r, r, accentPaint)
+        accentPaint.style = Paint.Style.FILL
+        val cx = box.right - box.width() * 0.17f
+        val cy = box.top + box.width() * 0.17f
+        val cr = box.width() * 0.11f
+        canvas.drawCircle(cx, cy, cr, accentPaint)
+        accentPaint.style = Paint.Style.STROKE
+        accentPaint.strokeWidth = 2.2f * density
+        accentPaint.color = Color.WHITE
+        accentPaint.strokeCap = Paint.Cap.ROUND
+        val p = android.graphics.Path().apply {
+            moveTo(cx - cr * 0.45f, cy)
+            lineTo(cx - cr * 0.1f, cy + cr * 0.38f)
+            lineTo(cx + cr * 0.5f, cy - cr * 0.36f)
+        }
+        canvas.drawPath(p, accentPaint)
+    }
+
+    /** A tap on a cover: a stack opens (unless covers are being ticked), anything else is passed on. */
+    private fun handleTap(hit: WallHit) {
+        val song = coverSongs.getOrNull(hit.index) ?: return
+        val members = memberCovers[song.id]
+        val group = stacks[song.id]
+        if (group != null && members != null && selectedIds.isEmpty()) {
+            openStack(group, members, hit)
+        } else {
+            onSongClick?.invoke(coverSongs, hit.index)
+        }
+    }
+
+    private fun openStack(group: List<Song>, bitmaps: List<Bitmap>, hit: WallHit) {
+        expandedSongs = group.take(bitmaps.size)
+        expandedBitmaps = bitmaps
+        expandedFrom.set(hit.centerX, hit.centerY)
+        expandedFromSize = hit.half * 2f
+        animateExpand(0f, 1f)
+    }
+
+    private fun animateExpand(from: Float, to: Float, onEnd: (() -> Unit)? = null) {
+        expandAnimator?.cancel()
+        expandAnimator = ValueAnimator.ofFloat(from, to).apply {
+            duration = 260
+            interpolator = android.view.animation.DecelerateInterpolator()
+            addUpdateListener {
+                expandProgress = it.animatedValue as Float
+                invalidate()
+            }
+            addListener(object : android.animation.AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: android.animation.Animator) {
+                    onEnd?.invoke()
+                }
+            })
+            start()
+        }
+    }
+
+    /** Folds the opened stack back into its place. */
+    fun closeStack() {
+        if (!isExpanded) return
+        animateExpand(expandProgress, 0f) { closeStackNow() }
+    }
+
+    private fun closeStackNow() {
+        expandAnimator?.cancel()
+        expandedSongs = emptyList()
+        expandedBitmaps = emptyList()
+        expandedRects.clear()
+        expandProgress = 0f
+        lastFrameNanos = 0L
+        invalidate()
+    }
+
+    private fun handleExpandedTap(x: Float, y: Float): Boolean {
+        val index = expandedRects.indexOfFirst { it.contains(x, y) }
+        if (index >= 0 && expandProgress > 0.9f) {
+            playSoundEffect(android.view.SoundEffectConstants.CLICK)
+            onStackMemberClick?.invoke(expandedSongs, index)
+        }
+        closeStack()
+        return true
+    }
+
+    /** Draws the opened stack: a dark veil and its cards spread out around where the pile was. */
+    private fun drawExpanded(canvas: Canvas, w: Float, h: Float) {
+        val n = expandedBitmaps.size
+        if (n == 0) return
+        val t = expandProgress
+        scrimPaint.color = Color.argb((150 * t).toInt(), 0, 0, 0)
+        canvas.drawRect(0f, 0f, w, h, scrimPaint)
+        val gap = 10f * density
+        val pad = 16f * density
+        val cols = if (n <= 3) n else if (n <= 6) 3 else 4
+        val rows = ceil(n / cols.toFloat()).toInt()
+        val e = min((w - 2 * pad - (cols - 1) * gap) / cols, (h * 0.8f - (rows - 1) * gap) / rows)
+            .coerceAtMost(gridFor(w, h).tile * 1.1f)
+        val totalW = cols * e + (cols - 1) * gap
+        val totalH = rows * e + (rows - 1) * gap
+        val left0 = (expandedFrom.x - totalW / 2f).coerceIn(pad, (w - pad - totalW).coerceAtLeast(pad))
+        val top0 = (expandedFrom.y - totalH / 2f).coerceIn(pad, (h * 0.9f - totalH).coerceAtLeast(pad))
+        expandedRects.clear()
+        for (i in 0 until n) {
+            val r = i / cols
+            val c = i % cols
+            // the last row is centred when it is not full
+            val inRow = if (r == rows - 1) n - r * cols else cols
+            val rowW = inRow * e + (inRow - 1) * gap
+            val tx = left0 + (totalW - rowW) / 2f + c * (e + gap)
+            val ty = top0 + r * (e + gap)
+            val fromX = expandedFrom.x - expandedFromSize * 0.4f
+            val fromY = expandedFrom.y - expandedFromSize * 0.4f
+            val size = expandedFromSize * 0.8f + (e - expandedFromSize * 0.8f) * t
+            val x = fromX + (tx - fromX) * t
+            val y = fromY + (ty - fromY) * t
+            val rect = RectF(x, y, x + size, y + size)
+            expandedRects.add(RectF(tx, ty, tx + e, ty + e))
+            val bm = expandedBitmaps[i]
+            tilePaint.alpha = (255 * (0.35f + 0.65f * t)).toInt()
+            canvas.drawBitmap(bm, Rect(0, 0, bm.width, bm.height), rect, tilePaint)
+            tilePaint.alpha = 255
+        }
     }
 
     /** Index in [coverSongs] of the cover under the touch point, or -1 for a gap / nothing. */
@@ -406,9 +637,10 @@ class TiltedCoverGridView @JvmOverloads constructor(
     fun tapAtScreen(rawX: Float, rawY: Float): Boolean {
         val loc = IntArray(2)
         getLocationOnScreen(loc)
-        val index = hitTest(rawX - loc[0], rawY - loc[1])
-        if (index < 0) return false
-        onSongClick?.invoke(coverSongs, index)
+        if (isExpanded) return handleExpandedTap(rawX - loc[0], rawY - loc[1])
+        val hit = findHit(rawX - loc[0], rawY - loc[1]) ?: return false
+        if (coverSongs.size != covers.size) return false
+        handleTap(hit)
         return true
     }
 
@@ -417,7 +649,7 @@ class TiltedCoverGridView @JvmOverloads constructor(
     }
 
     private fun shouldAnimate(list: List<Bitmap>): Boolean {
-        if (frozen || speedDpPerSec <= 0f || list.isEmpty() || !isShown) return false
+        if (frozen || isExpanded || speedDpPerSec <= 0f || list.isEmpty() || !isShown) return false
         return Build.VERSION.SDK_INT < Build.VERSION_CODES.O || ValueAnimator.areAnimatorsEnabled()
     }
 
@@ -438,6 +670,7 @@ class TiltedCoverGridView @JvmOverloads constructor(
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
+        expandAnimator?.cancel()
         lastFrameNanos = 0L
         clearTargets()
         if (loading) {

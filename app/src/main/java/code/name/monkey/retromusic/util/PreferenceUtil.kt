@@ -113,6 +113,7 @@ import code.name.monkey.retromusic.AUTO_BACKUP_KEEP
 import code.name.monkey.retromusic.BACKUP_FOLDER_URI
 import code.name.monkey.retromusic.HOME_COVERS_COUNT
 import code.name.monkey.retromusic.HOME_COVERS_PINNED
+import code.name.monkey.retromusic.HOME_COVERS_STACKS
 import code.name.monkey.retromusic.HOME_COVERS_DARKNESS
 import code.name.monkey.retromusic.HOME_COVERS_ENABLED
 import code.name.monkey.retromusic.HOME_COVERS_SOURCE
@@ -867,6 +868,18 @@ object PreferenceUtil {
         get() = sharedPreferences.getString(HOME_COVERS_PINNED, "").orEmpty()
             .split(',').mapNotNull { it.trim().toLongOrNull() }
         set(value) = sharedPreferences.edit { putString(HOME_COVERS_PINNED, value.joinToString(",")) }
+
+    /**
+     * Groups of pinned song ids shown as one stack of covers on the wall ("1,2,3;4,5").
+     * The first id of a group is the one shown on top.
+     */
+    var homeCoversStacks: List<List<Long>>
+        get() = sharedPreferences.getString(HOME_COVERS_STACKS, "").orEmpty()
+            .split(';').map { g -> g.split(',').mapNotNull { it.trim().toLongOrNull() } }
+            .filter { it.size >= 2 }
+        set(value) = sharedPreferences.edit {
+            putString(HOME_COVERS_STACKS, value.joinToString(";") { it.joinToString(",") })
+        }
 
     /** Folder (Storage Access Framework tree URI) where backups are written and listed from. */
     var backupFolderUri: String?
