@@ -53,6 +53,12 @@ class PersonalizeSettingsFragment : AbsSettingsFragment() {
             setSummary(prefs, newValue)
             true
         }
+        val appIcon: ATEListPreference? = findPreference(code.name.monkey.retromusic.util.AppIconHelper.PREF_KEY)
+        appIcon?.setOnPreferenceChangeListener { preference, newValue ->
+            code.name.monkey.retromusic.util.AppIconHelper.apply(requireContext(), newValue as String)
+            setSummary(preference, newValue)
+            true
+        }
         val appBarMode: ATEListPreference? = findPreference(APPBAR_MODE)
         appBarMode?.setOnPreferenceChangeListener { _, _ ->
             restartActivity()

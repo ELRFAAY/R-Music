@@ -55,6 +55,8 @@ class MainActivity : AbsCastActivity() {
 
         WhatsNewFragment.showChangeLog(this)
         checkPendingArtistMerge()
+        // A restored backup can change the saved icon without touching the launcher.
+        code.name.monkey.retromusic.util.AppIconHelper.sync(this)
     }
 
     private val artistMerger = code.name.monkey.retromusic.fragments.artists.ArtistMerger(this)

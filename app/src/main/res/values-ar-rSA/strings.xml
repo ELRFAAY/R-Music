@@ -727,4 +727,8 @@
     <string name="wall_remove_from_stack">إخراج من الكومة</string>
     <string name="wall_play_this">تشغيل الأغنية دي</string>
     <string name="stats_highlight_label">أكتر أغنية سمعتها</string>
+    <string name="pref_header_app_icon">أيقونة التطبيق</string>
+    <string name="pref_title_app_icon">الأيقونة</string>
+    <string name="app_icon_new">الأيقونة الجديدة (الكوبرا)</string>
+    <string name="app_icon_old">الأيقونة القديمة</string>
 </resources>
