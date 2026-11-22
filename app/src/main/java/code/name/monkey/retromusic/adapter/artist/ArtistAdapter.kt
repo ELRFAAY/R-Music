@@ -107,12 +107,6 @@ class ArtistAdapter(
         if (dataSet.getOrNull(position)?.id == FAVORITES_CARD_ID) VIEW_TYPE_FAVORITES else 0
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        if (viewType == VIEW_TYPE_FAVORITES) {
-            return createViewHolder(
-                LayoutInflater.from(activity)
-                    .inflate(R.layout.item_favorite_artists_card, parent, false)
-            )
-        }
         val view =
             try {
                 LayoutInflater.from(activity).inflate(itemLayoutRes, parent, false)
@@ -129,11 +123,7 @@ class ArtistAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val artist = dataSet[position]
         if (artist.id == FAVORITES_CARD_ID) {
-            holder.itemView.isActivated = false
-            holder.title?.text = activity.getString(R.string.favorite_artists)
-            holder.text?.text = activity.getString(
-                R.string.favorite_artists_count, PreferenceUtil.favoriteArtists.size
-            )
+            bindFavoritesCard(holder)
             return
         }
         val isChecked = isChecked(artist)
@@ -153,6 +143,36 @@ class ArtistAdapter(
             holder.image?.transitionName = transitionName
         }
         loadArtistImage(artist, holder)
+    }
+
+    /** Same coloured card as an artist, with a heart instead of a picture. */
+    private fun bindFavoritesCard(holder: ViewHolder) {
+        holder.itemView.isActivated = false
+        val ctx = holder.itemView.context
+        val bg = com.google.android.material.color.MaterialColors.getColor(
+            ctx, com.google.android.material.R.attr.colorPrimaryContainer, 0
+        )
+        val fg = com.google.android.material.color.MaterialColors.getColor(
+            ctx, com.google.android.material.R.attr.colorOnPrimaryContainer, 0
+        )
+        bindPile(holder, emptyList())
+        holder.title?.text = activity.getString(R.string.favorite_artists) +
+                " (${PreferenceUtil.favoriteArtists.size})"
+        holder.title?.compoundDrawableTintList = null
+        holder.title?.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, 0, 0)
+        holder.title?.setTextColor(fg)
+        holder.text?.hide()
+        holder.image?.let { img ->
+            Glide.with(activity).clear(img)
+            val pad = (28 * img.resources.displayMetrics.density).toInt()
+            img.setPadding(pad, pad, pad, pad)
+            img.scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+            img.setImageResource(R.drawable.ic_favorite)
+            img.imageTintList = ColorStateList.valueOf(fg)
+            img.setBackgroundColor(bg)
+        }
+        holder.paletteColorContainer?.setBackgroundColor(bg)
+        holder.imageContainerCard?.setCardBackgroundColor(bg)
     }
 
     /** Draws up to two more covers behind the cell, tilted, so a pile shows. */

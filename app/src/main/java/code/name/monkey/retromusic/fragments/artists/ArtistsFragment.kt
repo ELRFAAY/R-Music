@@ -126,14 +126,7 @@ class ArtistsFragment : AbsRecyclerViewCustomGridSizeFragment<ArtistAdapter, Gri
     }
 
     override fun createLayoutManager(): GridLayoutManager {
-        return GridLayoutManager(requireActivity(), getGridSize()).also { manager ->
-            // the favorites card takes the whole first row
-            manager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
-                override fun getSpanSize(position: Int): Int =
-                    if (adapter?.getItemViewType(position) == ArtistAdapter.VIEW_TYPE_FAVORITES)
-                        manager.spanCount else 1
-            }
-        }
+        return GridLayoutManager(requireActivity(), getGridSize())
     }
 
     /** All favorite artists in one sheet; opening one works like opening it from the list. */
