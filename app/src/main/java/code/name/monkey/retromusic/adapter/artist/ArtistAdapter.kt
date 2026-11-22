@@ -35,6 +35,7 @@ import code.name.monkey.retromusic.helper.menu.SongsMenuHelper
 import code.name.monkey.retromusic.interfaces.IAlbumArtistClickListener
 import code.name.monkey.retromusic.interfaces.IArtistClickListener
 import code.name.monkey.retromusic.model.Artist
+import code.name.monkey.retromusic.model.Album
 import code.name.monkey.retromusic.model.Song
 import code.name.monkey.retromusic.util.MusicUtil
 import code.name.monkey.retromusic.util.PreferenceUtil
@@ -49,7 +50,10 @@ class ArtistAdapter(
     val IArtistClickListener: IArtistClickListener,
     val IAlbumArtistClickListener: IAlbumArtistClickListener? = null,
     var onMerge: ((Artist) -> Unit)? = null,
-    var onRename: ((Artist) -> Unit)? = null
+    var onRename: ((Artist) -> Unit)? = null,
+    /** The artists list shows a "favorite artists" card as its first item. */
+    var showFavoritesCard: Boolean = false,
+    var onFavoritesClick: (() -> Unit)? = null
 ) : AbsMultiSelectAdapter<ArtistAdapter.ViewHolder, Artist>(activity, R.menu.menu_media_selection),
     PopupTextProvider {
 
@@ -65,26 +69,32 @@ class ArtistAdapter(
         this.setHasStableIds(true)
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     /** Read once per data set instead of once per bound row (the getter parses a string). */
     private var pinnedNames: Set<String> = PreferenceUtil.pinnedArtists
 
+    /** Placeholder item that becomes the "favorite artists" card; never a real artist. */
+    private fun favoritesCard() =
+        Artist(FAVORITES_CARD_ID, listOf(Album(FAVORITES_CARD_ID, listOf(Song.emptySong))))
+
+    @SuppressLint("NotifyDataSetChanged")
     fun swapDataSet(dataSet: List<Artist>) {
-        rawDataSet = dataSet
+        val real = dataSet.filter { it.id != FAVORITES_CARD_ID }
+        rawDataSet = real
         val pinned = PreferenceUtil.pinnedArtists
         pinnedNames = pinned
-        val sorted = if (pinned.isEmpty()) dataSet
-        else dataSet.sortedBy { if (it.name in pinned) 0 else 1 }
+        val sorted = if (pinned.isEmpty()) real
+        else real.sortedBy { if (it.name in pinned) 0 else 1 }
         val pinnedList = sorted.filter { it.name in pinned }
-        if (pinnedList.size >= 2 && !stackExpanded) {
+        val body = if (pinnedList.size >= 2 && !stackExpanded) {
             stackHead = pinnedList[0]
             stackRest = pinnedList.drop(1)
-            this.dataSet = listOf(pinnedList[0]) + sorted.filter { it.name !in pinned }
+            listOf(pinnedList[0]) + sorted.filter { it.name !in pinned }
         } else {
             stackHead = null
             stackRest = emptyList()
-            this.dataSet = sorted
+            sorted
         }
+        this.dataSet = if (showFavoritesCard) listOf(favoritesCard()) + body else body
         notifyDataSetChanged()
         albumArtistsOnly = PreferenceUtil.albumArtistsOnly
     }
@@ -93,7 +103,16 @@ class ArtistAdapter(
         return dataSet[position].id
     }
 
+    override fun getItemViewType(position: Int): Int =
+        if (dataSet.getOrNull(position)?.id == FAVORITES_CARD_ID) VIEW_TYPE_FAVORITES else 0
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        if (viewType == VIEW_TYPE_FAVORITES) {
+            return createViewHolder(
+                LayoutInflater.from(activity)
+                    .inflate(R.layout.item_favorite_artists_card, parent, false)
+            )
+        }
         val view =
             try {
                 LayoutInflater.from(activity).inflate(itemLayoutRes, parent, false)
@@ -109,6 +128,14 @@ class ArtistAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val artist = dataSet[position]
+        if (artist.id == FAVORITES_CARD_ID) {
+            holder.itemView.isActivated = false
+            holder.title?.text = activity.getString(R.string.favorite_artists)
+            holder.text?.text = activity.getString(
+                R.string.favorite_artists_count, PreferenceUtil.favoriteArtists.size
+            )
+            return
+        }
         val isChecked = isChecked(artist)
         holder.itemView.isActivated = isChecked
         val artistName = artist.name
@@ -232,6 +259,7 @@ class ArtistAdapter(
     }
 
     private fun getSectionName(position: Int): String {
+        if (dataSet[position].id == FAVORITES_CARD_ID) return "★"
         return MusicUtil.getSectionName(dataSet[position].name)
     }
 
@@ -243,6 +271,10 @@ class ArtistAdapter(
 
         override fun onClick(v: View?) {
             super.onClick(v)
+            if (dataSet.getOrNull(layoutPosition)?.id == FAVORITES_CARD_ID) {
+                if (!isInQuickSelectMode) onFavoritesClick?.invoke()
+                return
+            }
             if (isInQuickSelectMode) {
                 toggleChecked(layoutPosition)
             } else {
@@ -263,6 +295,7 @@ class ArtistAdapter(
         }
 
         override fun onLongClick(v: View?): Boolean {
+            if (dataSet.getOrNull(layoutPosition)?.id == FAVORITES_CARD_ID) return true
             if (isInQuickSelectMode) return toggleChecked(layoutPosition)
             val pos = layoutPosition
             if (pos < 0 || pos >= dataSet.size) return true
@@ -301,5 +334,7 @@ class ArtistAdapter(
 
     companion object {
         private const val PILE_TAG = "artist_pile"
+        const val VIEW_TYPE_FAVORITES = 1
+        const val FAVORITES_CARD_ID = -4242L
     }
 }
