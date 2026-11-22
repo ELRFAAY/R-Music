@@ -112,15 +112,40 @@ class ListeningStatsFragment : Fragment() {
             if (list.isEmpty()) {
                 box.addView(TextView(requireContext()).apply { setText(R.string.stats_no_data) })
             }
+            val maxMs = (list.firstOrNull()?.ms ?: 1L).coerceAtLeast(1L)
+            val d = resources.displayMetrics.density
+            val accent = com.google.android.material.color.MaterialColors.getColor(
+                box, androidx.appcompat.R.attr.colorPrimary, 0
+            )
             list.forEachIndexed { i, p ->
-                box.addView(TextView(requireContext()).apply {
+                val row = android.widget.LinearLayout(requireContext()).apply {
+                    orientation = android.widget.LinearLayout.VERTICAL
+                    setPadding(0, if (i == 0) 0 else (8 * d).toInt(), 0, 0)
+                    alpha = 0f
+                    translationY = 12 * d
+                }
+                row.addView(TextView(requireContext()).apply {
                     text = "${i + 1}. ${p.name} · ${formatDuration(p.ms)}"
                     textSize = 15f
                     maxLines = 1
                     ellipsize = android.text.TextUtils.TruncateAt.END
                     if (i == 0) setTypeface(typeface, android.graphics.Typeface.BOLD)
-                    setPadding(0, if (i == 0) 0 else (6 * resources.displayMetrics.density).toInt(), 0, 0)
                 })
+                val bar = View(requireContext()).apply {
+                    setBackgroundColor(accent)
+                    alpha = if (i == 0) 1f else 0.55f
+                    scaleX = 0f
+                }
+                row.addView(bar, android.widget.LinearLayout.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT, (4 * d).toInt()
+                ).apply { topMargin = (3 * d).toInt() })
+                box.addView(row)
+                val fraction = p.ms.toFloat() / maxMs
+                row.animate().alpha(1f).translationY(0f).setStartDelay(i * 90L).setDuration(260).start()
+                bar.post {
+                    bar.pivotX = if (bar.layoutDirection == View.LAYOUT_DIRECTION_RTL) bar.width.toFloat() else 0f
+                    bar.animate().scaleX(fraction).setStartDelay(i * 90L + 120).setDuration(500).start()
+                }
             }
         }
         viewModel.today.observe(viewLifecycleOwner) { stats ->

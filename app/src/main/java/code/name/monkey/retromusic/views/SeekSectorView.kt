@@ -21,7 +21,7 @@ import android.util.AttributeSet
 import android.view.View
 
 /**
- * Feedback for a double tap on the round cover: a translucent grey half disc over the tapped half
+ * Feedback for a double tap on the round cover: a translucent grey half disc over the tapped half (left = forward, right = back)
  * of the (square) view, two arrows and a label such as "10 seconds". Hides itself after a moment.
  */
 class SeekSectorView @JvmOverloads constructor(
@@ -53,6 +53,10 @@ class SeekSectorView @JvmOverloads constructor(
         this.label = label
         removeCallbacks(hideRunnable)
         visibility = VISIBLE
+        alpha = 0f
+        scaleX = 0.92f
+        scaleY = 0.92f
+        animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(140).start()
         invalidate()
         postDelayed(hideRunnable, 650)
     }
@@ -62,9 +66,10 @@ class SeekSectorView @JvmOverloads constructor(
         val h = height.toFloat()
         oval.set(0f, 0f, w, h)
         // 0 degrees is 3 o'clock and angles run clockwise: -90..+90 is the right half.
-        canvas.drawArc(oval, if (forward) -90f else 90f, 180f, true, fill)
+        // Forward is the LEFT half (the tapped side), back is the right half.
+        canvas.drawArc(oval, if (forward) 90f else -90f, 180f, true, fill)
 
-        val cx = if (forward) w * 0.75f else w * 0.25f
+        val cx = if (forward) w * 0.25f else w * 0.75f
         val cy = h * 0.46f
         val s = 9 * density
         val dir = if (forward) 1f else -1f

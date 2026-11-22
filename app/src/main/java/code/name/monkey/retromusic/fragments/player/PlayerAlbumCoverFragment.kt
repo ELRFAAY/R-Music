@@ -168,6 +168,10 @@ class PlayerAlbumCoverFragment : AbsMusicServiceFragment(R.layout.fragment_playe
                         (if (seconds > 0) android.view.Gravity.LEFT else android.view.Gravity.RIGHT)
             it.requestLayout()
             it.isVisible = true
+            it.alpha = 0f
+            it.scaleX = 0.8f
+            it.scaleY = 0.8f
+            it.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(140).start()
             it.postDelayed(hideSeekFeedback, 600)
         }
     }
