@@ -165,7 +165,7 @@ class ArtistAdapter(
             ctx, com.google.android.material.R.attr.colorOnPrimaryContainer, 0
         )
         val favs = rawDataSet.filter { it.name in PreferenceUtil.favoriteArtists }
-        bindPile(holder, favs.drop(1).take(2))
+        bindPile(holder, emptyList())
         holder.title?.text = activity.getString(R.string.favorite_artists) +
                 " (${PreferenceUtil.favoriteArtists.size})"
         holder.title?.compoundDrawableTintList = null
@@ -173,27 +173,83 @@ class ArtistAdapter(
         holder.title?.setTextColor(fg)
         holder.text?.hide()
         holder.image?.let { img ->
-            val head = favs.firstOrNull()
-            if (head != null) {
-                // the favorites show their own pictures, piled like the pinned artists
-                img.setPadding(0, 0, 0, 0)
-                img.imageTintList = null
-                img.setBackgroundColor(0)
-                img.scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
-                Glide.with(activity).load(RetroGlideExtension.getArtistModel(head))
-                    .artistImageOptions(head).into(img)
-            } else {
-                Glide.with(activity).clear(img)
-                val pad = (28 * img.resources.displayMetrics.density).toInt()
-                img.setPadding(pad, pad, pad, pad)
-                img.scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
-                img.setImageResource(R.drawable.ic_favorite)
-                img.imageTintList = ColorStateList.valueOf(fg)
-                img.setBackgroundColor(bg)
+            Glide.with(activity).clear(img)
+            val pad = (28 * img.resources.displayMetrics.density).toInt()
+            img.setPadding(pad, pad, pad, pad)
+            img.scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+            img.setImageResource(R.drawable.ic_favorite)
+            img.imageTintList = ColorStateList.valueOf(fg)
+            img.setBackgroundColor(bg)
+            if (favs.isNotEmpty()) {
+                // the wall's pile: up to four of the favorites' pictures, turned, with a count badge
+                val token = Any()
+                img.setTag(R.id.image, token)
+                val models = favs.take(4).map { RetroGlideExtension.getArtistModel(it) }
+                val total = favs.size
+                val accent = code.name.monkey.appthemehelper.ThemeStore.accentColor(activity)
+                Thread {
+                    val bitmaps = models.mapNotNull {
+                        try {
+                            Glide.with(activity).asBitmap().load(it).override(300, 300).centerCrop()
+                                .submit().get()
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+                    if (bitmaps.isNotEmpty()) {
+                        val pile = favoritesPile(bitmaps, total, accent)
+                        img.post {
+                            if (img.getTag(R.id.image) === token) {
+                                img.setPadding(0, 0, 0, 0)
+                                img.imageTintList = null
+                                img.setBackgroundColor(0)
+                                img.scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                                img.setImageBitmap(pile)
+                            }
+                        }
+                    }
+                }.start()
             }
         }
         holder.paletteColorContainer?.setBackgroundColor(bg)
         holder.imageContainerCard?.setCardBackgroundColor(bg)
+    }
+
+    /** The wall's stack look: turned pictures with a white frame and a count badge. */
+    private fun favoritesPile(bitmaps: List<android.graphics.Bitmap>, total: Int, accent: Int): android.graphics.Bitmap {
+        val size = 300
+        val out = android.graphics.Bitmap.createBitmap(size, size, android.graphics.Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(out)
+        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG or android.graphics.Paint.FILTER_BITMAP_FLAG)
+        val border = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { color = 0xE6FFFFFF.toInt() }
+        val angles = floatArrayOf(0f, -9f, 8f, -16f)
+        val shifts = floatArrayOf(0f, -0.04f, 0.04f, -0.02f)
+        val card = size * 0.78f
+        for (k in bitmaps.size - 1 downTo 0) {
+            val saved = canvas.save()
+            canvas.rotate(angles[k], size / 2f, size / 2f)
+            val left = (size - card) / 2f + shifts[k] * size
+            val top = (size - card) / 2f
+            val box = android.graphics.RectF(left, top, left + card, top + card)
+            val r = card * 0.1f
+            val frame = android.graphics.RectF(box)
+            frame.inset(-size * 0.012f, -size * 0.012f)
+            canvas.drawRoundRect(frame, r, r, border)
+            val bm = bitmaps[k]
+            canvas.drawBitmap(bm, android.graphics.Rect(0, 0, bm.width, bm.height), box, paint)
+            canvas.restoreToCount(saved)
+        }
+        val badge = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { color = accent }
+        val br = size * 0.13f
+        canvas.drawCircle(size * 0.86f, size * 0.86f, br, badge)
+        val text = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.WHITE
+            textSize = br * 1.25f
+            textAlign = android.graphics.Paint.Align.CENTER
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+        }
+        canvas.drawText(total.toString(), size * 0.86f, size * 0.86f + br * 0.42f, text)
+        return out
     }
 
     /** Draws up to two more covers behind the cell, tilted, so a pile shows. */
