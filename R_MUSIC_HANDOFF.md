@@ -411,3 +411,15 @@ RULES: short Egyptian Arabic replies, no long polling of CI, commits carry the C
 
 ## Session 22 — pinned artists pile (artists list)
 - ArtistAdapter: when 2+ artists are pinned they collapse into ONE cell (first pinned, title "Name +N") with up to two more covers tilted behind it (views tagged `artist_pile`, added to the item's ConstraintLayout). Tap the pile = expand (pinned shown normally); long-press a pinned artist while expanded -> "Stack pinned artists" folds it back. State is in memory only (`stackExpanded`). Untested on a phone; CI result pending.
+
+## Session 20 (branch claude/code-review, built from claude/backup-listening-data)
+Not tested on a phone yet; CI builds only. What changed:
+- Crash: Deezer error response in ArtistImageFetcher threw inside a callback (hang, then crash when opening an artist from the player). Now falls back to the album cover.
+- Crash: unknown saved sort order (e.g. restored from an older backup) threw IllegalArgumentException on artist/album pages. Now keeps the order.
+- Network: Last.fm/lyrics timeouts 1 s -> 8 s. Artists list reads the pinned set once per data set.
+- Artist page: songs are a 2-column colored card grid (item_card_color); 30 first, button adds the next 30 (also after a sort change).
+- Player cover: double tap LEFT half = +10 s, RIGHT half = -10 s (CoverGestureLayout; feedback text on the matching physical side).
+- Stats: new card under the top songs: most played playlist (plays of its songs in the period, a song counts for every playlist it is in) and time listened.
+- Favorite artists: heart in the artist toolbar (avd_favorite / avd_unfavorite, PreferenceUtil.favoriteArtists, "\n"-joined names); first item of the artists list is a placeholder Artist (id -4242, ArtistAdapter.VIEW_TYPE_FAVORITES) that opens a bottom sheet with the favorites.
+Left alone on purpose: usesCleartextTraffic (images from other hosts may be http), the many `!!` in MusicService/MusicPlayerRemote, 27 notifyDataSetChanged.
+Still open: package rename + release build, only after the user says "ابدأ".
