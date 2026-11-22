@@ -364,3 +364,15 @@ NEXT (only if he asks / after his test)
 2. If the voice sounds wrong/instrumental: check `MdxSeparator` output stem (9482 verified as vocals in Python), compensate factor not applied.
 3. Reported earlier and not answered: "Player" oval shape showing buttons/name was checked by the user already ("made long ago").
 RULES: short Egyptian Arabic replies, no long polling of CI, commits carry the Co-Authored-By + Claude-Session trailers, fetch + ff-merge before work, never redo items the user says exist (check git log first).
+
+## Session 20 (branch claude/code-review, built from claude/backup-listening-data)
+Not tested on a phone yet; CI builds only. What changed:
+- Crash: Deezer error response in ArtistImageFetcher threw inside a callback (hang, then crash when opening an artist from the player). Now falls back to the album cover.
+- Crash: unknown saved sort order (e.g. restored from an older backup) threw IllegalArgumentException on artist/album pages. Now keeps the order.
+- Network: Last.fm/lyrics timeouts 1 s -> 8 s. Artists list reads the pinned set once per data set.
+- Artist page: songs are a 2-column colored card grid (item_card_color); 30 first, button adds the next 30 (also after a sort change).
+- Player cover: double tap LEFT half = +10 s, RIGHT half = -10 s (CoverGestureLayout; feedback text on the matching physical side).
+- Stats: new card under the top songs: most played playlist (plays of its songs in the period, a song counts for every playlist it is in) and time listened.
+- Favorite artists: heart in the artist toolbar (avd_favorite / avd_unfavorite, PreferenceUtil.favoriteArtists, "\n"-joined names); first item of the artists list is a placeholder Artist (id -4242, ArtistAdapter.VIEW_TYPE_FAVORITES) that opens a bottom sheet with the favorites.
+Left alone on purpose: usesCleartextTraffic (images from other hosts may be http), the many `!!` in MusicService/MusicPlayerRemote, 27 notifyDataSetChanged.
+Still open: package rename + release build, only after the user says "ابدأ".
