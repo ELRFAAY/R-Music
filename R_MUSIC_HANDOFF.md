@@ -423,3 +423,8 @@ Not tested on a phone yet; CI builds only. What changed:
 - Favorite artists: heart in the artist toolbar (avd_favorite / avd_unfavorite, PreferenceUtil.favoriteArtists, "\n"-joined names); first item of the artists list is a placeholder Artist (id -4242, ArtistAdapter.VIEW_TYPE_FAVORITES) that opens a bottom sheet with the favorites.
 Left alone on purpose: usesCleartextTraffic (images from other hosts may be http), the many `!!` in MusicService/MusicPlayerRemote, 27 notifyDataSetChanged.
 Still open: package rename + release build, only after the user says "ابدأ".
+
+### Session 22 (2026-11-22): the "unpushed patch" (Session 20 above) was applied on top of the current branch
+- Applied: 8 s timeouts; ArtistAdapter reads pinned names once per data set (merged with the pinned-artists stack code); double tap on the player cover (LEFT half +10 s, RIGHT half -10 s: the patch says the user asked for it — if he says it is backwards, flip `ev.x < width / 2f` in `CoverGestureLayout` and the gravity in `PlayerAlbumCoverFragment`); stats card "most played playlist + time listened"; favorite artists (heart on the artist page, first card in the artists list).
+- NOT applied on purpose: patch 2 and 9 (sort-order fallback + its compile fix: already on the branch), patch 4 (artist songs as a fixed 2-column card grid + "next 30" button: it would replace the user-chosen song view style / staged loading that the branch already has). Idea worth porting later: "show next 30" instead of "show all" and not re-binding every song after a sort change.
+- Everything here compiled only in CI (see the build after this commit); nothing was tested on the phone.
