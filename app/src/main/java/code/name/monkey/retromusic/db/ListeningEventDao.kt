@@ -67,6 +67,9 @@ interface ListeningEventDao {
     @Query("SELECT * FROM ListeningEventEntity WHERE played_at >= :since")
     fun eventsSince(since: Long): LiveData<List<ListeningEventEntity>>
 
+    @Query("SELECT song_id FROM ListeningEventEntity WHERE played_at >= :since")
+    suspend fun songIdsSince(since: Long): List<Long>
+
     @Query("DELETE FROM ListeningEventEntity")
     suspend fun clear()
 }

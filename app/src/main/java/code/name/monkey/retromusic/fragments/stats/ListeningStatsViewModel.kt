@@ -14,16 +14,25 @@ package code.name.monkey.retromusic.fragments.stats
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import androidx.lifecycle.ViewModel
 import code.name.monkey.retromusic.db.ListeningEventDao
 import code.name.monkey.retromusic.db.ListeningEventEntity
 import code.name.monkey.retromusic.db.ListeningStats
+import code.name.monkey.retromusic.db.PlaylistDao
 import code.name.monkey.retromusic.db.TopRow
 import java.util.Calendar
+import kotlinx.coroutines.Dispatchers
 import java.util.concurrent.TimeUnit
 
-class ListeningStatsViewModel(private val dao: ListeningEventDao) : ViewModel() {
+/** The playlist whose songs were played the most in the chosen period. */
+data class TopPlaylist(val name: String, val plays: Int)
+
+class ListeningStatsViewModel(
+    private val dao: ListeningEventDao,
+    private val playlistDao: PlaylistDao
+) : ViewModel() {
 
     private val periodDays = MutableLiveData(7)
 
@@ -45,6 +54,29 @@ class ListeningStatsViewModel(private val dao: ListeningEventDao) : ViewModel() 
         since.switchMap { dao.topAlbums(it, TOP_LIMIT) }
 
     val today: LiveData<ListeningStats> = dao.stats(startOfToday())
+
+    /**
+     * Plays of the songs of each playlist in the period; the biggest one wins. A song that is in
+     * several playlists counts for each of them, because a play is not tied to the playlist it
+     * was started from.
+     */
+    val topPlaylist: LiveData<TopPlaylist?> = since.switchMap { sinceMs ->
+        liveData<TopPlaylist?>(Dispatchers.IO) { emit(computeTopPlaylist(sinceMs)) }
+    }
+
+    private suspend fun computeTopPlaylist(sinceMs: Long): TopPlaylist? {
+        val plays = dao.songIdsSince(sinceMs).groupingBy { it }.eachCount()
+        if (plays.isEmpty()) return null
+        return playlistDao.playlistsWithSongs()
+            .map { p ->
+                TopPlaylist(
+                    p.playlistEntity.playlistName,
+                    p.songs.map { it.id }.distinct().fold(0) { acc, id -> acc + (plays[id] ?: 0) }
+                )
+            }
+            .filter { it.plays > 0 }
+            .maxByOrNull { it.plays }
+    }
 
     /** Events of the last [CHART_DAYS] days, turned into one number per day by the fragment. */
     val chartEvents: LiveData<List<ListeningEventEntity>> =

@@ -164,7 +164,7 @@ private val viewModules = module {
     }
 
     viewModel {
-        ListeningStatsViewModel(get())
+        ListeningStatsViewModel(get(), get())
     }
 
     viewModel { (albumId: Long) ->

@@ -103,7 +103,15 @@ class ListeningStatsFragment : Fragment() {
             binding.cardTimeValue.text = formatDuration(stats.totalMs)
             binding.cardPlaysValue.text = stats.plays.toString()
             binding.cardSongsValue.text = stats.songs.toString()
+            binding.hoursListenedValue.text = formatDuration(stats.totalMs)
             binding.emptyView.visibility = if (stats.plays == 0) View.VISIBLE else View.GONE
+        }
+        viewModel.topPlaylist.observe(viewLifecycleOwner) { top ->
+            binding.topPlaylistValue.text = if (top == null) {
+                getString(R.string.stats_no_data)
+            } else {
+                top.name + " · " + getString(R.string.stats_playlist_plays, top.plays)
+            }
         }
         viewModel.today.observe(viewLifecycleOwner) { stats ->
             binding.cardTodayValue.text = formatDuration(stats.totalMs)
