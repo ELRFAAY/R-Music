@@ -737,4 +737,5 @@
     <string name="pref_title_app_icon">الأيقونة</string>
     <string name="app_icon_new">الأيقونة الجديدة (الكوبرا)</string>
     <string name="app_icon_old">الأيقونة القديمة</string>
+    <string name="favorite_artists_hint">اضغط مطولاً على فنان لتثبيته أو إلغاء التثبيت</string>
 </resources>

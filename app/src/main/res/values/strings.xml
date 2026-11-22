@@ -746,4 +746,5 @@
     <string name="pref_title_app_icon">Icon</string>
     <string name="app_icon_new">New icon (cobra)</string>
     <string name="app_icon_old">Old icon</string>
+    <string name="favorite_artists_hint">Long-press an artist to pin or unpin it</string>
 </resources>

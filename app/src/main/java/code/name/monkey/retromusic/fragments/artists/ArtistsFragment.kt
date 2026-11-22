@@ -168,7 +168,7 @@ class ArtistsFragment : AbsRecyclerViewCustomGridSizeFragment<ArtistAdapter, Gri
             val list = androidx.recyclerview.widget.RecyclerView(ctx).apply {
                 layoutManager = GridLayoutManager(ctx, 3)
                 adapter = ArtistAdapter(
-                    requireActivity(), artists, R.layout.item_grid_circle, artistClick, albumArtistClick
+                    requireActivity(), artists, itemLayoutRes(), artistClick, albumArtistClick
                 ).also { it.swapDataSet(artists) }
                 layoutParams = android.view.ViewGroup.LayoutParams(
                     android.view.ViewGroup.LayoutParams.MATCH_PARENT,
@@ -176,8 +176,15 @@ class ArtistsFragment : AbsRecyclerViewCustomGridSizeFragment<ArtistAdapter, Gri
                     else android.view.ViewGroup.LayoutParams.WRAP_CONTENT
                 )
             }
+            column.addView(android.widget.TextView(ctx).apply {
+                setText(R.string.favorite_artists_hint)
+                textSize = 13f
+                alpha = 0.7f
+                setPadding(0, 0, 0, (8 * d).toInt())
+            })
             column.addView(list)
         }
+        dialog.setOnDismissListener { adapter?.swapDataSet(adapter!!.dataSet.filter { it.id != ArtistAdapter.FAVORITES_CARD_ID }) }
         dialog.setContentView(column)
         dialog.show()
     }
