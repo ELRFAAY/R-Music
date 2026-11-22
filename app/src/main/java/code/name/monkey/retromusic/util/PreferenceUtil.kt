@@ -978,6 +978,12 @@ object PreferenceUtil {
             .split('\n').filter { it.isNotEmpty() }.toSet()
         set(v) = sharedPreferences.edit { putString("pinned_artists", v.joinToString("\n")) }
 
+    /** Names of the favorite artists (the heart on the artist page). Included in the backup. */
+    var favoriteArtists: Set<String>
+        get() = sharedPreferences.getString("favorite_artists", "").orEmpty()
+            .split('\n').filter { it.isNotEmpty() }.toSet()
+        set(v) = sharedPreferences.edit { putString("favorite_artists", v.joinToString("\n")) }
+
     /** Muzio theme: tools hidden behind the arrow (only prev/play/next + heart stay). */
     var muzioToolsHidden: Boolean
         get() = sharedPreferences.getBoolean("muzio_tools_hidden", false)

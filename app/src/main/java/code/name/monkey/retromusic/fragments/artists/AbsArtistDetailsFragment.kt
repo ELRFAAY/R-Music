@@ -165,6 +165,9 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
         // Hundreds of cards with covers inside a scrolling page froze the screen: show the first
         // ones and let the user add the next batch.
         bindSongs(artist.sortedSongs)
+        updateFavoriteIcon(
+            binding.toolbar.menu.findItem(R.id.action_toggle_favorite_artist), artist.name, false
+        )
         albumAdapter.swapDataSet(artist.albums)
     }
 
@@ -258,7 +261,34 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
     }
 
     override fun onMenuItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.action_toggle_favorite_artist) {
+            if (::artist.isInitialized) toggleFavoriteArtist(item)
+            return true
+        }
         return handleSortOrderMenuItem(item)
+    }
+
+    private fun toggleFavoriteArtist(item: MenuItem) {
+        val name = artist.name
+        val favorites = PreferenceUtil.favoriteArtists
+        PreferenceUtil.favoriteArtists = if (name in favorites) favorites - name else favorites + name
+        updateFavoriteIcon(item, name, animate = true)
+    }
+
+    /** Same heart and animation as the player's. */
+    private fun updateFavoriteIcon(item: MenuItem?, artistName: String, animate: Boolean) {
+        item ?: return
+        val isFavorite = artistName in PreferenceUtil.favoriteArtists
+        val icon = if (animate) {
+            if (isFavorite) R.drawable.avd_favorite else R.drawable.avd_unfavorite
+        } else {
+            if (isFavorite) R.drawable.ic_favorite else R.drawable.ic_favorite_border
+        }
+        item.icon = requireContext().getTintedDrawable(icon, colorControlNormal())
+        item.title = getString(
+            if (isFavorite) R.string.action_remove_from_favorites else R.string.action_add_to_favorites
+        )
+        (item.icon as? android.graphics.drawable.AnimatedVectorDrawable)?.start()
     }
 
     /** Pick an existing artist (or type a new name): all songs of this artist get that name. */
@@ -514,6 +544,9 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
 
     override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.menu_artist_detail, menu)
+        if (::artist.isInitialized) {
+            updateFavoriteIcon(menu.findItem(R.id.action_toggle_favorite_artist), artist.name, false)
+        }
     }
 
     override fun onDestroyView() {

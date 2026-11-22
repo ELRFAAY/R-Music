@@ -126,7 +126,67 @@ class ArtistsFragment : AbsRecyclerViewCustomGridSizeFragment<ArtistAdapter, Gri
     }
 
     override fun createLayoutManager(): GridLayoutManager {
-        return GridLayoutManager(requireActivity(), getGridSize())
+        return GridLayoutManager(requireActivity(), getGridSize()).also { manager ->
+            // the favorites card takes the whole first row
+            manager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+                override fun getSpanSize(position: Int): Int =
+                    if (adapter?.getItemViewType(position) == ArtistAdapter.VIEW_TYPE_FAVORITES)
+                        manager.spanCount else 1
+            }
+        }
+    }
+
+    /** All favorite artists in one sheet; opening one works like opening it from the list. */
+    private fun showFavoriteArtists() {
+        val ctx = requireContext()
+        val d = resources.displayMetrics.density
+        val favorites = PreferenceUtil.favoriteArtists
+        val artists = (libraryViewModel.getArtists().value ?: emptyList()).filter { it.name in favorites }
+        val dialog = com.google.android.material.bottomsheet.BottomSheetDialog(ctx)
+        val column = android.widget.LinearLayout(ctx).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            val pad = (16 * d).toInt()
+            setPadding(pad, pad, pad, pad)
+        }
+        column.addView(android.widget.TextView(ctx).apply {
+            setText(R.string.favorite_artists)
+            textSize = 18f
+            setPadding(0, 0, 0, (8 * d).toInt())
+        })
+        if (artists.isEmpty()) {
+            column.addView(android.widget.TextView(ctx).apply { setText(R.string.no_favorite_artists) })
+        } else {
+            val artistClick = object : IArtistClickListener {
+                override fun onArtist(artistId: Long, view: View) {
+                    dialog.dismiss()
+                    findNavController().navigate(
+                        R.id.artistDetailsFragment, bundleOf(EXTRA_ARTIST_ID to artistId)
+                    )
+                }
+            }
+            val albumArtistClick = object : IAlbumArtistClickListener {
+                override fun onAlbumArtist(artistName: String, view: View) {
+                    dialog.dismiss()
+                    findNavController().navigate(
+                        R.id.albumArtistDetailsFragment, bundleOf(EXTRA_ARTIST_NAME to artistName)
+                    )
+                }
+            }
+            val list = androidx.recyclerview.widget.RecyclerView(ctx).apply {
+                layoutManager = GridLayoutManager(ctx, 3)
+                adapter = ArtistAdapter(
+                    requireActivity(), artists, R.layout.item_grid_circle, artistClick, albumArtistClick
+                ).also { it.swapDataSet(artists) }
+                layoutParams = android.view.ViewGroup.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    if (artists.size > 6) (0.7f * resources.displayMetrics.heightPixels).toInt()
+                    else android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+            }
+            column.addView(list)
+        }
+        dialog.setContentView(column)
+        dialog.show()
     }
 
     override fun createAdapter(): ArtistAdapter {
@@ -138,7 +198,9 @@ class ArtistsFragment : AbsRecyclerViewCustomGridSizeFragment<ArtistAdapter, Gri
             this,
             this,
             onMerge = { showMerge(it) },
-            onRename = { showRename(it) }
+            onRename = { showRename(it) },
+            showFavoritesCard = true,
+            onFavoritesClick = { showFavoriteArtists() }
         )
     }
 
