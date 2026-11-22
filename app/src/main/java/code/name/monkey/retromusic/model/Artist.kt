@@ -93,7 +93,7 @@ data class Artist(
                         )
                     }
 
-                    else -> Comparator<Song> { _, _ -> 0 } // unknown saved value: keep the order as it is
+                    else -> { _, _ -> 0 } // unknown saved value: keep the order as it is
                 })
         }
 
@@ -118,7 +118,7 @@ data class Artist(
                         o2.year.compareTo(o1.year)
                     }
 
-                    else -> Comparator<Album> { _, _ -> 0 } // unknown saved value: keep the order as it is
+                    else -> { _, _ -> 0 } // unknown saved value: keep the order as it is
                 })
         }
 
