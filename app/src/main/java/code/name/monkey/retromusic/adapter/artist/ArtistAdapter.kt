@@ -164,7 +164,8 @@ class ArtistAdapter(
         val fg = com.google.android.material.color.MaterialColors.getColor(
             ctx, com.google.android.material.R.attr.colorOnPrimaryContainer, 0
         )
-        bindPile(holder, emptyList())
+        val favs = rawDataSet.filter { it.name in PreferenceUtil.favoriteArtists }
+        bindPile(holder, favs.drop(1).take(2))
         holder.title?.text = activity.getString(R.string.favorite_artists) +
                 " (${PreferenceUtil.favoriteArtists.size})"
         holder.title?.compoundDrawableTintList = null
@@ -172,13 +173,24 @@ class ArtistAdapter(
         holder.title?.setTextColor(fg)
         holder.text?.hide()
         holder.image?.let { img ->
-            Glide.with(activity).clear(img)
-            val pad = (28 * img.resources.displayMetrics.density).toInt()
-            img.setPadding(pad, pad, pad, pad)
-            img.scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
-            img.setImageResource(R.drawable.ic_favorite)
-            img.imageTintList = ColorStateList.valueOf(fg)
-            img.setBackgroundColor(bg)
+            val head = favs.firstOrNull()
+            if (head != null) {
+                // the favorites show their own pictures, piled like the pinned artists
+                img.setPadding(0, 0, 0, 0)
+                img.imageTintList = null
+                img.setBackgroundColor(0)
+                img.scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                Glide.with(activity).load(RetroGlideExtension.getArtistModel(head))
+                    .artistImageOptions(head).into(img)
+            } else {
+                Glide.with(activity).clear(img)
+                val pad = (28 * img.resources.displayMetrics.density).toInt()
+                img.setPadding(pad, pad, pad, pad)
+                img.scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+                img.setImageResource(R.drawable.ic_favorite)
+                img.imageTintList = ColorStateList.valueOf(fg)
+                img.setBackgroundColor(bg)
+            }
         }
         holder.paletteColorContainer?.setBackgroundColor(bg)
         holder.imageContainerCard?.setCardBackgroundColor(bg)
