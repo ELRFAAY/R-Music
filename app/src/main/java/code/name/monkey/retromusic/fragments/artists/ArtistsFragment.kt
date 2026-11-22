@@ -166,7 +166,7 @@ class ArtistsFragment : AbsRecyclerViewCustomGridSizeFragment<ArtistAdapter, Gri
                 }
             }
             val list = androidx.recyclerview.widget.RecyclerView(ctx).apply {
-                layoutManager = GridLayoutManager(ctx, 3)
+                layoutManager = GridLayoutManager(ctx, getGridSize())
                 adapter = ArtistAdapter(
                     requireActivity(), artists, itemLayoutRes(), artistClick, albumArtistClick,
                     favoritesSheet = true
