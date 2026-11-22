@@ -692,7 +692,7 @@
     <string name="favorite_artists">Favorite artists</string>
     <string name="favorite_artists_count">%1$d artists</string>
     <string name="no_favorite_artists">No favorite artists yet. Tap the heart on an artist page.</string>
-    <string name="stats_top_playlist">Most played playlist</string>
+    <string name="stats_top_playlist">Top 5 playlists by hours listened</string>
     <string name="stats_hours_listened">Time listened</string>
     <string name="stats_playlist_plays">%1$d plays</string>
     <string name="stats_history">History</string>

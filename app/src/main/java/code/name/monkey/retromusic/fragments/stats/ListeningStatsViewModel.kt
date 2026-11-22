@@ -27,7 +27,7 @@ import kotlinx.coroutines.Dispatchers
 import java.util.concurrent.TimeUnit
 
 /** The playlist whose songs were played the most in the chosen period. */
-data class TopPlaylist(val name: String, val plays: Int)
+data class TopPlaylist(val name: String, val ms: Long)
 
 class ListeningStatsViewModel(
     private val dao: ListeningEventDao,
@@ -56,26 +56,27 @@ class ListeningStatsViewModel(
     val today: LiveData<ListeningStats> = dao.stats(startOfToday())
 
     /**
-     * Plays of the songs of each playlist in the period; the biggest one wins. A song that is in
+     * The playlists with the most listening time in the period, biggest first. A song that is in
      * several playlists counts for each of them, because a play is not tied to the playlist it
      * was started from.
      */
-    val topPlaylist: LiveData<TopPlaylist?> = since.switchMap { sinceMs ->
-        liveData<TopPlaylist?>(Dispatchers.IO) { emit(computeTopPlaylist(sinceMs)) }
+    val topPlaylists: LiveData<List<TopPlaylist>> = since.switchMap { sinceMs ->
+        liveData<List<TopPlaylist>>(Dispatchers.IO) { emit(computeTopPlaylists(sinceMs)) }
     }
 
-    private suspend fun computeTopPlaylist(sinceMs: Long): TopPlaylist? {
-        val plays = dao.songIdsSince(sinceMs).groupingBy { it }.eachCount()
-        if (plays.isEmpty()) return null
+    private suspend fun computeTopPlaylists(sinceMs: Long): List<TopPlaylist> {
+        val ms = dao.songMsSince(sinceMs).associate { it.songId to it.ms }
+        if (ms.isEmpty()) return emptyList()
         return playlistDao.playlistsWithSongs()
             .map { p ->
                 TopPlaylist(
                     p.playlistEntity.playlistName,
-                    p.songs.map { it.id }.distinct().fold(0) { acc, id -> acc + (plays[id] ?: 0) }
+                    p.songs.map { it.id }.distinct().fold(0L) { acc, id -> acc + (ms[id] ?: 0L) }
                 )
             }
-            .filter { it.plays > 0 }
-            .maxByOrNull { it.plays }
+            .filter { it.ms > 0 }
+            .sortedByDescending { it.ms }
+            .take(5)
     }
 
     /** Events of the last [CHART_DAYS] days, turned into one number per day by the fragment. */

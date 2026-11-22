@@ -53,7 +53,9 @@ class ArtistAdapter(
     var onRename: ((Artist) -> Unit)? = null,
     /** The artists list shows a "favorite artists" card as its first item. */
     var showFavoritesCard: Boolean = false,
-    var onFavoritesClick: (() -> Unit)? = null
+    var onFavoritesClick: (() -> Unit)? = null,
+    /** True inside the favorites sheet: pins are then the sheet's own, not the main list's. */
+    private val favoritesSheet: Boolean = false
 ) : AbsMultiSelectAdapter<ArtistAdapter.ViewHolder, Artist>(activity, R.menu.menu_media_selection),
     PopupTextProvider {
 
@@ -70,7 +72,14 @@ class ArtistAdapter(
     }
 
     /** Read once per data set instead of once per bound row (the getter parses a string). */
-    private var pinnedNames: Set<String> = PreferenceUtil.pinnedArtists
+    private var pinnedNames: Set<String> = readPins()
+
+    private fun readPins(): Set<String> =
+        if (favoritesSheet) PreferenceUtil.pinnedFavoriteArtists else PreferenceUtil.pinnedArtists
+
+    private fun writePins(v: Set<String>) {
+        if (favoritesSheet) PreferenceUtil.pinnedFavoriteArtists = v else PreferenceUtil.pinnedArtists = v
+    }
 
     /** Placeholder item that becomes the "favorite artists" card; never a real artist. */
     private fun favoritesCard() =
@@ -80,7 +89,7 @@ class ArtistAdapter(
     fun swapDataSet(dataSet: List<Artist>) {
         val real = dataSet.filter { it.id != FAVORITES_CARD_ID }
         rawDataSet = real
-        val pinned = PreferenceUtil.pinnedArtists
+        val pinned = readPins()
         pinnedNames = pinned
         val sorted = if (pinned.isEmpty()) real
         else real.sortedBy { if (it.name in pinned) 0 else 1 }
@@ -320,13 +329,12 @@ class ArtistAdapter(
             val pos = layoutPosition
             if (pos < 0 || pos >= dataSet.size) return true
             val artist = dataSet[pos]
-            val pinned = PreferenceUtil.pinnedArtists
+            val pinned = readPins()
             val isPinned = artist.name in pinned
             val songs = artist.songs
             val entries = mutableListOf<Pair<String, () -> Unit>>()
             entries.add(activity.getString(if (isPinned) R.string.artist_unpin else R.string.artist_pin) to {
-                PreferenceUtil.pinnedArtists =
-                    if (isPinned) pinned - artist.name else pinned + artist.name
+                writePins(if (isPinned) pinned - artist.name else pinned + artist.name)
                 swapDataSet(rawDataSet)
             })
             if (isPinned && stackExpanded && pinned.size >= 2) {

@@ -1015,6 +1015,12 @@ object PreferenceUtil {
             .split('\n').filter { it.isNotEmpty() }.toSet()
         set(v) = sharedPreferences.edit { putString("pinned_artists", v.joinToString("\n")) }
 
+    /** Pins made inside the favorite-artists sheet; kept apart from [pinnedArtists]. */
+    var pinnedFavoriteArtists: Set<String>
+        get() = sharedPreferences.getString("pinned_favorite_artists", "").orEmpty()
+            .split('\n').filter { it.isNotEmpty() }.toSet()
+        set(v) = sharedPreferences.edit { putString("pinned_favorite_artists", v.joinToString("\n")) }
+
     /** Names of the favorite artists (the heart on the artist page). Included in the backup. */
     var favoriteArtists: Set<String>
         get() = sharedPreferences.getString("favorite_artists", "").orEmpty()

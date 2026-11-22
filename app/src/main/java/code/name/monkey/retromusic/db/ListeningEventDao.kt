@@ -70,6 +70,16 @@ interface ListeningEventDao {
     @Query("SELECT song_id FROM ListeningEventEntity WHERE played_at >= :since")
     suspend fun songIdsSince(since: Long): List<Long>
 
+    /** Listening time per song id since [since], for the per-playlist hours. */
+    @Query(
+        "SELECT song_id AS songId, COALESCE(SUM(listened_ms), 0) AS ms FROM ListeningEventEntity " +
+                "WHERE played_at >= :since GROUP BY song_id"
+    )
+    suspend fun songMsSince(since: Long): List<SongMs>
+
     @Query("DELETE FROM ListeningEventEntity")
     suspend fun clear()
 }
+
+/** Total listened milliseconds of one song id. */
+data class SongMs(val songId: Long, val ms: Long)

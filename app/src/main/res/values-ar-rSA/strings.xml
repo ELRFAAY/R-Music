@@ -683,7 +683,7 @@
     <string name="favorite_artists">الفنانين المفضلين</string>
     <string name="favorite_artists_count">%1$d فنان</string>
     <string name="no_favorite_artists">لسه مفيش فنانين مفضلين. اضغط القلب في صفحة الفنان.</string>
-    <string name="stats_top_playlist">أكثر قائمة تشغيلًا</string>
+    <string name="stats_top_playlist">أكثر 5 قوائم من حيث ساعات الاستماع</string>
     <string name="stats_hours_listened">مدة الاستماع</string>
     <string name="stats_playlist_plays">%1$d تشغيل</string>
     <string name="stats_history">السجل</string>

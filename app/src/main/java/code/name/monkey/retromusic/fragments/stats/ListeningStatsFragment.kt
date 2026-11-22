@@ -106,11 +106,21 @@ class ListeningStatsFragment : Fragment() {
             binding.hoursListenedValue.text = formatDuration(stats.totalMs)
             binding.emptyView.visibility = if (stats.plays == 0) View.VISIBLE else View.GONE
         }
-        viewModel.topPlaylist.observe(viewLifecycleOwner) { top ->
-            binding.topPlaylistValue.text = if (top == null) {
-                getString(R.string.stats_no_data)
-            } else {
-                top.name + " · " + getString(R.string.stats_playlist_plays, top.plays)
+        viewModel.topPlaylists.observe(viewLifecycleOwner) { list ->
+            val box = binding.topPlaylistsContainer
+            box.removeAllViews()
+            if (list.isEmpty()) {
+                box.addView(TextView(requireContext()).apply { setText(R.string.stats_no_data) })
+            }
+            list.forEachIndexed { i, p ->
+                box.addView(TextView(requireContext()).apply {
+                    text = "${i + 1}. ${p.name} · ${formatDuration(p.ms)}"
+                    textSize = 15f
+                    maxLines = 1
+                    ellipsize = android.text.TextUtils.TruncateAt.END
+                    if (i == 0) setTypeface(typeface, android.graphics.Typeface.BOLD)
+                    setPadding(0, if (i == 0) 0 else (6 * resources.displayMetrics.density).toInt(), 0, 0)
+                })
             }
         }
         viewModel.today.observe(viewLifecycleOwner) { stats ->
