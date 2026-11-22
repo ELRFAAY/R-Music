@@ -215,7 +215,7 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
     private var lyricsScaleIndex = 0
     private val lyricsScales = floatArrayOf(1f, 1.25f, 1.5f, 0.85f)
 
-    /** Drag up/down on the cover = volume, double tap right/left half = -/+10 seconds. */
+    /** Drag up/down on the cover = volume, double tap left/right half = +/-10 seconds. */
     /** Once: tells how to skip 10 seconds, then fades away. */
     private fun showFirstUseHint() {
         val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(requireContext())
@@ -261,7 +261,7 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
                 }
             }
             onVolumeGestureEnd = { _binding?.volumeOverlay?.postDelayed(hideVolume, 800) }
-            // Physical halves: right = forward, left = back (same in Arabic and English).
+            // Physical halves: left = forward, right = back (same in Arabic and English).
             onDoubleTap = { forward -> skipSeconds(if (forward) 10 else -10) }
         }
     }

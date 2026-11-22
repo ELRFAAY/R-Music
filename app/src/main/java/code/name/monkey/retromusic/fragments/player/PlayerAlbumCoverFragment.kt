@@ -138,7 +138,7 @@ class PlayerAlbumCoverFragment : AbsMusicServiceFragment(R.layout.fragment_playe
     private val hideVolume = Runnable { _binding?.volumeOverlay?.isVisible = false }
     private val hideSeekFeedback = Runnable { _binding?.seekFeedback?.isVisible = false }
 
-    /** Drag up/down on the cover = volume, double tap right/left = +/-10 seconds. */
+    /** Drag up/down on the cover = volume, double tap left/right = +/-10 seconds. */
     private fun setupGestures() {
         (binding.root as CoverGestureLayout).apply {
             onVolumeChanged = { fraction ->
@@ -165,7 +165,7 @@ class PlayerAlbumCoverFragment : AbsMusicServiceFragment(R.layout.fragment_playe
             it.setText(if (seconds > 0) R.string.cover_seek_forward else R.string.cover_seek_back)
             (it.layoutParams as android.widget.FrameLayout.LayoutParams).gravity =
                 android.view.Gravity.CENTER_VERTICAL or
-                        (if (seconds > 0) android.view.Gravity.END else android.view.Gravity.START)
+                        (if (seconds > 0) android.view.Gravity.LEFT else android.view.Gravity.RIGHT)
             it.requestLayout()
             it.isVisible = true
             it.postDelayed(hideSeekFeedback, 600)

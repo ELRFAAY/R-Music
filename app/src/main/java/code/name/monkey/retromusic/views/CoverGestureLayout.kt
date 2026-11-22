@@ -183,7 +183,8 @@ class CoverGestureLayout @JvmOverloads constructor(
         return if (hasPendingTap) {
             removeCallbacks(replayTap)
             hasPendingTap = false
-            onDoubleTap?.invoke(ev.x > width / 2f)
+            // Left half = forward (+10 s), right half = back (-10 s), as the user asked.
+            onDoubleTap?.invoke(ev.x < width / 2f)
             true
         } else {
             hasPendingTap = true
