@@ -27,18 +27,75 @@ object LrcLibClient {
         if (exact != null) {
             toFound(JSONObject(exact))?.let { return it }
         }
-        val list = request(
-            "$BASE/search?track_name=${enc(song.title)}&artist_name=${enc(song.artistName)}"
-        ) ?: return null
-        val array = JSONArray(list)
-        val items = (0 until array.length()).map { array.getJSONObject(it) }
-        val closeInLength = items.filter { abs(it.optDouble("duration") - seconds) <= 3 }
-        val ordered = closeInLength + (items - closeInLength.toSet())
-        // Prefer a result that has timestamps.
-        val best = ordered.firstOrNull { !it.isNull("syncedLyrics") && it.optString("syncedLyrics").isNotBlank() }
-            ?: ordered.firstOrNull { !it.isNull("plainLyrics") && it.optString("plainLyrics").isNotBlank() }
-        return best?.let { toFound(it) }
+        // Tags of K-pop files are messy ("Title (Korean Ver.)", "Artist, Featured", file names, ...),
+        // so after the strict lookups the search is relaxed step by step.
+        val title = cleanTitle(song.title)
+        val artist = firstArtist(song.artistName)
+        val queries = LinkedHashSet<String>()
+        queries.add("track_name=${enc(song.title)}&artist_name=${enc(song.artistName)}")
+        queries.add("track_name=${enc(title)}&artist_name=${enc(artist)}")
+        queries.add("q=${enc("$title $artist")}")
+        queries.add("q=${enc("$artist $title")}")
+        queries.add("track_name=${enc(title)}")
+        queries.add("q=${enc(title)}")
+        var firstError: IOException? = null
+        val seen = HashSet<Int>()
+        val pool = ArrayList<JSONObject>()
+        for (q in queries) {
+            val list = try {
+                request("$BASE/search?$q")
+            } catch (e: IOException) {
+                firstError = firstError ?: e
+                null
+            } ?: continue
+            val array = JSONArray(list)
+            for (i in 0 until array.length()) {
+                val o = array.getJSONObject(i)
+                if (seen.add(o.optInt("id", i * 7919 + q.hashCode()))) pool.add(o)
+            }
+            pick(pool, title, artist, seconds)?.let { return toFound(it) }
+        }
+        if (pool.isEmpty() && firstError != null) throw firstError
+        return null
     }
+
+    /** The best candidate, or null when none is a convincing match for this song. */
+    private fun pick(items: List<JSONObject>, title: String, artist: String, seconds: Int): JSONObject? {
+        fun hasText(o: JSONObject, key: String) = !o.isNull(key) && o.optString(key).isNotBlank()
+        val t = norm(title)
+        val a = norm(artist)
+        val scored = items.filter { hasText(it, "syncedLyrics") || hasText(it, "plainLyrics") }.map { o ->
+            val ot = norm(o.optString("trackName"))
+            val oa = norm(o.optString("artistName"))
+            val titleOk = t.isNotEmpty() && (ot == t || ot.contains(t) || t.contains(ot) && ot.length >= 2)
+            val artistOk = a.isEmpty() || oa.contains(a) || a.contains(oa) && oa.length >= 2
+            val durDiff = abs(o.optDouble("duration", 1e9) - seconds)
+            var score = 0
+            if (titleOk) score += 4
+            if (artistOk) score += 3
+            if (durDiff <= 3) score += 4 else if (durDiff <= 8) score += 1
+            if (hasText(o, "syncedLyrics")) score += 1
+            Triple(o, score, titleOk to (durDiff <= 8))
+        }
+        // Convincing: the title matches, or the length is nearly identical and the artist matches.
+        return scored.filter { (_, _, flags) -> flags.first || flags.second }
+            .filter { it.second >= 5 }
+            .maxByOrNull { it.second }?.first
+    }
+
+    private val junk = Regex("""[(\[{][^)\]}]*[)\]}]|\s-\s.*$|\b(feat|ft)\.?\s.*$""", RegexOption.IGNORE_CASE)
+
+    /** The title without brackets, "feat." parts and " - Remastered" style suffixes. */
+    internal fun cleanTitle(raw: String): String =
+        raw.replace(junk, " ").replace(Regex("\\s+"), " ").trim().ifEmpty { raw.trim() }
+
+    /** "A, B & C" and "A feat. B" -> "A". */
+    internal fun firstArtist(raw: String): String =
+        raw.split(Regex("""\s*(,|&|;|/|\bfeat\.?|\bft\.?|\bx\b|×)\s*""", RegexOption.IGNORE_CASE))
+            .firstOrNull { it.isNotBlank() }?.trim() ?: raw.trim()
+
+    /** Lower case, letters and digits of any script only, so Hangul survives. */
+    private fun norm(v: String) = v.lowercase().filter { it.isLetterOrDigit() }
 
     private fun toFound(o: JSONObject): Found? {
         val synced = o.optString("syncedLyrics").takeIf { !o.isNull("syncedLyrics") && it.isNotBlank() }
