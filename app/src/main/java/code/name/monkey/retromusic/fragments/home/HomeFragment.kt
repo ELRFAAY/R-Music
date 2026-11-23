@@ -530,6 +530,17 @@ class HomeFragment :
                     ) { clearSelection() }
                 )
             }
+            if (!isPinned) {
+                entries.add(
+                    code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
+                        getString(R.string.wall_remove), R.drawable.ic_close
+                    ) {
+                        PreferenceUtil.homeCoversRemoved =
+                            PreferenceUtil.homeCoversRemoved + (song.id to System.currentTimeMillis())
+                        reloadWallCovers()
+                    }
+                )
+            }
             entries.add(
                 code.name.monkey.retromusic.adapter.artist.ArtistPopup.Entry(
                     getString(R.string.wall_go_to_song), R.drawable.ic_play_arrow

@@ -150,7 +150,23 @@ class LibraryViewModel(
             }
             val pinnedAlbums = pinned.map { it.albumId }.toSet()
             val hidden = PreferenceUtil.incognitoHidden
-            val rest = primary.filter { it.albumId !in pinnedAlbums && it.id !in hidden }
+            // covers the user removed stay away until the song was played more than twice since
+            val removed = PreferenceUtil.homeCoversRemoved
+            val stillRemoved = HashSet<Long>()
+            if (removed.isNotEmpty()) {
+                val dao = org.koin.java.KoinJavaComponent.get<code.name.monkey.retromusic.db.ListeningEventDao>(
+                    code.name.monkey.retromusic.db.ListeningEventDao::class.java
+                )
+                removed.forEach { (id, since) ->
+                    if (dao.playsSince(id, since) <= 2) stillRemoved.add(id)
+                }
+                if (stillRemoved.size != removed.size) {
+                    PreferenceUtil.homeCoversRemoved = removed.filterKeys { it in stillRemoved }
+                }
+            }
+            val rest = primary.filter {
+                it.albumId !in pinnedAlbums && it.id !in hidden && it.id !in stillRemoved
+            }
                 .distinctBy { it.albumId }
             var picked = shown + rest.take((count - shown.size).coerceAtLeast(0))
             if (picked.isEmpty()) {

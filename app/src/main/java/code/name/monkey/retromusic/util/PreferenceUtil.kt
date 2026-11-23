@@ -900,6 +900,17 @@ object PreferenceUtil {
         get() = sharedPreferences.getInt(AUTO_BACKUP_KEEP, 5)
         set(value) = sharedPreferences.edit { putInt(AUTO_BACKUP_KEEP, value) }
 
+    /** Covers removed from the home wall: song id -> time of removal. They return after more than 2 plays. */
+    var homeCoversRemoved: Map<Long, Long>
+        get() = sharedPreferences.getString("home_covers_removed", "").orEmpty().split(",")
+            .mapNotNull { e -> e.split(":").takeIf { it.size == 2 }?.let { (a, t) ->
+                val id = a.toLongOrNull(); val ts = t.toLongOrNull()
+                if (id != null && ts != null) id to ts else null
+            } }.toMap()
+        set(v) = sharedPreferences.edit {
+            putString("home_covers_removed", v.entries.joinToString(",") { "${it.key}:${it.value}" })
+        }
+
     /** Songs played while incognito: they are left out of the home display list until played normally. */
     var incognitoHidden: Set<Long>
         get() = sharedPreferences.getString("incognito_hidden_ids", "").orEmpty()

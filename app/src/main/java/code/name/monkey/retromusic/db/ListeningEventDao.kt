@@ -77,6 +77,10 @@ interface ListeningEventDao {
     )
     suspend fun songMsSince(since: Long): List<SongMs>
 
+    /** How many times [songId] was played since [since] (used to bring back a removed wall cover). */
+    @Query("SELECT COUNT(*) FROM ListeningEventEntity WHERE song_id = :songId AND played_at >= :since")
+    suspend fun playsSince(songId: Long, since: Long): Int
+
     @Query("DELETE FROM ListeningEventEntity")
     suspend fun clear()
 }
