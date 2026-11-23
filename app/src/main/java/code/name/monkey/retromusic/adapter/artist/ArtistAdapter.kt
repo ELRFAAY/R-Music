@@ -74,6 +74,9 @@ class ArtistAdapter(
     /** Read once per data set instead of once per bound row (the getter parses a string). */
     private var pinnedNames: Set<String> = readPins()
 
+    /** Pinned artists are piled into one card only when the user chose to group them (main list only). */
+    private fun grouped() = !favoritesSheet && PreferenceUtil.pinnedArtistsGrouped
+
     private fun readPins(): Set<String> =
         if (favoritesSheet) PreferenceUtil.pinnedFavoriteArtists else PreferenceUtil.pinnedArtists
 
@@ -94,7 +97,7 @@ class ArtistAdapter(
         val sorted = if (pinned.isEmpty()) real
         else real.sortedBy { if (it.name in pinned) 0 else 1 }
         val pinnedList = sorted.filter { it.name in pinned }
-        val body = if (pinnedList.size >= 2 && !stackExpanded) {
+        val body = if (pinnedList.size >= 2 && grouped() && !stackExpanded) {
             stackHead = pinnedList[0]
             stackRest = pinnedList.drop(1)
             listOf(pinnedList[0]) + sorted.filter { it.name !in pinned }
@@ -132,16 +135,23 @@ class ArtistAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val artist = dataSet[position]
         if (artist.id == FAVORITES_CARD_ID) {
-            bindFavoritesCard(holder)
+            bindPileCard(holder, rawDataSet.filter { it.name in PreferenceUtil.favoriteArtists },
+                activity.getString(R.string.favorite_artists) + " (${PreferenceUtil.favoriteArtists.size})")
             return
         }
         val isChecked = isChecked(artist)
         holder.itemView.isActivated = isChecked
         val artistName = artist.name
         holder.title?.text = artistName
+        holder.image?.setTag(R.id.image, null)
         val isStack = stackHead === artist && stackRest.isNotEmpty()
-        if (isStack) holder.title?.text = "$artistName +${stackRest.size}"
-        bindPile(holder, if (isStack) stackRest.take(2) else emptyList())
+        if (isStack) {
+            // grouped pinned artists: the pictures piled and turned, no name
+            bindPileCard(holder, listOf(artist) + stackRest, null)
+            markPinned(holder, true)
+            return
+        }
+        bindPile(holder, emptyList())
         markPinned(holder, artistName in pinnedNames)
         holder.text?.hide()
         val transitionName =
@@ -155,7 +165,7 @@ class ArtistAdapter(
     }
 
     /** Same coloured card as an artist, with a heart instead of a picture. */
-    private fun bindFavoritesCard(holder: ViewHolder) {
+    private fun bindPileCard(holder: ViewHolder, favs: List<Artist>, title: String?) {
         holder.itemView.isActivated = false
         val ctx = holder.itemView.context
         val bg = com.google.android.material.color.MaterialColors.getColor(
@@ -164,10 +174,8 @@ class ArtistAdapter(
         val fg = com.google.android.material.color.MaterialColors.getColor(
             ctx, com.google.android.material.R.attr.colorOnPrimaryContainer, 0
         )
-        val favs = rawDataSet.filter { it.name in PreferenceUtil.favoriteArtists }
         bindPile(holder, emptyList())
-        holder.title?.text = activity.getString(R.string.favorite_artists) +
-                " (${PreferenceUtil.favoriteArtists.size})"
+        holder.title?.text = title.orEmpty()
         holder.title?.compoundDrawableTintList = null
         holder.title?.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, 0, 0)
         holder.title?.setTextColor(fg)
@@ -405,11 +413,25 @@ class ArtistAdapter(
                 writePins(if (isPinned) pinned - artist.name else pinned + artist.name)
                 swapDataSet(rawDataSet)
             })
-            if (isPinned && stackExpanded && pinned.size >= 2) {
-                entries.add(activity.getString(R.string.artist_stack_pinned) to {
-                    stackExpanded = false
-                    swapDataSet(rawDataSet)
-                })
+            if (isPinned && pinned.size >= 2 && !favoritesSheet) {
+                if (!grouped()) {
+                    entries.add(activity.getString(R.string.artist_group_pinned) to {
+                        PreferenceUtil.pinnedArtistsGrouped = true
+                        stackExpanded = false
+                        swapDataSet(rawDataSet)
+                    })
+                } else {
+                    if (stackExpanded) {
+                        entries.add(activity.getString(R.string.artist_stack_pinned) to {
+                            stackExpanded = false
+                            swapDataSet(rawDataSet)
+                        })
+                    }
+                    entries.add(activity.getString(R.string.artist_ungroup_pinned) to {
+                        PreferenceUtil.pinnedArtistsGrouped = false
+                        swapDataSet(rawDataSet)
+                    })
+                }
             }
             entries.add(activity.getString(R.string.action_play_next) to {
                 SongsMenuHelper.handleMenuClick(activity, songs, R.id.action_play_next)

@@ -751,4 +751,6 @@
     <string name="artists_view_options">View options</string>
     <string name="artists_view_by">View by</string>
     <string name="artists_view_all">All artists</string>
+    <string name="artist_group_pinned">Group pinned artists</string>
+    <string name="artist_ungroup_pinned">Ungroup pinned artists</string>
 </resources>

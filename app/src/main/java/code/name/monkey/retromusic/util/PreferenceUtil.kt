@@ -1026,6 +1026,11 @@ object PreferenceUtil {
             .split('\n').filter { it.isNotEmpty() }.toSet()
         set(v) = sharedPreferences.edit { putString("pinned_artists", v.joinToString("\n")) }
 
+    /** True when the pinned artists of the main list are piled into one card (opt-in, via the long-press menu). */
+    var pinnedArtistsGrouped: Boolean
+        get() = sharedPreferences.getBoolean("pinned_artists_grouped", false)
+        set(v) = sharedPreferences.edit { putBoolean("pinned_artists_grouped", v) }
+
     /** Pins made inside the favorite-artists sheet; kept apart from [pinnedArtists]. */
     var pinnedFavoriteArtists: Set<String>
         get() = sharedPreferences.getString("pinned_favorite_artists", "").orEmpty()
