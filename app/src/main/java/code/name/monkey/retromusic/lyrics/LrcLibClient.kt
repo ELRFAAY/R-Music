@@ -59,28 +59,39 @@ object LrcLibClient {
         return null
     }
 
-    /** The best candidate, or null when none is a convincing match for this song. */
+    /**
+     * The best candidate, or null when none is a convincing match. A wrong song is worse than none, so
+     * the title must match (equal, or one contains the other and is most of it), the artist must match
+     * when it is known, and the length must be close.
+     */
     private fun pick(items: List<JSONObject>, title: String, artist: String, seconds: Int): JSONObject? {
         fun hasText(o: JSONObject, key: String) = !o.isNull(key) && o.optString(key).isNotBlank()
         val t = norm(title)
         val a = norm(artist)
-        val scored = items.filter { hasText(it, "syncedLyrics") || hasText(it, "plainLyrics") }.map { o ->
+        if (t.isEmpty()) return null
+        var best: JSONObject? = null
+        var bestScore = -1
+        for (o in items) {
+            if (!hasText(o, "syncedLyrics") && !hasText(o, "plainLyrics")) continue
             val ot = norm(o.optString("trackName"))
             val oa = norm(o.optString("artistName"))
-            val titleOk = t.isNotEmpty() && (ot == t || ot.contains(t) || t.contains(ot) && ot.length >= 2)
-            val artistOk = a.isEmpty() || oa.contains(a) || a.contains(oa) && oa.length >= 2
+            if (ot.isEmpty()) continue
+            val exactTitle = ot == t
+            val shorter = minOf(ot.length, t.length)
+            val longer = maxOf(ot.length, t.length)
+            val closeTitle = !exactTitle && shorter >= 3 && (ot.contains(t) || t.contains(ot)) &&
+                    shorter.toFloat() / longer >= 0.6f
+            if (!exactTitle && !closeTitle) continue
+            val artistOk = a.isEmpty() || oa.contains(a) || (oa.length >= 2 && a.contains(oa))
+            if (!artistOk) continue
             val durDiff = abs(o.optDouble("duration", 1e9) - seconds)
-            var score = 0
-            if (titleOk) score += 4
-            if (artistOk) score += 3
-            if (durDiff <= 3) score += 4 else if (durDiff <= 8) score += 1
-            if (hasText(o, "syncedLyrics")) score += 1
-            Triple(o, score, titleOk to (durDiff <= 8))
+            if (durDiff > (if (exactTitle) 10 else 5)) continue
+            var score = if (exactTitle) 10 else 6
+            score += (5 - minOf(durDiff, 5.0)).toInt()
+            if (hasText(o, "syncedLyrics")) score += 2
+            if (score > bestScore) { bestScore = score; best = o }
         }
-        // Convincing: the title matches, or the length is nearly identical and the artist matches.
-        return scored.filter { (_, _, flags) -> flags.first || flags.second }
-            .filter { it.second >= 5 }
-            .maxByOrNull { it.second }?.first
+        return best
     }
 
     private val junk = Regex("""[(\[{][^)\]}]*[)\]}]|\s-\s.*$|\b(feat|ft)\.?\s.*$""", RegexOption.IGNORE_CASE)
