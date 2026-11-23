@@ -739,4 +739,7 @@
     <string name="app_icon_old">الأيقونة القديمة</string>
     <string name="favorite_artists_hint">اضغط مطولاً على فنان لتثبيته أو إلغاء التثبيت</string>
     <string name="wall_remove">إزالة من الجدار (يرجع بعد 3 مرات تشغيل)</string>
+    <string name="artists_view_options">خيارات العرض</string>
+    <string name="artists_view_by">عرض حسب</string>
+    <string name="artists_view_all">كل الفنانين</string>
 </resources>

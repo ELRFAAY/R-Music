@@ -129,6 +129,80 @@ class ArtistsFragment : AbsRecyclerViewCustomGridSizeFragment<ArtistAdapter, Gri
         return GridLayoutManager(requireActivity(), getGridSize())
     }
 
+    /** One sheet for how the list looks (style), how it is sorted and what it shows. */
+    private fun showViewOptions() {
+        val ctx = requireContext()
+        val d = resources.displayMetrics.density
+        val dialog = com.google.android.material.bottomsheet.BottomSheetDialog(ctx)
+        val column = android.widget.LinearLayout(ctx).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            val pad = (16 * d).toInt()
+            setPadding(pad, pad, pad, pad)
+        }
+        fun section(title: Int, options: List<Pair<Int, Boolean>>, onPick: (Int) -> Unit) {
+            column.addView(android.widget.TextView(ctx).apply {
+                setText(title)
+                textSize = 16f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                setPadding(0, (8 * d).toInt(), 0, (4 * d).toInt())
+            })
+            val group = android.widget.RadioGroup(ctx)
+            options.forEachIndexed { i, (label, checked) ->
+                group.addView(android.widget.RadioButton(ctx).apply {
+                    id = View.generateViewId()
+                    setText(label)
+                    isChecked = checked
+                    tag = i
+                })
+            }
+            group.setOnCheckedChangeListener { g, checkedId ->
+                val i = g.findViewById<View>(checkedId)?.tag as? Int ?: return@setOnCheckedChangeListener
+                onPick(i)
+            }
+            column.addView(group)
+        }
+        val styles = listOf(
+            R.string.normal to R.layout.item_grid,
+            R.string.card to R.layout.item_card,
+            R.string.card_color_style to R.layout.item_card_color,
+            R.string.circular to R.layout.item_grid_circle,
+            R.string.image to R.layout.image,
+            R.string.image_gradient to R.layout.item_image_gradient
+        )
+        section(R.string.grid_style_label, styles.map { it.first to (itemLayoutRes() == it.second) }) {
+            if (styles[it].second != PreferenceUtil.artistGridStyle.layoutResId) {
+                setAndSaveLayoutRes(styles[it].second)
+            }
+            dialog.dismiss()
+        }
+        val sorts = listOf(
+            R.string.sort_order_a_z to ArtistSortOrder.ARTIST_A_Z,
+            R.string.sort_order_z_a to ArtistSortOrder.ARTIST_Z_A
+        )
+        section(R.string.sort_order, sorts.map { it.first to (getSortOrder() == it.second) }) {
+            if (sorts[it].second != PreferenceUtil.artistSortOrder) setAndSaveSortOrder(sorts[it].second)
+            dialog.dismiss()
+        }
+        section(
+            R.string.artists_view_by,
+            listOf(
+                R.string.artists_view_all to !PreferenceUtil.albumArtistsOnly,
+                R.string.show_album_artists to PreferenceUtil.albumArtistsOnly
+            )
+        ) {
+            val albumArtists = it == 1
+            if (albumArtists != PreferenceUtil.albumArtistsOnly) {
+                PreferenceUtil.albumArtistsOnly = albumArtists
+                libraryViewModel.forceReload(ReloadType.Artists)
+            }
+            dialog.dismiss()
+        }
+        val scroll = android.widget.ScrollView(ctx)
+        scroll.addView(column)
+        dialog.setContentView(scroll)
+        dialog.show()
+    }
+
     /** All favorite artists in one sheet; opening one works like opening it from the list. */
     private fun showFavoriteArtists() {
         val ctx = requireContext()
@@ -281,6 +355,10 @@ class ArtistsFragment : AbsRecyclerViewCustomGridSizeFragment<ArtistAdapter, Gri
         setupLayoutMenu(layoutItem.subMenu!!)
         setUpSortOrderMenu(menu.findItem(R.id.action_sort_order).subMenu!!)
         setupAlbumArtistMenu(menu)
+        menu.add(0, R.id.action_artists_view_options, 0, R.string.artists_view_options).apply {
+            setIcon(R.drawable.ic_filter_song)
+            setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+        }
         //Setting up cast button
         requireContext().setUpMediaRouteButton(menu)
     }
@@ -364,6 +442,10 @@ class ArtistsFragment : AbsRecyclerViewCustomGridSizeFragment<ArtistAdapter, Gri
     }
 
     override fun onMenuItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.action_artists_view_options) {
+            showViewOptions()
+            return true
+        }
         if (handleGridSizeMenuItem(item)) {
             return true
         }

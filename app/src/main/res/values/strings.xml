@@ -748,4 +748,7 @@
     <string name="app_icon_old">Old icon</string>
     <string name="favorite_artists_hint">Long-press an artist to pin or unpin it</string>
     <string name="wall_remove">Remove from the wall (returns after 3 plays)</string>
+    <string name="artists_view_options">View options</string>
+    <string name="artists_view_by">View by</string>
+    <string name="artists_view_all">All artists</string>
 </resources>
