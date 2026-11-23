@@ -1026,6 +1026,17 @@ object PreferenceUtil {
             .split('\n').filter { it.isNotEmpty() }.toSet()
         set(v) = sharedPreferences.edit { putString("pinned_artists", v.joinToString("\n")) }
 
+    /** Look of the favorite-artists sheet (0 = follow the main list). */
+    var favSheetStyle: Int
+        get() = sharedPreferences.getInt("fav_sheet_style", 0)
+        set(v) = sharedPreferences.edit { putInt("fav_sheet_style", v) }
+    var favSheetColumns: Int
+        get() = sharedPreferences.getInt("fav_sheet_columns", 0)
+        set(v) = sharedPreferences.edit { putInt("fav_sheet_columns", v) }
+    var favSheetSortDesc: Boolean
+        get() = sharedPreferences.getBoolean("fav_sheet_sort_desc", false)
+        set(v) = sharedPreferences.edit { putBoolean("fav_sheet_sort_desc", v) }
+
     /** True when the pinned artists of the main list are piled into one card (opt-in, via the long-press menu). */
     var pinnedArtistsGrouped: Boolean
         get() = sharedPreferences.getBoolean("pinned_artists_grouped", false)
