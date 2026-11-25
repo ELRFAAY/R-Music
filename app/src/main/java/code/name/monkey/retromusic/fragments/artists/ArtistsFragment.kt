@@ -264,6 +264,29 @@ class ArtistsFragment : AbsRecyclerViewCustomGridSizeFragment<ArtistAdapter, Gri
                 contentDescription = getString(R.string.artists_view_options)
                 setOnClickListener { showFavoritesOptions { render() } }
             }
+            fun iconButton(icon: Int, desc: Int, onClick: () -> Unit) =
+                android.widget.ImageButton(ctx).apply {
+                    setImageResource(icon)
+                    setBackgroundColor(0)
+                    contentDescription = getString(desc)
+                    setOnClickListener { onClick() }
+                }
+            // shuffle play: all the songs of one random favorite artist
+            header.addView(iconButton(R.drawable.ic_shuffle, R.string.favorite_random_artist) {
+                val songs = artists.random().songs
+                if (songs.isNotEmpty()) {
+                    MusicPlayerRemote.openAndShuffleQueue(songs, true)
+                    dialog.dismiss()
+                }
+            })
+            // one random song from every favorite artist, in random order
+            header.addView(iconButton(R.drawable.ic_queue_music, R.string.favorite_random_songs) {
+                val picks = artists.mapNotNull { it.songs.randomOrNull() }.shuffled()
+                if (picks.isNotEmpty()) {
+                    MusicPlayerRemote.openQueue(picks, 0, true)
+                    dialog.dismiss()
+                }
+            })
             header.addView(optionsButton)
             column.addView(list)
         }

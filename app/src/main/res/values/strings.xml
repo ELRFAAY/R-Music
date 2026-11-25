@@ -753,4 +753,6 @@
     <string name="artists_view_all">All artists</string>
     <string name="artist_group_pinned">Group pinned artists</string>
     <string name="artist_ungroup_pinned">Ungroup pinned artists</string>
+    <string name="favorite_random_artist">Shuffle a random favorite artist</string>
+    <string name="favorite_random_songs">One random song from each favorite artist</string>
 </resources>

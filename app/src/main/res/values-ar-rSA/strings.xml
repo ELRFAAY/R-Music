@@ -744,4 +744,6 @@
     <string name="artists_view_all">كل الفنانين</string>
     <string name="artist_group_pinned">تجميع المثبتين</string>
     <string name="artist_ungroup_pinned">فك تجميع المثبتين</string>
+    <string name="favorite_random_artist">تشغيل عشوائي لفنان من المفضلين</string>
+    <string name="favorite_random_songs">أغنية عشوائية من كل فنان مفضل</string>
 </resources>
