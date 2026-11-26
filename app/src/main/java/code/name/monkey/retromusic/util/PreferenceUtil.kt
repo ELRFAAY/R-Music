@@ -1021,6 +1021,12 @@ object PreferenceUtil {
         set(v) = sharedPreferences.edit { putBoolean("mini_player_locked", v) }
 
     /** Names of artists pinned to the top of the artists list. */
+    /** Ids of songs hidden from the Songs tab only (still in folders, playlists, albums, artists). */
+    var hiddenSongIds: Set<Long>
+        get() = sharedPreferences.getString("hidden_song_ids", "").orEmpty()
+            .split(',').mapNotNull { it.toLongOrNull() }.toSet()
+        set(v) = sharedPreferences.edit { putString("hidden_song_ids", v.joinToString(",")) }
+
     var pinnedArtists: Set<String>
         get() = sharedPreferences.getString("pinned_artists", "").orEmpty()
             .split('\n').filter { it.isNotEmpty() }.toSet()

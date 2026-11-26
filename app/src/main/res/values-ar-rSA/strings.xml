@@ -744,6 +744,10 @@
     <string name="artists_view_all">كل الفنانين</string>
     <string name="artist_group_pinned">تجميع المثبتين</string>
     <string name="artist_ungroup_pinned">فك تجميع المثبتين</string>
-    <string name="favorite_random_artist">تشغيل عشوائي لفنان من المفضلين</string>
+    <string name="favorite_random_artist">فتح فنان عشوائي من المفضلين</string>
     <string name="favorite_random_songs">أغنية عشوائية من كل فنان مفضل</string>
+    <string name="action_hide_from_songs">إخفاء من قائمة الأغاني</string>
+    <string name="hidden_from_songs_toast">اتخفت من قائمة الأغاني (لسه في الملفات وقوائم التشغيل)</string>
+    <string name="hidden_songs">الأغاني المخفية</string>
+    <string name="hidden_songs_apply">إظهار تاني</string>
 </resources>

@@ -386,6 +386,9 @@ class LyricsSheetFragment : BottomSheetDialogFragment() {
                             LyricUtil.storeFetchedLyrics(song, found.synced, found.plain)
                         }
                         if (found.synced != null) showSynced(found.synced) else showPlain(found.plain!!)
+                        // The player (Muzio) shows the lyrics from the stored files: tell it to reload.
+                        setFragmentResult(RESULT_KEY, bundleOf())
+                        requireActivity().supportFragmentManager.setFragmentResult(RESULT_KEY, bundleOf())
                     }
                     else -> showStatus(getString(R.string.lyrics_instrumental), false)
                 }

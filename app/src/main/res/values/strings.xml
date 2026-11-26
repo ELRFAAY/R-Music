@@ -753,6 +753,10 @@
     <string name="artists_view_all">All artists</string>
     <string name="artist_group_pinned">Group pinned artists</string>
     <string name="artist_ungroup_pinned">Ungroup pinned artists</string>
-    <string name="favorite_random_artist">Shuffle a random favorite artist</string>
+    <string name="favorite_random_artist">Open a random favorite artist</string>
     <string name="favorite_random_songs">One random song from each favorite artist</string>
+    <string name="action_hide_from_songs">Hide from the Songs list</string>
+    <string name="hidden_from_songs_toast">Hidden from the Songs list (still in folders and playlists)</string>
+    <string name="hidden_songs">Hidden songs</string>
+    <string name="hidden_songs_apply">Show again</string>
 </resources>

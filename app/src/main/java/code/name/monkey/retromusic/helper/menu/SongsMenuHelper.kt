@@ -17,6 +17,9 @@ package code.name.monkey.retromusic.helper.menu
 import android.content.Intent
 import androidx.fragment.app.FragmentActivity
 import code.name.monkey.retromusic.R
+import code.name.monkey.retromusic.extensions.showToast
+import code.name.monkey.retromusic.util.PreferenceUtil
+import org.koin.androidx.viewmodel.ext.android.getViewModel
 import code.name.monkey.retromusic.dialogs.AddToPlaylistDialog
 import code.name.monkey.retromusic.dialogs.DeleteSongsDialog
 import code.name.monkey.retromusic.helper.MusicPlayerRemote
@@ -39,6 +42,13 @@ object SongsMenuHelper : KoinComponent {
         when (menuItemId) {
             R.id.action_play_next -> {
                 MusicPlayerRemote.playNext(songs)
+                return true
+            }
+            R.id.action_hide_from_songs -> {
+                PreferenceUtil.hiddenSongIds = PreferenceUtil.hiddenSongIds + songs.map { it.id }
+                (activity.getViewModel() as code.name.monkey.retromusic.fragments.LibraryViewModel)
+                    .forceReload(code.name.monkey.retromusic.fragments.ReloadType.Songs)
+                activity.showToast(R.string.hidden_from_songs_toast)
                 return true
             }
             R.id.action_add_to_current_playing -> {

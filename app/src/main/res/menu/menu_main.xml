@@ -92,6 +92,11 @@
         android:title="@string/action_settings"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_hidden_songs"
+        android:title="@string/hidden_songs"
+        android:visible="false"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_open_folders"
         android:icon="@drawable/ic_folder"
         android:title="@string/folders"

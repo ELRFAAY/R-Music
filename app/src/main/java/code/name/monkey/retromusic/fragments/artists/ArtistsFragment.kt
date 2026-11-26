@@ -273,11 +273,10 @@ class ArtistsFragment : AbsRecyclerViewCustomGridSizeFragment<ArtistAdapter, Gri
                 }
             // shuffle play: all the songs of one random favorite artist
             header.addView(iconButton(R.drawable.ic_shuffle, R.string.favorite_random_artist) {
-                val songs = artists.random().songs
-                if (songs.isNotEmpty()) {
-                    MusicPlayerRemote.openAndShuffleQueue(songs, true)
-                    dialog.dismiss()
-                }
+                dialog.dismiss()
+                findNavController().navigate(
+                    R.id.artistDetailsFragment, bundleOf(EXTRA_ARTIST_ID to artists.random().id)
+                )
             })
             // one random song from every favorite artist, in random order
             header.addView(iconButton(R.drawable.ic_queue_music, R.string.favorite_random_songs) {
