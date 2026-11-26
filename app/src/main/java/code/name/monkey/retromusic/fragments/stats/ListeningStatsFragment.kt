@@ -251,6 +251,7 @@ class ListeningStatsFragment : Fragment() {
             adapter.submitList(it)
         }
         viewModel.recent.observe(viewLifecycleOwner, observer)
+        viewLifecycleOwner.lifecycleScope.launch { adapter.songIndex = viewModel.songIndex() }
         val list = RecyclerView(ctx).apply {
             layoutManager = LinearLayoutManager(ctx)
             this.adapter = adapter
@@ -466,7 +467,7 @@ class ListeningStatsFragment : Fragment() {
     }
 
     private companion object {
-        const val PREVIEW_ROWS = 5
+        const val PREVIEW_ROWS = 3
         const val KIND_SONG = 0
         const val KIND_ARTIST = 1
         const val KIND_ALBUM = 2

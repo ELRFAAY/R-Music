@@ -22,17 +22,38 @@ import code.name.monkey.retromusic.db.ListeningEventEntity
 import code.name.monkey.retromusic.db.ListeningStats
 import code.name.monkey.retromusic.db.PlaylistDao
 import code.name.monkey.retromusic.db.TopRow
+import code.name.monkey.retromusic.model.Song
+import code.name.monkey.retromusic.repository.Repository
 import java.util.Calendar
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
 /** The playlist whose songs were played the most in the chosen period. */
 data class TopPlaylist(val name: String, val ms: Long)
 
+/** Finds the library [Song] of a history row, so its cover can be shown. */
+class SongIndex(songs: List<Song>) {
+    private val byId = songs.associateBy { it.id }
+    private val byKey = HashMap<String, Song>().also { map ->
+        songs.forEach { map.putIfAbsent(key(it.title, it.artistName, it.duration), it) }
+    }
+
+    /** By id first (when the title still matches), else by title + artist + duration (ids change after a restore). */
+    fun find(e: ListeningEventEntity): Song? =
+        byId[e.songId]?.takeIf { it.title == e.title } ?: byKey[key(e.title, e.artistName, e.duration)]
+
+    private fun key(title: String, artist: String, duration: Long) = "$title\u0000$artist\u0000$duration"
+}
+
 class ListeningStatsViewModel(
     private val dao: ListeningEventDao,
-    private val playlistDao: PlaylistDao
+    private val playlistDao: PlaylistDao,
+    private val repository: Repository
 ) : ViewModel() {
+
+    /** Reads the library off the main thread. */
+    suspend fun songIndex(): SongIndex = withContext(Dispatchers.IO) { SongIndex(repository.allSongs()) }
 
     private val periodDays = MutableLiveData(7)
 
