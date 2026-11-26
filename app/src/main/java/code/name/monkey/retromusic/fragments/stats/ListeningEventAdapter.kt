@@ -32,6 +32,9 @@ class ListeningEventAdapter :
         }
     }
 
+    /** A tap on a history row. */
+    var onClick: ((ListeningEventEntity) -> Unit)? = null
+
     /** Set once the library has been read; until then (and for deleted songs) the default cover shows. */
     var songIndex: SongIndex? = null
         set(value) {
@@ -54,6 +57,7 @@ class ListeningEventAdapter :
             DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_TIME or DateUtils.FORMAT_ABBREV_ALL
         )
         holder.binding.title.text = event.title
+        holder.itemView.setOnClickListener { onClick?.invoke(event) }
         val song = songIndex?.find(event)
         val request = Glide.with(holder.binding.cover).load(
             if (song != null) RetroGlideExtension.getSongModel(song) else R.drawable.default_audio_art

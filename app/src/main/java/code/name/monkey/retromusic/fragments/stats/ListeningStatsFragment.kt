@@ -252,6 +252,17 @@ class ListeningStatsFragment : Fragment() {
         }
         viewModel.recent.observe(viewLifecycleOwner, observer)
         viewLifecycleOwner.lifecycleScope.launch { adapter.songIndex = viewModel.songIndex() }
+        // a tap on a history row plays that song
+        adapter.onClick = { event ->
+            viewLifecycleOwner.lifecycleScope.launch {
+                val song = (adapter.songIndex ?: viewModel.songIndex()).find(event)
+                if (song == null) {
+                    Toast.makeText(requireContext(), R.string.stats_song_not_found, Toast.LENGTH_SHORT).show()
+                } else {
+                    MusicPlayerRemote.openQueue(listOf(song), 0, true)
+                }
+            }
+        }
         val list = RecyclerView(ctx).apply {
             layoutManager = LinearLayoutManager(ctx)
             this.adapter = adapter
