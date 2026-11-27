@@ -900,6 +900,23 @@ object PreferenceUtil {
         get() = sharedPreferences.getInt(AUTO_BACKUP_KEEP, 5)
         set(value) = sharedPreferences.edit { putInt(AUTO_BACKUP_KEEP, value) }
 
+    /** Season background behind the player (a video or animated image per season, picked by the user). */
+    var seasonThemeEnabled: Boolean
+        get() = sharedPreferences.getBoolean(SeasonTheme.ENABLED, false)
+        set(value) = sharedPreferences.edit { putBoolean(SeasonTheme.ENABLED, value) }
+
+    /** [SeasonTheme.AUTO] (follow the month) or a [Season] name, to preview a season. */
+    var seasonThemeForce: String
+        get() = sharedPreferences.getString(SeasonTheme.FORCE, SeasonTheme.AUTO) ?: SeasonTheme.AUTO
+        set(value) = sharedPreferences.edit { putString(SeasonTheme.FORCE, value) }
+
+    fun seasonThemeUri(season: Season): String? =
+        sharedPreferences.getString(season.prefKey, null)?.takeIf { it.isNotEmpty() }
+
+    fun setSeasonThemeUri(season: Season, uri: String?) = sharedPreferences.edit {
+        if (uri == null) remove(season.prefKey) else putString(season.prefKey, uri)
+    }
+
     /** Covers removed from the home wall: song id -> time of removal. They return after more than 2 plays. */
     var homeCoversRemoved: Map<Long, Long>
         get() = sharedPreferences.getString("home_covers_removed", "").orEmpty().split(",")

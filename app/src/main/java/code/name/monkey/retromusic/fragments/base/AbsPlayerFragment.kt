@@ -27,6 +27,12 @@ import android.view.GestureDetector
 import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import androidx.constraintlayout.widget.ConstraintLayout
+import code.name.monkey.retromusic.activities.base.AbsSlidingMusicPanelActivity
+import code.name.monkey.retromusic.util.SeasonTheme
+import code.name.monkey.retromusic.views.SeasonBackgroundView
 import android.widget.RelativeLayout
 import androidx.annotation.LayoutRes
 import androidx.appcompat.widget.Toolbar
@@ -356,9 +362,80 @@ abstract class AbsPlayerFragment(@LayoutRes layout: Int) : AbsMusicServiceFragme
         view.findViewById<RelativeLayout>(R.id.statusBarShadow)?.hide()
     }
 
+    private var seasonBackground: SeasonBackgroundView? = null
+    private var seasonSheetCallback: BottomSheetBehavior.BottomSheetCallback? = null
+
+    private fun isPanelOpen(state: Int) =
+        state == BottomSheetBehavior.STATE_EXPANDED ||
+            state == BottomSheetBehavior.STATE_DRAGGING ||
+            state == BottomSheetBehavior.STATE_SETTLING
+
+    /**
+     * Season theme: a looping video / animated image behind the player, chosen by the month (settings).
+     * Checked on every resume so a change in settings shows when the player comes back.
+     */
+    private fun refreshSeasonBackground() {
+        val uri = SeasonTheme.currentUri()
+        if (uri == seasonBackground?.source) return
+        removeSeasonBackground()
+        val group = view as? ViewGroup ?: return
+        if (uri == null) return
+        val bg = SeasonBackgroundView(requireContext())
+        bg.setSource(uri)
+        val params: ViewGroup.LayoutParams = if (group is ConstraintLayout) {
+            ConstraintLayout.LayoutParams(0, 0).apply {
+                topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+                bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+                startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+                endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            }
+        } else {
+            FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        }
+        group.addView(bg, 0, params)
+        seasonBackground = bg
+        val behavior = (activity as? AbsSlidingMusicPanelActivity)?.getBottomSheetBehavior()
+        bg.setActive(behavior == null || isPanelOpen(behavior.state))
+        if (behavior != null) {
+            val callback = object : BottomSheetBehavior.BottomSheetCallback() {
+                override fun onSlide(bottomSheet: View, slideOffset: Float) = Unit
+                override fun onStateChanged(bottomSheet: View, newState: Int) {
+                    seasonBackground?.setActive(isPanelOpen(newState))
+                }
+            }
+            behavior.addBottomSheetCallback(callback)
+            seasonSheetCallback = callback
+        }
+    }
+
+    private fun removeSeasonBackground() {
+        seasonSheetCallback?.let { cb ->
+            (activity as? AbsSlidingMusicPanelActivity)?.getBottomSheetBehavior()?.removeBottomSheetCallback(cb)
+        }
+        seasonSheetCallback = null
+        seasonBackground?.let {
+            it.release()
+            (it.parent as? ViewGroup)?.removeView(it)
+        }
+        seasonBackground = null
+    }
+
+    override fun onPause() {
+        super.onPause()
+        seasonBackground?.setActive(false)
+    }
+
+    override fun onDestroyView() {
+        removeSeasonBackground()
+        super.onDestroyView()
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onResume() {
         super.onResume()
+        refreshSeasonBackground()
         val nps = PreferenceUtil.nowPlayingScreen
 
         if (nps == NowPlayingScreen.Muzio || nps == NowPlayingScreen.Peek || nps == NowPlayingScreen.Tiny) {
