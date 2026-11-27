@@ -694,4 +694,10 @@
     <string name="pref_vocal_quality_summary">السريع أسرع حوالي 2.7 مرة، والعالي أنضف في الصوت</string>
     <string name="vocal_quality_fast">سريع (30 ميجا)</string>
     <string name="vocal_quality_high">عالي (67 ميجا، أبطأ)</string>
+    <string name="r_settings_title">إعدادات R</string>
+    <string name="r_settings_summary">كل الإضافات والخيارات الخاصة بتطبيق R Music</string>
+    <string name="r_settings_home">الشاشة الرئيسية</string>
+    <string name="r_settings_lyrics">الكلمات</string>
+    <string name="r_settings_vocals">فصل صوت المغني</string>
+    <string name="r_settings_notifications">الإشعار</string>
 </resources>

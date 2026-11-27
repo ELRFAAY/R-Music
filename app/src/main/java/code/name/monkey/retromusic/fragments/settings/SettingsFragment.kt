@@ -56,6 +56,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings), ColorCallback {
     private fun getStringFromDestination(currentDestination: NavDestination): String {
         val idRes = when (currentDestination.id) {
             R.id.mainSettingsFragment -> R.string.action_settings
+            R.id.rSettingsFragment -> R.string.r_settings_title
             R.id.audioSettings -> R.string.pref_header_audio
             R.id.imageSettingFragment -> R.string.pref_header_images
             R.id.nowPlayingSettingsFragment -> R.string.now_playing

@@ -35,6 +35,7 @@ class MainSettingsFragment : Fragment(), View.OnClickListener {
     override fun onClick(view: View) {
         findNavController().navigate(
             when (view.id) {
+                R.id.rSettings -> R.id.action_mainSettingsFragment_to_rSettingsFragment
                 R.id.generalSettings -> R.id.action_mainSettingsFragment_to_themeSettingsFragment
                 R.id.audioSettings -> R.id.action_mainSettingsFragment_to_audioSettings
                 R.id.personalizeSettings -> R.id.action_mainSettingsFragment_to_personalizeSettingsFragment
@@ -60,6 +61,7 @@ class MainSettingsFragment : Fragment(), View.OnClickListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.rSettings.setOnClickListener(this)
         binding.generalSettings.setOnClickListener(this)
         binding.audioSettings.setOnClickListener(this)
         binding.nowPlayingSettings.setOnClickListener(this)

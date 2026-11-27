@@ -703,4 +703,10 @@
     <string name="pref_vocal_quality_summary">Fast model is about 2.7x quicker; the high one sounds cleaner</string>
     <string name="vocal_quality_fast">Fast (30 MB)</string>
     <string name="vocal_quality_high">High (67 MB, slower)</string>
+    <string name="r_settings_title">R settings</string>
+    <string name="r_settings_summary">Everything that was added to R Music</string>
+    <string name="r_settings_home">Home screen</string>
+    <string name="r_settings_lyrics">Lyrics</string>
+    <string name="r_settings_vocals">Vocal separation</string>
+    <string name="r_settings_notifications">Notification</string>
 </resources>

@@ -15,6 +15,15 @@
         android:paddingBottom="@dimen/mini_player_height">
 
         <code.name.monkey.retromusic.views.SettingListItemView
+            android:id="@+id/rSettings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:settingListItemIcon="@drawable/ic_favorite"
+            app:settingListItemIconColor="@color/md_red_A400"
+            app:settingListItemText="@string/r_settings_summary"
+            app:settingListItemTitle="@string/r_settings_title" />
+
+        <code.name.monkey.retromusic.views.SettingListItemView
             android:id="@+id/generalSettings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

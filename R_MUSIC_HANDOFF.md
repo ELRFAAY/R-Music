@@ -376,3 +376,10 @@ Not tested on a phone yet; CI builds only. What changed:
 - Favorite artists: heart in the artist toolbar (avd_favorite / avd_unfavorite, PreferenceUtil.favoriteArtists, "\n"-joined names); first item of the artists list is a placeholder Artist (id -4242, ArtistAdapter.VIEW_TYPE_FAVORITES) that opens a bottom sheet with the favorites.
 Left alone on purpose: usesCleartextTraffic (images from other hosts may be http), the many `!!` in MusicService/MusicPlayerRemote, 27 notifyDataSetChanged.
 Still open: package rename + release build, only after the user says "ابدأ".
+
+## Session 21 (branch claude/code-review)
+- Fix: Artist sort fallback compile error (explicit Comparator in `else` made the `when` an Any). CI failure details come from the `::error::` annotations of the Fast APK job (read them through the check-runs annotations API; job logs are blocked from the sandbox).
+- Crash fix: AUDIO_BECOMING_NOISY receiver called startService() in the background (Android 12 BackgroundServiceStartNotAllowedException); now pauses the service directly.
+- New settings screen "R settings" (RSettingsFragment, pref_r_settings.xml, first item of the main settings): home covers (toggle + 5), mini player (4), lyrics (panel, Wi-Fi only, Korean pronunciation), vocal separation (quality, clear stems), notification switch. The keys did not change, so saved values keep working; the prefs were MOVED out of pref_ui / pref_advanced / pref_now_playing_screen.
+- Arabic resources folder renamed values-ar-rSA -> values-ar, so every Arabic locale (ar-EG, ar-SA, ...) gets the Arabic text; with only ar-rSA a phone set to Arabic (Egypt) fell back to English.
+- Open: "snow / seasons" effect: the only seasonal feature is the snowfall switch (key `snowfall`, Now playing settings); its SnowfallView exists ONLY in the normal player (fragment_player.xml), not in Ring/Muzio, and it only shows on a dark surface. Waiting for the user to confirm that is what he means.

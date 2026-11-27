@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory
+        android:layout="@layout/preference_category_title"
+        android:title="@string/r_settings_home">
+        <code.name.monkey.appthemehelper.common.prefs.supportv7.ATESwitchPreference
+            android:defaultValue="true"
+            android:key="toggle_home_covers"
+            android:layout="@layout/list_item_view_switch"
+            android:summary="@string/pref_summary_home_covers"
+            android:title="@string/pref_title_home_covers" />
+        <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEListPreference
+            android:defaultValue="0"
+            android:dependency="toggle_home_covers"
+            android:entries="@array/pref_home_covers_source_titles"
+            android:entryValues="@array/pref_home_covers_source_values"
+            android:key="home_covers_source"
+            android:layout="@layout/list_item_view"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="@string/pref_title_home_covers_source" />
+        <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEListPreference
+            android:defaultValue="20"
+            android:dependency="toggle_home_covers"
+            android:entries="@array/pref_home_covers_speed_titles"
+            android:entryValues="@array/pref_home_covers_speed_values"
+            android:key="home_covers_speed"
+            android:layout="@layout/list_item_view"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="@string/pref_title_home_covers_speed" />
+        <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEListPreference
+            android:defaultValue="15"
+            android:dependency="toggle_home_covers"
+            android:entries="@array/pref_home_covers_angle_titles"
+            android:entryValues="@array/pref_home_covers_angle_values"
+            android:key="home_covers_angle"
+            android:layout="@layout/list_item_view"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="@string/pref_title_home_covers_angle" />
+        <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEListPreference
+            android:defaultValue="50"
+            android:dependency="toggle_home_covers"
+            android:entries="@array/pref_home_covers_darkness_titles"
+            android:entryValues="@array/pref_home_covers_darkness_values"
+            android:key="home_covers_darkness"
+            android:layout="@layout/list_item_view"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="@string/pref_title_home_covers_darkness" />
+        <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEListPreference
+            android:defaultValue="24"
+            android:dependency="toggle_home_covers"
+            android:entries="@array/pref_home_covers_count_titles"
+            android:entryValues="@array/pref_home_covers_count_values"
+            android:key="home_covers_count"
+            android:layout="@layout/list_item_view"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="@string/pref_title_home_covers_count" />
+    </code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory>
+    <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory
+        android:layout="@layout/preference_category_title"
+        android:title="@string/pref_header_mini_player">
+
+        <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEListPreference
+            android:defaultValue="1"
+            android:entries="@array/pref_mini_player_style_titles"
+            android:entryValues="@array/pref_mini_player_style_values"
+            android:key="mini_player_style"
+            android:layout="@layout/list_item_view"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="@string/pref_title_mini_player_style" />
+
+        <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEListPreference
+            android:defaultValue="0"
+            android:entries="@array/pref_mini_player_shape_titles"
+            android:entryValues="@array/pref_mini_player_shape_values"
+            android:key="mini_player_shape"
+            android:layout="@layout/list_item_view"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="@string/pref_title_mini_player_shape" />
+
+        <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEListPreference
+            android:defaultValue="1"
+            android:entries="@array/pref_mini_player_size_titles"
+            android:entryValues="@array/pref_mini_player_size_values"
+            android:key="mini_player_size"
+            android:layout="@layout/list_item_view"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="@string/pref_title_mini_player_size" />
+
+        <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEListPreference
+            android:defaultValue="0"
+            android:entries="@array/pref_mini_player_background_titles"
+            android:entryValues="@array/pref_mini_player_background_values"
+            android:key="mini_player_background"
+            android:layout="@layout/list_item_view"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="@string/pref_title_mini_player_background" />
+
+    </code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory>
+    <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory
+        android:layout="@layout/preference_category_title"
+        android:title="@string/r_settings_lyrics">
+    <code.name.monkey.appthemehelper.common.prefs.supportv7.ATESwitchPreference
+        android:defaultValue="true"
+        android:key="lyrics_panel"
+        android:layout="@layout/list_item_view_switch"
+        android:summary="@string/pref_summary_lyrics_panel"
+        android:title="@string/pref_title_lyrics_panel" />
+    <code.name.monkey.appthemehelper.common.prefs.supportv7.ATESwitchPreference
+        android:defaultValue="false"
+        android:key="lyrics_wifi_only"
+        android:layout="@layout/list_item_view_switch"
+        android:summary="@string/pref_summary_lyrics_wifi_only"
+        android:title="@string/pref_title_lyrics_wifi_only" />
+    <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEListPreference
+        android:defaultValue="en"
+        android:entries="@array/pref_korean_pronunciation_entries"
+        android:entryValues="@array/pref_korean_pronunciation_values"
+        android:key="korean_pronunciation"
+        android:layout="@layout/list_item_view"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:title="@string/pref_title_korean_pronunciation" />
+    </code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory>
+    <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory
+        android:layout="@layout/preference_category_title"
+        android:title="@string/r_settings_vocals">
+        <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEListPreference
+            android:defaultValue="fast"
+            android:entries="@array/pref_vocal_quality_entries"
+            android:entryValues="@array/pref_vocal_quality_values"
+            android:key="vocal_quality"
+            android:layout="@layout/list_item_view"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:summary="@string/pref_vocal_quality_summary"
+            android:title="@string/pref_vocal_quality_title"
+            app:icon="@drawable/ic_vocal_wave" />
+        <androidx.preference.Preference
+            android:key="clear_vocal_stems"
+            android:layout="@layout/list_item_view"
+            android:summary="@string/pref_clear_vocal_stems_summary"
+            android:title="@string/pref_clear_vocal_stems_title"
+            app:icon="@drawable/ic_delete" />
+    </code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory>
+    <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory
+        android:layout="@layout/preference_category_title"
+        android:title="@string/r_settings_notifications">
+        <code.name.monkey.appthemehelper.common.prefs.supportv7.ATESwitchPreference
+            android:defaultValue="false"
+            android:key="system_player_notification"
+            android:layout="@layout/list_item_view_switch"
+            android:summary="@string/pref_system_player_notification_summary"
+            android:title="@string/pref_system_player_notification_title"
+            app:icon="@drawable/ic_notification" />
+    </code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory>
+</androidx.preference.PreferenceScreen>
