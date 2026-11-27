@@ -2,15 +2,15 @@
 <resources>
     <string name="pref_season_theme_category">Season themes</string>
     <string name="pref_season_theme_enabled_title">Season background</string>
-    <string name="pref_season_theme_enabled_summary">A looping video or animated image behind the player. The season follows the month.</string>
+    <string name="pref_season_theme_enabled_summary">An animated scene behind the player that follows the month: winter, spring, summer or autumn. You can pick your own video or image for any season.</string>
     <string name="pref_season_theme_force_title">Preview a season</string>
-    <string name="pref_season_winter_title">Winter file</string>
-    <string name="pref_season_spring_title">Spring file</string>
-    <string name="pref_season_summer_title">Summer file</string>
-    <string name="pref_season_autumn_title">Autumn file</string>
-    <string name="season_file_not_set">Not set</string>
+    <string name="pref_season_winter_title">Winter scene</string>
+    <string name="pref_season_spring_title">Spring scene</string>
+    <string name="pref_season_summer_title">Summer scene</string>
+    <string name="pref_season_autumn_title">Autumn scene</string>
+    <string name="season_file_not_set">Built-in scene</string>
     <string name="season_choose_file">Choose file</string>
-    <string name="season_remove_file">Remove file</string>
+    <string name="season_remove_file">Use the built-in scene</string>
     <string name="season_auto">Automatic (by month)</string>
     <string name="season_winter">Winter</string>
     <string name="season_spring">Spring</string>

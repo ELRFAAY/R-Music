@@ -375,13 +375,14 @@ abstract class AbsPlayerFragment(@LayoutRes layout: Int) : AbsMusicServiceFragme
      * Checked on every resume so a change in settings shows when the player comes back.
      */
     private fun refreshSeasonBackground() {
-        val uri = SeasonTheme.currentUri()
-        if (uri == seasonBackground?.source) return
+        val key = SeasonTheme.currentKey()
+        if (key == seasonBackground?.key) return
         removeSeasonBackground()
         val group = view as? ViewGroup ?: return
-        if (uri == null) return
+        if (key == null) return
         val bg = SeasonBackgroundView(requireContext())
-        bg.setSource(uri)
+        val file = SeasonTheme.currentUri()
+        if (file != null) bg.setSource(file) else bg.setScene(SeasonTheme.current())
         val params: ViewGroup.LayoutParams = if (group is ConstraintLayout) {
             ConstraintLayout.LayoutParams(0, 0).apply {
                 topToTop = ConstraintLayout.LayoutParams.PARENT_ID

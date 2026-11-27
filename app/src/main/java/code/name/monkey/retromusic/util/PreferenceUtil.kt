@@ -902,7 +902,7 @@ object PreferenceUtil {
 
     /** Season background behind the player (a video or animated image per season, picked by the user). */
     var seasonThemeEnabled: Boolean
-        get() = sharedPreferences.getBoolean(SeasonTheme.ENABLED, false)
+        get() = sharedPreferences.getBoolean(SeasonTheme.ENABLED, true)
         set(value) = sharedPreferences.edit { putBoolean(SeasonTheme.ENABLED, value) }
 
     /** [SeasonTheme.AUTO] (follow the month) or a [Season] name, to preview a season. */

@@ -151,7 +151,7 @@
         android:title="@string/pref_season_theme_category">
 
         <code.name.monkey.appthemehelper.common.prefs.supportv7.ATESwitchPreference
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:key="season_theme_enabled"
             android:layout="@layout/list_item_view_switch"
             android:summary="@string/pref_season_theme_enabled_summary"

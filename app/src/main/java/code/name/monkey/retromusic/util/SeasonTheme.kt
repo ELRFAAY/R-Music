@@ -31,9 +31,18 @@ object SeasonTheme {
         return fromMonth(Calendar.getInstance().get(Calendar.MONTH))
     }
 
-    /** The file to show right now, or null when the theme is off or no file was picked for this season. */
+    /** The file the user picked for the current season, or null when the theme is off or none was picked. */
     fun currentUri(): Uri? {
         if (!PreferenceUtil.seasonThemeEnabled) return null
         return PreferenceUtil.seasonThemeUri(current())?.let { Uri.parse(it) }
+    }
+
+    /**
+     * What the player background should show right now: "file:<uri>" (the picked file wins) or
+     * "builtin:<season>" (the scene drawn by the app); null when the theme is switched off.
+     */
+    fun currentKey(): String? {
+        if (!PreferenceUtil.seasonThemeEnabled) return null
+        return currentUri()?.let { "file:$it" } ?: "builtin:${current().name}"
     }
 }

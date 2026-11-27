@@ -11,6 +11,7 @@ import android.view.TextureView
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
+import code.name.monkey.retromusic.util.Season
 import com.bumptech.glide.Glide
 
 /**
@@ -25,8 +26,15 @@ class SeasonBackgroundView @JvmOverloads constructor(
     attrs: AttributeSet? = null
 ) : FrameLayout(context, attrs), TextureView.SurfaceTextureListener {
 
+    /** The picked file, when the layer shows one. */
     var source: Uri? = null
         private set
+
+    /** What is shown now ("file:<uri>" or "builtin:<season>"); null when nothing is. */
+    var key: String? = null
+        private set
+
+    private var scene: SeasonSceneView? = null
 
     private var texture: TextureView? = null
     private var surface: Surface? = null
@@ -48,6 +56,7 @@ class SeasonBackgroundView @JvmOverloads constructor(
         if (uri == source) return
         clearMedia()
         source = uri
+        key = "file:$uri"
         val mime = try {
             context.contentResolver.getType(uri)
         } catch (e: Exception) {
@@ -59,6 +68,7 @@ class SeasonBackgroundView @JvmOverloads constructor(
     /** Plays only while the player screen is open, so a hidden player costs no CPU or battery. */
     fun setActive(active: Boolean) {
         wantPlaying = active
+        scene?.setRunning(active)
         val mp = player ?: return
         if (!prepared) return
         try {
@@ -76,6 +86,20 @@ class SeasonBackgroundView @JvmOverloads constructor(
     fun release() {
         clearMedia()
         source = null
+        key = null
+    }
+
+    /** The built-in, code-drawn animated scene of a season (used when no file was picked for it). */
+    fun setScene(season: Season) {
+        val newKey = "builtin:${season.name}"
+        if (newKey == key) return
+        clearMedia()
+        source = null
+        key = newKey
+        val view = SeasonSceneView(context, season)
+        scene = view
+        addView(view, 0, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+        view.setRunning(wantPlaying)
     }
 
     private fun showImage(uri: Uri) {
@@ -156,6 +180,8 @@ class SeasonBackgroundView @JvmOverloads constructor(
     }
 
     private fun clearMedia() {
+        scene?.setRunning(false)
+        scene = null
         releasePlayer()
         surface?.release()
         surface = null
