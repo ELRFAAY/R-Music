@@ -365,6 +365,53 @@ NEXT (only if he asks / after his test)
 3. Reported earlier and not answered: "Player" oval shape showing buttons/name was checked by the user already ("made long ago").
 RULES: short Egyptian Arabic replies, no long polling of CI, commits carry the Co-Authored-By + Claude-Session trailers, fetch + ff-merge before work, never redo items the user says exist (check git log first).
 
+### Session 20 (2026-11-17 ~15:00): Incognito button (written, CI not checked, not tested)
+- User: "hidden browser" icon next to the cast icon in all lists; ONLY the home display list (cover wall) must skip songs played while it is on. History, play counts and stats stay normal (he said so explicitly, 14:47). While it is on he also wants a notification with a button to turn it off.
+- `menu_main.xml` `action_incognito` (icons `ic_incognito` / `ic_incognito_on`, accent tint when on) before `action_cast`; `util/IncognitoMode.kt` (`applyState`, `handle`, `refreshNotification`, `OffReceiver` registered in the manifest) wired in HomeFragment, LibraryFragment, AbsRecyclerViewFragment. Pref `incognito_mode` (skipped in backups), `App.onCreate` re-posts the notification when on, `AbsSlidingMusicPanelActivity` invalidates the menu when the pref changes (turned off from the notification).
+- How the wall hides songs: `PreferenceUtil.incognitoHidden` (ids played while incognito, added/removed in `AbsMusicServiceActivity.onPlayingMetaChanged`); `LibraryViewModel.loadHomeCovers` filters them out. A song returns to the wall when played normally again. Artist/album detail toolbars have no button.
+
+### Session 20b (2026-11-17 15:30): Muzio center tap (written, CI not checked, not tested)
+- User: first tap on the cover sometimes did NOT open the lyrics (had to use the lyrics chip); with no lyrics (or plain text) a tap in the middle took a while to go back to the cover. Synced lyrics stay: tap a line = seek, X = back (his earlier spec).
+- Fix: `RingPlayerFragment` cover tap is now own detection (up within 1.2 s and 2x touch slop; GestureDetector dropped held/drifting taps); `CoverGestureLayout` vertical-drag (volume) slop and short-tap slop doubled; `CoverLrcView.onSingleTapUp` answers at once when there is no timed lyric (the old path waited for the double-tap timeout in `onSingleTapConfirmed`); `updateLyrics()` resets `lyricsSynced=false` while loading.
+
+### Session 20c (2026-11-17 22:20): stats "History" button was empty
+- `ListeningStatsFragment.showHistory()` read `viewModel.recent.value` of a Room LiveData that nobody observed (always null → empty sheet). Now observes `recent` while the sheet is open. Written, CI not checked, not tested.
+- Incognito answer given to the user: history, play counts and stats ARE recorded while incognito is on; only the home display list hides those songs (`PreferenceUtil.incognitoHidden`).
+
+### Session 21 (2026-11-17 night): stats additions (written, NOT compiled/tested until CI says so)
+- Period filter (7/30/all) already existed. Added on `ListeningStatsFragment` / `ListeningStatsViewModel`: `extras` (MediatorLiveData over `dao.allEventsLive()` + period) → compare line under total time (vs previous equal period, hidden for "all"), 4 tiles (daily average, day streak, favourite hour, favourite weekday), 24-bar "when you listen" chart (`BarChartView.setData(..., highlight)`), tap on a top-song row plays it / artist+album rows open their page (`openRow`, matched by name in `repository.allSongs()`), "Share summary" button drawing a 1080x1350 gradient PNG (cache file via FileProvider; `provider_paths.xml` got `<cache-path>`).
+
+### Session 21b (2026-11-17 night): stacked pins on the home wall (written, NOT compiled/tested)
+- User: several pinned covers can be ticked and grouped into ONE stack (like paper photos piled up in one cell); tapping the stack spreads the cards out in place; each card plays its song.
+- Pref `home_covers_stacks` ("1,2,3;4,5", first id on top; `PreferenceUtil.homeCoversStacks`). `LibraryViewModel.loadHomeCovers` shows only the top song of a stack on the wall and posts `getHomeStacks()` (top id -> members) just before `getHomeCovers()`.
+- `TiltedCoverGridView`: `setCovers(songs, stackMap)` loads every member, draws a pile bitmap (`stackBitmap`, up to 4 turned cards + count badge); selection frame/check (`selectedIds`); tap on a stack → `openStack`/`drawExpanded` (veil + cards spread around the cell, animated), tap a card → `onStackMemberClick`, tap elsewhere closes.
+- `HomeFragment`: long-press menu — single cover: Pin/Unpin, Select (pinned only), "Group N covers", Clear selection, Go to song; stack: Play stack, Ungroup, Unpin all. While something is ticked a plain tap ticks/unticks pinned covers. Ids are MediaStore song ids (same backup caveat as pins).
+
+### Session 21c (2026-11-17 night): artist picture from the internet (written, NOT compiled/tested)
+- Artist "Edit" dialog (`AbsArtistDetailsFragment.showEditArtistDialog`) has a new button "Search a picture online" → `showOnlineImages(name)`: bottom sheet that searches at once for the artist name (editable) and shows a 3-column grid; a tap sets the picture through `CustomArtistImageUtil.setCustomArtistImage(artist, Uri.parse(url))`.
+- `network/ArtistImageSearch.kt`: Deezer (`DeezerService.searchArtists`, `picture_xl`, skips empty-hash images) + Wikipedia pageimages (en, plus ar when the name has Arabic letters). No keys needed.
+
+### Session 21d (2026-11-17 night): card menu inside an opened stack (written, NOT compiled/tested)
+- Long press on a card of a spread-out stack → glass menu: Move (drag the card onto another card's slot to change the order; `TiltedCoverGridView.startMove` / `onStackReordered` → `HomeFragment.saveStackOrder`), Take out of the stack, Unpin, Play this song (`onStackMemberLongClick` → `showStackCardMenu`). After a reorder the wall reloads and the stack folds back (its top card changes); tap it again to spread it.
+
+### Session 21e (2026-11-17 night): stats colours (written, NOT compiled/tested)
+- User: the stats screen is all dark; wanted a break in the middle. `ListeningStatsFragment.applyPalette()` colours each card with a hue-rotated accent (time card solid accent, others tinted), hours chart in another hue (`BarChartView.barColor`), and a gradient "most played song" highlight card (`highlightCard`) between the charts and the top lists.
+- Build failures seen at 22:37 (stacks + online picture search) were compile errors, fixed in the next commit: duplicate `wallMenu`, local `val text` shadowing `TextView.text`, `createDefaultOkHttpClient()` returns a Builder (`.build()`).
+
+### Session 21f (2026-11-17 23:00): END-OF-ACCOUNT NOTES (read this first)
+- The last 5 CI builds (22:28-22:38) FAILED: my text replace in HomeFragment.kt turned `ArtistPopup` into `Artistcode.name...ArtistPopup` (8 places). Fixed in commit "Fix build: ArtistPopup name mangled" — CI result NOT yet seen. FIRST THING: `gh run list --repo ELRFAAY/R-Music --branch claude/backup-listening-data --limit 3`; if it fails read `gh run view <id> --log-failed | grep "^e: "` and fix the compile errors. Earlier failures (duplicate `wallMenu`, shadowed `text`, `OkHttpClient.Builder.build()`) are already fixed.
+- Everything below was written WITHOUT being compiled or run on the phone; the user will test an APK in the morning:
+  1. Stats screen (Session 21 / 21e): compare with previous period, tiles, time-of-day chart, tap rows to play/open, share-summary picture, colourful cards + gradient highlight card.
+  2. Home wall stacks (21b, 21d): tick pinned covers → group into a stack; tap spreads the cards; long press a card → Move / Take out / Unpin / Play. Files: `TiltedCoverGridView.kt`, `HomeFragment.kt`, `LibraryViewModel.loadHomeCovers`, pref `home_covers_stacks`.
+  3. Online artist picture search (21c): Artist Edit dialog → "Search a picture online" (Deezer + Wikipedia), `network/ArtistImageSearch.kt`.
+  4. Incognito (Session 20): button next to cast; only hides songs from the home display list; ongoing notification with Turn off.
+  5. Muzio center tap fix + stats History button fix (20b, 20c) were built OK and confirmed by the user ("everything works") before the later items.
+- Open / ideas: package rename + final signed release (user said wait until he says); vocal separation works offline but takes ~6 min per song (idea: background pre-processing of the next songs); incognito button not on artist/album toolbars; after reordering a stack the wall reloads and the stack folds back.
+- Rules that still hold: reply in short Egyptian Arabic, be honest that nothing is tested on the phone unless he confirms; push with `git push https://github.com/ELRFAAY/R-Music.git HEAD:claude/backup-listening-data` (origin points to a deleted fork); CI is GitHub Actions only (~8 min), a transient "KSP plugin" download failure can be re-run with `gh run rerun <id> --failed`; commits end with the Co-Authored-By / Claude-Session lines.
+
+## Session 22 — pinned artists pile (artists list)
+- ArtistAdapter: when 2+ artists are pinned they collapse into ONE cell (first pinned, title "Name +N") with up to two more covers tilted behind it (views tagged `artist_pile`, added to the item's ConstraintLayout). Tap the pile = expand (pinned shown normally); long-press a pinned artist while expanded -> "Stack pinned artists" folds it back. State is in memory only (`stackExpanded`). Untested on a phone; CI result pending.
+
 ## Session 20 (branch claude/code-review, built from claude/backup-listening-data)
 Not tested on a phone yet; CI builds only. What changed:
 - Crash: Deezer error response in ArtistImageFetcher threw inside a callback (hang, then crash when opening an artist from the player). Now falls back to the album cover.
@@ -383,3 +430,34 @@ Still open: package rename + release build, only after the user says "ابدأ".
 - New settings screen "R settings" (RSettingsFragment, pref_r_settings.xml, first item of the main settings): home covers (toggle + 5), mini player (4), lyrics (panel, Wi-Fi only, Korean pronunciation), vocal separation (quality, clear stems), notification switch. The keys did not change, so saved values keep working; the prefs were MOVED out of pref_ui / pref_advanced / pref_now_playing_screen.
 - Arabic resources folder renamed values-ar-rSA -> values-ar, so every Arabic locale (ar-EG, ar-SA, ...) gets the Arabic text; with only ar-rSA a phone set to Arabic (Egypt) fell back to English.
 - Open: "snow / seasons" effect: the only seasonal feature is the snowfall switch (key `snowfall`, Now playing settings); its SnowfallView exists ONLY in the normal player (fragment_player.xml), not in Ring/Muzio, and it only shows on a dark surface. Waiting for the user to confirm that is what he means.
+### Session 22 (2026-11-22): the "unpushed patch" (Session 20 above) was applied on top of the current branch
+- Applied: 8 s timeouts; ArtistAdapter reads pinned names once per data set (merged with the pinned-artists stack code); double tap on the player cover (LEFT half +10 s, RIGHT half -10 s: the patch says the user asked for it — if he says it is backwards, flip `ev.x < width / 2f` in `CoverGestureLayout` and the gravity in `PlayerAlbumCoverFragment`); stats card "most played playlist + time listened"; favorite artists (heart on the artist page, first card in the artists list).
+- NOT applied on purpose: patch 2 and 9 (sort-order fallback + its compile fix: already on the branch), patch 4 (artist songs as a fixed 2-column card grid + "next 30" button: it would replace the user-chosen song view style / staged loading that the branch already has). Idea worth porting later: "show next 30" instead of "show all" and not re-binding every song after a sort change.
+- Everything here compiled only in CI (see the build after this commit); nothing was tested on the phone.
+
+## Session 23 (2026-11-27): crash/notification hardening, stats squares, history covers (WRITTEN, CI not checked, NOT tested on a phone)
+User's 4 complaints: (1) app closes/restarts itself after a while of use, (2) stats should be squares and condensed, (3) history rows should show the song cover, (4) the playback notification vanishes while music plays.
+- (1) NOT diagnosed: there is no stack trace yet (the app uses CustomActivityOnCrash, so the "restart" is probably its crash screen: ask the user for that text). Defensive changes only: `startForegroundOrNotify` catches a refused `startForeground` (no more crash), notification bitmaps are smaller (bar 640x68, cover 240) and the bar is re-posted every 4 s instead of 2 s.
+- (4) The cobra RemoteViews card could not be proven to be the cause either. Added self-heal: `MusicService.restoreNotificationIfMissing()` (checked every ~5 s by `notificationTicker`) re-posts the notification when it is not in `activeNotifications` while playing. If SystemUI fails to inflate the card the notification is still "active", so this will not catch that case; then try the Settings > Advanced "System player notification" switch (MediaStyle).
+- (2) `fragment_listening_stats.xml`: the 4 cards + 4 tiles are now 2 rows x 4 square-ish tiles (same ids, `tint()` in the fragment still works: card > LinearLayout > value TextView). Top songs/artists/albums preview shows 3 rows (`PREVIEW_ROWS`), "See all" unchanged.
+- (3) History sheet rows show the cover: `SongIndex` (in `ListeningStatsViewModel.kt`, built from `Repository.allSongs()` off the main thread) maps a row to a library song by id+title, else title+artist+duration; rows whose song is gone show the default cover. ViewModel now takes `Repository` as 3rd argument (MainModule updated).
+
+## Session 24 (2026-11-27): lag investigation (static reading only, nothing measured on a device)
+User reports lag, uses the FAST apk, answered "all" (cold start, artist/album pages, transitions).
+- Found: every `repository.allSongs()` = a full MediaStore query + `Collator.compare` sort in `RealSongRepository.sortedSongs`. At startup the library is read ~6 times (`LibraryViewModel.loadLibraryContent`, `homeSections` -> top/recent artists+albums, `suggestions` -> `NotPlayedPlaylist`). FIXED the sort cost only: `sortedCollated()` computes one `CollationKey` per song (same order, much cheaper). NOT fixed: the repeated reads. Next step if still slow: one shared song snapshot with invalidation (MediaStore observer / `forceReload`), ask the user first (stale lists risk after tag edit/delete).
+- Artist/album pages load only their own songs (filtered cursor), postponed enter transition waits for that; looked fine. Vocal separation now runs at background thread priority (`VocalSeparator.ensure`).
+- Still unknown: WHERE the lag is. If it persists ask for a screen recording or "Profile GPU rendering"/logcat while it happens.
+
+## Session 25 (2026-11-27): season themes behind the player (WRITTEN, CI result below, NOT tested on a phone)
+User sent a video of a macOS desktop with an animated winter-cabin scene behind a glass UI (art by @KOIART_EN, so NOT bundled: the repo is public). Asked: "a theme like this, one per season". Answers: player screen only, season automatic by month, user supplies the files.
+- Design: files are picked ON THE PHONE (Settings > Now playing > "Season themes": switch, "Preview a season" list, one file per season; video/* or image/* incl. GIF/WebP). Nothing is shipped in the APK or the repo.
+- `util/SeasonTheme.kt` (Season enum, month -> season, northern hemisphere; `currentUri()`), prefs in `PreferenceUtil` (`seasonThemeEnabled`, `seasonThemeForce`, `seasonThemeUri`/`setSeasonThemeUri`).
+- `views/SeasonBackgroundView.kt`: looping muted video via `MediaPlayer` + `TextureView` (NOT `VideoView`: it takes audio focus and would pause the music), centre-crop matrix, or Glide for animated images; 25% black scrim; hides itself if the file cannot be played.
+- `AbsPlayerFragment.refreshSeasonBackground()` (called in `onResume`) inserts the view at index 0 of the player root (ConstraintLayout gets constraints, others MATCH_PARENT); plays only while the bottom sheet is open (BottomSheetCallback), pauses in `onPause`, released in `onDestroyView`.
+- Limits to check on the device: styles whose layouts draw an opaque full-size background (blur/colour/gradient styles) will cover the layer, so it only shows where those styles are transparent; if it matters, make that style's root background transparent. The video is decoded with the audio track (muted), no audio focus is requested.
+
+## Session 26 (2026-11-27): built-in season scenes (the user has no files)
+The user has no videos to pick, so the app now draws its own scenes: `views/SeasonScene.kt` (winter cabin + snow + moon, autumn sunset + leaves, spring blossoms + clouds, summer sea + sun + birds; original art, all Canvas code, no allocations per frame) hosted by `views/SeasonSceneView.kt` (~30 fps while the player is open, nothing scheduled otherwise).
+- `SeasonBackgroundView.setScene(season)`; `SeasonTheme.currentKey()` = "file:<uri>" (a picked file wins) or "builtin:<season>"; `AbsPlayerFragment.refreshSeasonBackground()` compares keys.
+- The season switch is now ON by default (`seasonThemeEnabled` default true, XML default true). Settings > Now playing > Season themes: switch, "Preview a season", and one entry per season to pick your own video/image or go back to the built-in scene.
+- A Pillow mock (not shipped) was used to check the composition; the real animation was NOT seen on a phone. Tune sizes in `SeasonScene.kt` if something looks off (cabin size `s` in `winter()`, particle counts in `resize()`).

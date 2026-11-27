@@ -34,6 +34,7 @@ class App : Application() {
         super.onCreate()
         instance = this
         code.name.monkey.retromusic.vocal.VocalSeparator.init(this)
+        code.name.monkey.retromusic.util.IncognitoMode.refreshNotification(this)
 
         startKoin {
             androidContext(this@App)

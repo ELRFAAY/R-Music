@@ -152,21 +152,30 @@ object VocalSeparator {
                 if (!isActive) return@launch
                 _status.value = Status.Processing(song.id, 0)
                 stage = "decode"
-                val pcm = AudioDecoder.decode(
-                    c, MusicUtil.getSongFileUri(song.id), song.duration
-                ) { !isActive }
-                stage = "model"
+                // Decoding + the model are heavy: run them at background priority (native threads created
+                // from this thread inherit it) so the UI thread keeps its CPU time while a song is processed.
                 val out = stemFile(c, song)
                 val tmp = File(out.parentFile, out.name + ".part")
-                MdxSeparator(model).use { sep ->
-                    stage = "separate"
-                    val t0 = System.currentTimeMillis()
-                    sep.separate(pcm, tmp, { !isActive }) { p ->
-                        val eta = if (p >= 3) {
-                            ((System.currentTimeMillis() - t0) / 1000.0 / p * (100 - p)).toInt()
-                        } else -1
-                        _status.value = Status.Processing(song.id, p, eta)
+                val tid = android.os.Process.myTid()
+                val oldPriority = android.os.Process.getThreadPriority(tid)
+                android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND)
+                try {
+                    val pcm = AudioDecoder.decode(
+                        c, MusicUtil.getSongFileUri(song.id), song.duration
+                    ) { !isActive }
+                    stage = "model"
+                    MdxSeparator(model).use { sep ->
+                        stage = "separate"
+                        val t0 = System.currentTimeMillis()
+                        sep.separate(pcm, tmp, { !isActive }) { p ->
+                            val eta = if (p >= 3) {
+                                ((System.currentTimeMillis() - t0) / 1000.0 / p * (100 - p)).toInt()
+                            } else -1
+                            _status.value = Status.Processing(song.id, p, eta)
+                        }
                     }
+                } finally {
+                    android.os.Process.setThreadPriority(tid, oldPriority)
                 }
                 if (!isActive) {
                     tmp.delete()

@@ -27,7 +27,7 @@ import kotlin.math.roundToInt
 /**
  * Wraps the player's cover area and adds two gestures on top of whatever the children do:
  *  - drag up/down anywhere on it to change the music volume ([onVolumeChanged] shows the bar)
- *  - double tap on the right / left half to skip forward / back ([onDoubleTap])
+ *  - double tap on the left / right half to skip forward / back ([onDoubleTap])
  *
  * Plain taps are held back for the double-tap timeout and then replayed to the children, so the
  * cover's own click (opening the lyrics) still works, just a moment later. Horizontal swipes are
@@ -48,7 +48,7 @@ class CoverGestureLayout @JvmOverloads constructor(
     /** Called when the volume drag ends. */
     var onVolumeGestureEnd: (() -> Unit)? = null
 
-    /** Called on a double tap; [forward] is true for the right half. */
+    /** Called on a double tap; [forward] is true for the left half (left = +10 s). */
     var onDoubleTap: ((forward: Boolean) -> Unit)? = null
 
     /**
@@ -127,7 +127,7 @@ class CoverGestureLayout @JvmOverloads constructor(
                 val dx = ev.x - downX
                 val dy = ev.y - downY
                 if (mode == Mode.NONE) {
-                    if (abs(dy) > slop && abs(dy) > abs(dx) * 1.5f) {
+                    if (abs(dy) > slop * 2 && abs(dy) > abs(dx) * 1.5f) {
                         mode = Mode.VOLUME
                         cancelChildren(ev)
                     } else if (abs(dx) > slop) {
@@ -175,7 +175,7 @@ class CoverGestureLayout @JvmOverloads constructor(
 
     private fun isShortTap(ev: MotionEvent): Boolean =
         ev.eventTime - downTime < longPressTimeout &&
-                abs(ev.x - downX) <= slop && abs(ev.y - downY) <= slop
+                abs(ev.x - downX) <= slop * 2 && abs(ev.y - downY) <= slop * 2
 
     /** First tap: hold it back. Second tap in time: double tap. */
     private fun handleTapUp(ev: MotionEvent): Boolean {

@@ -112,6 +112,7 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
             }
         }
         setupSongSortButton()
+        setupSongViewButton()
         setupAlbumSortButton()
         binding.appBarLayout?.statusBarForeground =
             MaterialShapeDrawable.createWithElevationOverlay(requireContext())
@@ -124,19 +125,82 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
             layoutManager = GridLayoutManager(this.context, 1, GridLayoutManager.HORIZONTAL, false)
             adapter = albumAdapter
         }
-        // Colored cards (the same look as the colored-card songs list): every card has the song's
-        // own cover and colors, and the album as subtitle (the artist is the same on every card).
+        // item_list shows the cover of every song; item_song only shows the track number, which
+        // makes no sense across several albums.
+        applySongView()
+    }
+
+    private fun songItemLayout(): Int = when (PreferenceUtil.artistDetailSongStyle) {
+        1 -> R.layout.item_grid
+        2 -> R.layout.item_card
+        3 -> R.layout.item_card_color
+        4 -> R.layout.item_grid_circle
+        else -> R.layout.item_list
+    }
+
+    /** Builds the songs list with the style / columns the user picked for artist pages. */
+    private fun applySongView() {
+        val isList = PreferenceUtil.artistDetailSongStyle == 0
         songAdapter = SimpleSongAdapter(
-            requireActivity(), ArrayList(), R.layout.item_card_color, showAlbumAsSubtitle = true
+            requireActivity(), ArrayList(), songItemLayout(), showAlbumAsSubtitle = true
         )
         binding.fragmentArtistContent.recyclerView.apply {
             itemAnimator = DefaultItemAnimator()
-            layoutManager = GridLayoutManager(this.context, 2)
+            layoutManager = if (isList) LinearLayoutManager(this.context)
+            else GridLayoutManager(this.context, PreferenceUtil.artistDetailSongColumns)
             adapter = songAdapter
+        }
+        if (::artist.isInitialized) {
+            allSongsShown = false
+            songsStaged = true
+            showArtist(artist)
         }
     }
 
-    private var shownSongCount = FIRST_SONGS
+    private fun setupSongViewButton() {
+        binding.fragmentArtistContent.songViewMode.setOnClickListener {
+            PopupMenu(requireContext(), binding.fragmentArtistContent.songViewMode).apply {
+                inflate(R.menu.menu_artist_songs_view)
+                val style = PreferenceUtil.artistDetailSongStyle
+                val cols = PreferenceUtil.artistDetailSongColumns
+                menu.findItem(
+                    when (style) {
+                        1 -> when (cols) {
+                            3 -> R.id.view_grid_3
+                            4 -> R.id.view_grid_4
+                            else -> R.id.view_grid_2
+                        }
+                        2 -> R.id.view_card
+                        3 -> R.id.view_card_color
+                        4 -> R.id.view_circular
+                        else -> R.id.view_list
+                    }
+                ).isChecked = true
+                setOnMenuItemClickListener { item ->
+                    when (item.itemId) {
+                        R.id.view_list -> PreferenceUtil.artistDetailSongStyle = 0
+                        R.id.view_grid_2, R.id.view_grid_3, R.id.view_grid_4 -> {
+                            PreferenceUtil.artistDetailSongStyle = 1
+                            PreferenceUtil.artistDetailSongColumns = when (item.itemId) {
+                                R.id.view_grid_3 -> 3
+                                R.id.view_grid_4 -> 4
+                                else -> 2
+                            }
+                        }
+                        R.id.view_card -> PreferenceUtil.artistDetailSongStyle = 2
+                        R.id.view_card_color -> PreferenceUtil.artistDetailSongStyle = 3
+                        R.id.view_circular -> PreferenceUtil.artistDetailSongStyle = 4
+                    }
+                    applySongView()
+                    true
+                }
+                show()
+            }
+        }
+    }
+
+    private var allSongsShown = false
+    private var songsStaged = false
 
     private fun showArtist(artist: Artist) {
         if (artist.songCount == 0) {
@@ -162,26 +226,32 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
         )
         binding.fragmentArtistContent.songTitle.text = songText
         binding.fragmentArtistContent.albumTitle.text = albumText
-        // Hundreds of cards with covers inside a scrolling page froze the screen: show the first
-        // ones and let the user add the next batch.
-        bindSongs(artist.sortedSongs)
         updateFavoriteIcon(
             binding.toolbar.menu.findItem(R.id.action_toggle_favorite_artist), artist.name, false
         )
-        albumAdapter.swapDataSet(artist.albums)
-    }
-
-    /** Shows the first [shownSongCount] songs; a button adds the next batch (cards are heavy). */
-    private fun bindSongs(allSongs: List<Song>) {
-        val showMore = binding.fragmentArtistContent.showAllSongs
-        songAdapter.swapDataSet(allSongs.take(shownSongCount))
-        val remaining = allSongs.size - shownSongCount
-        if (remaining > 0) {
-            showMore.text = getString(R.string.show_more_songs, minOf(remaining, FIRST_SONGS))
-            showMore.isVisible = true
-            showMore.setOnClickListener {
-                shownSongCount += FIRST_SONGS
-                bindSongs(allSongs)
+        // Hundreds of rows with covers inside a scrolling page froze the screen: show the first
+        // ones and let the user expand the rest.
+        val allSongs = artist.sortedSongs
+        val showAll = binding.fragmentArtistContent.showAllSongs
+        if (!songsStaged && allSongs.size > STAGE_SONGS) {
+            // Opening the page used to freeze: binding 30+ covers in the same frame as the
+            // transition. Show a few now, the rest right after the transition.
+            songsStaged = true
+            songAdapter.swapDataSet(allSongs.take(STAGE_SONGS))
+            binding.root.postDelayed({
+                if (_binding != null && ::artist.isInitialized) showArtist(artist)
+            }, 400)
+            albumAdapter.swapDataSet(artist.albums)
+            return
+        }
+        if (!allSongsShown && allSongs.size > FIRST_SONGS) {
+            songAdapter.swapDataSet(allSongs.take(FIRST_SONGS))
+            showAll.text = getString(R.string.show_all_songs, allSongs.size)
+            showAll.isVisible = true
+            showAll.setOnClickListener {
+                allSongsShown = true
+                showAll.isVisible = false
+                songAdapter.swapDataSet(allSongs)
             }
         } else {
             showMore.isVisible = false
@@ -308,6 +378,92 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
         forceDownload = true
     }
 
+    /**
+     * Suggests pictures for the artist from the internet (searched for the artist name at once; the
+     * name can be changed and searched again). A tap on a picture makes it the artist picture.
+     */
+    private fun showOnlineImages(initialQuery: String) {
+        val ctx = requireContext()
+        val d = resources.displayMetrics.density
+        val pad = (16 * d).toInt()
+        val sheet = com.google.android.material.bottomsheet.BottomSheetDialog(ctx)
+        val query = android.widget.EditText(ctx).apply {
+            setText(initialQuery)
+            setSingleLine()
+            imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH
+        }
+        val go = com.google.android.material.button.MaterialButton(ctx).apply {
+            setText(R.string.action_search)
+        }
+        val row = android.widget.LinearLayout(ctx).apply {
+            orientation = android.widget.LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            addView(query, android.widget.LinearLayout.LayoutParams(0, -2, 1f))
+            addView(go)
+        }
+        val status = android.widget.TextView(ctx).apply {
+            setPadding(0, pad / 2, 0, pad / 2)
+            alpha = 0.7f
+        }
+        val grid = android.widget.GridLayout(ctx).apply { columnCount = 3 }
+        val column = android.widget.LinearLayout(ctx).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(pad, pad, pad, pad)
+            addView(row)
+            addView(status)
+            addView(grid)
+        }
+        sheet.setContentView(androidx.core.widget.NestedScrollView(ctx).apply { addView(column) })
+
+        fun search() {
+            grid.removeAllViews()
+            status.setText(R.string.edit_artist_searching)
+            val queryText = query.text.toString()
+            viewLifecycleOwner.lifecycleScope.launch {
+                val found = code.name.monkey.retromusic.network.ArtistImageSearch.search(ctx, queryText)
+                if (!sheet.isShowing) return@launch
+                status.setText(
+                    if (found.isEmpty()) R.string.edit_artist_no_results else R.string.edit_artist_pick_one
+                )
+                val size = ((resources.displayMetrics.widthPixels - pad * 2) / 3) - (8 * d).toInt()
+                found.forEach { c ->
+                    val cell = android.widget.LinearLayout(ctx).apply {
+                        orientation = android.widget.LinearLayout.VERTICAL
+                        setPadding((4 * d).toInt(), (4 * d).toInt(), (4 * d).toInt(), (4 * d).toInt())
+                    }
+                    val img = android.widget.ImageView(ctx).apply {
+                        scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                        layoutParams = android.widget.LinearLayout.LayoutParams(size, size)
+                    }
+                    com.bumptech.glide.Glide.with(ctx).load(c.url).centerCrop().into(img)
+                    val cap = android.widget.TextView(ctx).apply {
+                        text = c.title + " · " + c.source
+                        textSize = 11f
+                        maxLines = 1
+                        ellipsize = android.text.TextUtils.TruncateAt.END
+                        layoutParams = android.widget.LinearLayout.LayoutParams(size, -2)
+                    }
+                    cell.addView(img)
+                    cell.addView(cap)
+                    cell.setOnClickListener {
+                        sheet.dismiss()
+                        showToast(resources.getString(R.string.updating))
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            CustomArtistImageUtil.getInstance(ctx)
+                                .setCustomArtistImage(artist, android.net.Uri.parse(c.url))
+                            detailsViewModel.refreshArtistInfo()
+                        }
+                    }
+                    grid.addView(cell)
+                }
+            }
+        }
+        go.setOnClickListener { search() }
+        query.setOnEditorActionListener { _, _, _ -> search(); true }
+        sheet.show()
+        search()
+    }
+
     private fun showEditArtistDialog() {
         val ctx = requireContext()
         val pad = (20 * resources.displayMetrics.density).toInt()
@@ -328,6 +484,12 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
             setText(R.string.edit_artist_change_image)
             setOnClickListener { pickArtistImage() }
         }
+        val online = com.google.android.material.button.MaterialButton(
+            ctx, null, com.google.android.material.R.attr.materialButtonOutlinedStyle
+        ).apply {
+            setText(R.string.edit_artist_search_online)
+            setOnClickListener { showOnlineImages(artist.name) }
+        }
         val remove = com.google.android.material.button.MaterialButton(
             ctx, null, com.google.android.material.R.attr.materialButtonOutlinedStyle
         ).apply {
@@ -340,6 +502,7 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
             addView(input)
             addView(note)
             addView(change)
+            addView(online)
             addView(remove)
         }
         materialDialog(R.string.edit_artist_title)
@@ -555,3 +718,4 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
     }
 }
 private const val FIRST_SONGS = 30
+private const val STAGE_SONGS = 9

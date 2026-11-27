@@ -34,6 +34,7 @@ import code.name.monkey.retromusic.model.Song
 import code.name.monkey.retromusic.providers.BlacklistStore
 import code.name.monkey.retromusic.util.PreferenceUtil
 import code.name.monkey.retromusic.util.getExternalStoragePublicDirectory
+import java.text.CollationKey
 import java.text.Collator
 
 /**
@@ -73,28 +74,30 @@ class RealSongRepository(private val context: Context) : SongRepository {
         return songs
     }
 
+    /**
+     * Sorts with a collation key computed ONCE per song. `Collator.compare` inside the sort is slow
+     * (it re-reads both strings on every comparison, n log n times), and this runs on every library load.
+     */
+    private fun List<Song>.sortedCollated(
+        collator: Collator,
+        descending: Boolean = false,
+        selector: (Song) -> String
+    ): List<Song> {
+        val keyed = map { it to collator.getCollationKey(selector(it)) }
+        val cmp = Comparator<Pair<Song, CollationKey>> { a, b -> a.second.compareTo(b.second) }
+        return keyed.sortedWith(if (descending) cmp.reversed() else cmp).map { it.first }
+    }
+
     override fun sortedSongs(cursor: Cursor?): List<Song> {
         val collator = Collator.getInstance()
         val songs = songs(cursor)
         return when (PreferenceUtil.songSortOrder) {
-            SortOrder.SongSortOrder.SONG_A_Z -> {
-                songs.sortedWith{ s1, s2 -> collator.compare(s1.title, s2.title) }
-            }
-            SortOrder.SongSortOrder.SONG_Z_A -> {
-                songs.sortedWith{ s1, s2 -> collator.compare(s2.title, s1.title) }
-            }
-            SortOrder.SongSortOrder.SONG_ALBUM -> {
-                songs.sortedWith{ s1, s2 -> collator.compare(s1.albumName, s2.albumName) }
-            }
-            SortOrder.SongSortOrder.SONG_ALBUM_ARTIST -> {
-                songs.sortedWith{ s1, s2 -> collator.compare(s1.albumArtist, s2.albumArtist) }
-            }
-            SortOrder.SongSortOrder.SONG_ARTIST -> {
-                songs.sortedWith{ s1, s2 -> collator.compare(s1.artistName, s2.artistName) }
-            }
-            SortOrder.SongSortOrder.COMPOSER -> {
-                songs.sortedWith{ s1, s2 -> collator.compare(s1.composer, s2.composer) }
-            }
+            SortOrder.SongSortOrder.SONG_A_Z -> songs.sortedCollated(collator) { it.title }
+            SortOrder.SongSortOrder.SONG_Z_A -> songs.sortedCollated(collator, descending = true) { it.title }
+            SortOrder.SongSortOrder.SONG_ALBUM -> songs.sortedCollated(collator) { it.albumName }
+            SortOrder.SongSortOrder.SONG_ALBUM_ARTIST -> songs.sortedCollated(collator) { it.albumArtist ?: "" }
+            SortOrder.SongSortOrder.SONG_ARTIST -> songs.sortedCollated(collator) { it.artistName }
+            SortOrder.SongSortOrder.COMPOSER -> songs.sortedCollated(collator) { it.composer ?: "" }
             else -> songs
         }
     }

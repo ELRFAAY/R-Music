@@ -96,9 +96,24 @@
         android:textColor="?android:attr/textColorPrimary"
         android:textStyle="bold"
         app:layout_constrainedWidth="true"
-        app:layout_constraintEnd_toStartOf="@id/song_sort_order"
+        app:layout_constraintEnd_toStartOf="@id/song_view_mode"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/albumRecyclerView" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/song_view_mode"
+        style="@style/Widget.Material3.Button.IconButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="0dp"
+        android:background="?roundSelector"
+        app:icon="@drawable/ic_dashboard"
+        app:iconSize="24dp"
+        app:iconTint="?colorControlNormal"
+        app:layout_constraintBottom_toBottomOf="@+id/songTitle"
+        app:layout_constraintEnd_toStartOf="@id/song_sort_order"
+        app:layout_constraintStart_toEndOf="@id/songTitle"
+        app:layout_constraintTop_toTopOf="@id/songTitle" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/song_sort_order"
@@ -112,7 +127,7 @@
         app:iconTint="?colorControlNormal"
         app:layout_constraintBottom_toBottomOf="@+id/songTitle"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/songTitle"
+        app:layout_constraintStart_toEndOf="@id/song_view_mode"
         app:layout_constraintTop_toTopOf="@id/songTitle" />
 
     <androidx.recyclerview.widget.RecyclerView

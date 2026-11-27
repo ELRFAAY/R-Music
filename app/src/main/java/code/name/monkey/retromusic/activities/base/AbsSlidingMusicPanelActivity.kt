@@ -373,6 +373,7 @@ abstract class AbsSlidingMusicPanelActivity : AbsMusicServiceActivity(),
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String?) {
         when (key) {
+            code.name.monkey.retromusic.INCOGNITO_MODE -> invalidateMenu()
             SWIPE_DOWN_DISMISS -> {
                 updateSheetHideable()
             }

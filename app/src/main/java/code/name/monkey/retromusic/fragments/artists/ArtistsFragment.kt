@@ -189,6 +189,170 @@ class ArtistsFragment : AbsRecyclerViewCustomGridSizeFragment<ArtistAdapter, Gri
         dialog.show()
     }
 
+    /** Look of the favorites sheet only: style, columns and sort, independent of the main list. */
+    private fun showFavoritesOptions(onChange: () -> Unit) {
+        val ctx = requireContext()
+        val d = resources.displayMetrics.density
+        val dialog = com.google.android.material.bottomsheet.BottomSheetDialog(ctx)
+        val column = android.widget.LinearLayout(ctx).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            val pad = (16 * d).toInt()
+            setPadding(pad, pad, pad, pad)
+        }
+        fun section(title: Int, options: List<Pair<String, Boolean>>, onPick: (Int) -> Unit) {
+            column.addView(android.widget.TextView(ctx).apply {
+                setText(title)
+                textSize = 16f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                setPadding(0, (8 * d).toInt(), 0, (4 * d).toInt())
+            })
+            val group = android.widget.RadioGroup(ctx)
+            options.forEachIndexed { i, (label, checked) ->
+                group.addView(android.widget.RadioButton(ctx).apply {
+                    id = View.generateViewId()
+                    text = label
+                    isChecked = checked
+                    tag = i
+                })
+            }
+            group.setOnCheckedChangeListener { g, checkedId ->
+                val i = g.findViewById<View>(checkedId)?.tag as? Int ?: return@setOnCheckedChangeListener
+                onPick(i)
+                onChange()
+            }
+            column.addView(group)
+        }
+        val styles = listOf(
+            R.string.normal to R.layout.item_grid,
+            R.string.card to R.layout.item_card,
+            R.string.card_color_style to R.layout.item_card_color,
+            R.string.circular to R.layout.item_grid_circle,
+            R.string.image to R.layout.image,
+            R.string.image_gradient to R.layout.item_image_gradient
+        )
+        val curStyle = PreferenceUtil.favSheetStyle.takeIf { it != 0 } ?: itemLayoutRes()
+        section(R.string.grid_style_label, styles.map { getString(it.first) to (curStyle == it.second) }) {
+            PreferenceUtil.favSheetStyle = styles[it].second
+        }
+        val cols = listOf(1, 2, 3, 4, 5)
+        val curCols = PreferenceUtil.favSheetColumns.takeIf { it != 0 } ?: getGridSize()
+        section(R.string.action_grid_size, cols.map { it.toString() to (curCols == it) }) {
+            PreferenceUtil.favSheetColumns = cols[it]
+        }
+        section(
+            R.string.sort_order,
+            listOf(
+                getString(R.string.sort_order_a_z) to !PreferenceUtil.favSheetSortDesc,
+                getString(R.string.sort_order_z_a) to PreferenceUtil.favSheetSortDesc
+            )
+        ) { PreferenceUtil.favSheetSortDesc = it == 1 }
+        val scroll = android.widget.ScrollView(ctx)
+        scroll.addView(column)
+        dialog.setContentView(scroll)
+        dialog.show()
+    }
+
+    /** All favorite artists in one sheet; opening one works like opening it from the list. */
+    private fun showFavoriteArtists() {
+        val ctx = requireContext()
+        val d = resources.displayMetrics.density
+        val favorites = PreferenceUtil.favoriteArtists
+        val artists = (libraryViewModel.getArtists().value ?: emptyList()).filter { it.name in favorites }
+        val dialog = com.google.android.material.bottomsheet.BottomSheetDialog(ctx)
+        val column = android.widget.LinearLayout(ctx).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            val pad = (16 * d).toInt()
+            setPadding(pad, pad, pad, pad)
+        }
+        val header = android.widget.LinearLayout(ctx).apply {
+            orientation = android.widget.LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+        }
+        header.addView(android.widget.TextView(ctx).apply {
+            setText(R.string.favorite_artists)
+            textSize = 18f
+        }, android.widget.LinearLayout.LayoutParams(0, android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        var optionsButton: android.widget.ImageButton? = null
+        column.addView(header)
+        if (artists.isEmpty()) {
+            column.addView(android.widget.TextView(ctx).apply { setText(R.string.no_favorite_artists) })
+        } else {
+            val artistClick = object : IArtistClickListener {
+                override fun onArtist(artistId: Long, view: View) {
+                    dialog.dismiss()
+                    findNavController().navigate(
+                        R.id.artistDetailsFragment, bundleOf(EXTRA_ARTIST_ID to artistId)
+                    )
+                }
+            }
+            val albumArtistClick = object : IAlbumArtistClickListener {
+                override fun onAlbumArtist(artistName: String, view: View) {
+                    dialog.dismiss()
+                    findNavController().navigate(
+                        R.id.albumArtistDetailsFragment, bundleOf(EXTRA_ARTIST_NAME to artistName)
+                    )
+                }
+            }
+            val list = androidx.recyclerview.widget.RecyclerView(ctx).apply {
+                layoutParams = android.view.ViewGroup.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    if (artists.size > 6) (0.7f * resources.displayMetrics.heightPixels).toInt()
+                    else android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+            }
+            column.addView(android.widget.TextView(ctx).apply {
+                setText(R.string.favorite_artists_hint)
+                textSize = 13f
+                alpha = 0.7f
+                setPadding(0, 0, 0, (8 * d).toInt())
+            })
+            fun render() {
+                val sorted = if (PreferenceUtil.favSheetSortDesc) artists.sortedByDescending { it.name.lowercase() }
+                else artists.sortedBy { it.name.lowercase() }
+                val style = PreferenceUtil.favSheetStyle.takeIf { it != 0 } ?: itemLayoutRes()
+                val columns = PreferenceUtil.favSheetColumns.takeIf { it != 0 } ?: getGridSize()
+                list.layoutManager = GridLayoutManager(ctx, columns)
+                list.adapter = ArtistAdapter(
+                    requireActivity(), sorted, style, artistClick, albumArtistClick,
+                    favoritesSheet = true
+                ).also { it.swapDataSet(sorted) }
+            }
+            render()
+            optionsButton = android.widget.ImageButton(ctx).apply {
+                setImageResource(R.drawable.ic_filter_song)
+                setBackgroundColor(0)
+                contentDescription = getString(R.string.artists_view_options)
+                setOnClickListener { showFavoritesOptions { render() } }
+            }
+            fun iconButton(icon: Int, desc: Int, onClick: () -> Unit) =
+                android.widget.ImageButton(ctx).apply {
+                    setImageResource(icon)
+                    setBackgroundColor(0)
+                    contentDescription = getString(desc)
+                    setOnClickListener { onClick() }
+                }
+            // shuffle play: all the songs of one random favorite artist
+            header.addView(iconButton(R.drawable.ic_shuffle, R.string.favorite_random_artist) {
+                dialog.dismiss()
+                findNavController().navigate(
+                    R.id.artistDetailsFragment, bundleOf(EXTRA_ARTIST_ID to artists.random().id)
+                )
+            })
+            // one random song from every favorite artist, in random order
+            header.addView(iconButton(R.drawable.ic_queue_music, R.string.favorite_random_songs) {
+                val picks = artists.mapNotNull { it.songs.randomOrNull() }.shuffled()
+                if (picks.isNotEmpty()) {
+                    MusicPlayerRemote.openQueue(picks, 0, true)
+                    dialog.dismiss()
+                }
+            })
+            header.addView(optionsButton)
+            column.addView(list)
+        }
+        dialog.setContentView(column)
+        dialog.show()
+    }
+
     override fun createAdapter(): ArtistAdapter {
         val dataSet = if (adapter == null) ArrayList() else adapter!!.dataSet
         return ArtistAdapter(

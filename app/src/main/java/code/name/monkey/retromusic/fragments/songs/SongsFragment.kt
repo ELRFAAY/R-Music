@@ -39,10 +39,10 @@ class SongsFragment : AbsRecyclerViewCustomGridSizeFragment<SongAdapter, GridLay
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         libraryViewModel.getSongs().observe(viewLifecycleOwner) {
-            if (it.isNotEmpty())
-                adapter?.swapDataSet(it)
-            else
-                adapter?.swapDataSet(listOf())
+            // Songs the user hid from this tab stay everywhere else (folders, playlists, albums).
+            val hidden = PreferenceUtil.hiddenSongIds
+            val shown = if (hidden.isEmpty()) it else it.filter { song -> song.id !in hidden }
+            adapter?.swapDataSet(shown)
         }
     }
 
@@ -150,6 +150,7 @@ class SongsFragment : AbsRecyclerViewCustomGridSizeFragment<SongAdapter, GridLay
         setUpSortOrderMenu(menu.findItem(R.id.action_sort_order).subMenu!!)
         // Folder button next to the cast button: browse and play straight from the folders
         menu.findItem(R.id.action_open_folders)?.isVisible = true
+        menu.findItem(R.id.action_hidden_songs)?.isVisible = PreferenceUtil.hiddenSongIds.isNotEmpty()
         //Setting up cast button
         requireContext().setUpMediaRouteButton(menu)
     }
@@ -284,6 +285,10 @@ class SongsFragment : AbsRecyclerViewCustomGridSizeFragment<SongAdapter, GridLay
             )
             return true
         }
+        if (item.itemId == R.id.action_hidden_songs) {
+            showHiddenSongsDialog()
+            return true
+        }
         if (handleGridSizeMenuItem(item)) {
             return true
         }
@@ -294,6 +299,31 @@ class SongsFragment : AbsRecyclerViewCustomGridSizeFragment<SongAdapter, GridLay
             return true
         }
         return super.onMenuItemSelected(item)
+    }
+
+    /** Lists the hidden songs; unticking one puts it back on the Songs tab. */
+    private fun showHiddenSongsDialog() {
+        val hiddenIds = PreferenceUtil.hiddenSongIds
+        val songs = (libraryViewModel.getSongs().value ?: emptyList()).filter { it.id in hiddenIds }
+        if (songs.isEmpty()) {
+            PreferenceUtil.hiddenSongIds = emptySet()
+            requireActivity().invalidateOptionsMenu()
+            return
+        }
+        val checked = BooleanArray(songs.size) { true }
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.hidden_songs)
+            .setMultiChoiceItems(
+                songs.map { "${it.title} - ${it.artistName}" }.toTypedArray(), checked
+            ) { _, which, isChecked -> checked[which] = isChecked }
+            .setPositiveButton(R.string.hidden_songs_apply) { _, _ ->
+                val restored = songs.filterIndexed { i, _ -> !checked[i] }.map { it.id }.toSet()
+                PreferenceUtil.hiddenSongIds = hiddenIds - restored
+                libraryViewModel.forceReload(ReloadType.Songs)
+                requireActivity().invalidateOptionsMenu()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     private fun handleSortOrderMenuItem(item: MenuItem): Boolean {

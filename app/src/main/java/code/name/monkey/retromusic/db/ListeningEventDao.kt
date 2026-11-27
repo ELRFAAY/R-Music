@@ -17,6 +17,9 @@ interface ListeningEventDao {
     @Query("SELECT * FROM ListeningEventEntity ORDER BY played_at DESC")
     suspend fun allEvents(): List<ListeningEventEntity>
 
+    @Query("SELECT * FROM ListeningEventEntity")
+    fun allEventsLive(): LiveData<List<ListeningEventEntity>>
+
     @Query("SELECT * FROM ListeningEventEntity ORDER BY played_at DESC LIMIT :limit")
     fun recentEvents(limit: Int): LiveData<List<ListeningEventEntity>>
 
@@ -67,6 +70,20 @@ interface ListeningEventDao {
     @Query("SELECT song_id FROM ListeningEventEntity WHERE played_at >= :since")
     suspend fun songIdsSince(since: Long): List<Long>
 
+    /** Listening time per song id since [since], for the per-playlist hours. */
+    @Query(
+        "SELECT song_id AS songId, COALESCE(SUM(listened_ms), 0) AS ms FROM ListeningEventEntity " +
+                "WHERE played_at >= :since GROUP BY song_id"
+    )
+    suspend fun songMsSince(since: Long): List<SongMs>
+
+    /** How many times [songId] was played since [since] (used to bring back a removed wall cover). */
+    @Query("SELECT COUNT(*) FROM ListeningEventEntity WHERE song_id = :songId AND played_at >= :since")
+    suspend fun playsSince(songId: Long, since: Long): Int
+
     @Query("DELETE FROM ListeningEventEntity")
     suspend fun clear()
 }
+
+/** Total listened milliseconds of one song id. */
+data class SongMs(val songId: Long, val ms: Long)

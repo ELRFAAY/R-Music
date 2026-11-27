@@ -1254,7 +1254,26 @@ class MusicService : MediaBrowserServiceCompat(),
             }
             val changed = playingNotification?.updateProgress(songProgressMillis, songDurationMillis) == true
             if (changed) startForegroundOrNotify()
+            // every ~5 s: if the system dropped the playing notification while music plays, post it again
+            if (++notificationTick % 5 == 0) restoreNotificationIfMissing()
             uiThreadHandler?.postDelayed(this, 1000)
+        }
+    }
+
+    private var notificationTick = 0
+
+    /** Self-heal: the notification can vanish (system trimmed it, SystemUI reset) while the song keeps playing. */
+    private fun restoreNotificationIfMissing() {
+        if (isQuitting || !isPlaying || playingNotification == null || currentSong.id == -1L) return
+        val nm = notificationManager ?: return
+        val present = try {
+            nm.activeNotifications.any { it.id == PlayingNotification.NOTIFICATION_ID }
+        } catch (e: Exception) {
+            return
+        }
+        if (!present) {
+            isForeground = false
+            startForegroundOrNotify()
         }
     }
 
@@ -1277,18 +1296,27 @@ class MusicService : MediaBrowserServiceCompat(),
             }
             if (!isForeground && isPlaying) {
                 // Specify that this is a media service, if supported.
-                if (VersionUtils.hasQ()) {
-                    startForeground(
-                        PlayingNotification.NOTIFICATION_ID, playingNotification!!.build(),
-                        ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
-                    )
-                } else {
-                    startForeground(
-                        PlayingNotification.NOTIFICATION_ID,
-                        playingNotification!!.build()
+                // Starting the foreground state can be refused (e.g. Android 12+ while the app is
+                // in the background); that must never crash the app, the notification is posted anyway.
+                try {
+                    if (VersionUtils.hasQ()) {
+                        startForeground(
+                            PlayingNotification.NOTIFICATION_ID, playingNotification!!.build(),
+                            ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+                        )
+                    } else {
+                        startForeground(
+                            PlayingNotification.NOTIFICATION_ID,
+                            playingNotification!!.build()
+                        )
+                    }
+                    isForeground = true
+                } catch (e: Exception) {
+                    android.util.Log.e("MusicService", "startForeground failed", e)
+                    notificationManager?.notify(
+                        PlayingNotification.NOTIFICATION_ID, playingNotification!!.build()
                     )
                 }
-                isForeground = true
             } else {
                 // If we are already in foreground just update the notification
                 notificationManager?.notify(

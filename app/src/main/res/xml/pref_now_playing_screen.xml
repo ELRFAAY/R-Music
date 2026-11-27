@@ -125,4 +125,46 @@
             app:icon="@drawable/ic_blur_on"
             app:showSeekBarValue="true" />
     </code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory>
+    <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory
+        android:layout="@layout/preference_category_title"
+        android:title="@string/pref_season_theme_category">
+
+        <code.name.monkey.appthemehelper.common.prefs.supportv7.ATESwitchPreference
+            android:defaultValue="true"
+            android:key="season_theme_enabled"
+            android:layout="@layout/list_item_view_switch"
+            android:summary="@string/pref_season_theme_enabled_summary"
+            android:title="@string/pref_season_theme_enabled_title" />
+
+        <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEListPreference
+            android:defaultValue="auto"
+            android:entries="@array/pref_season_force_titles"
+            android:entryValues="@array/pref_season_force_values"
+            android:key="season_theme_force"
+            android:layout="@layout/list_item_view"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="@string/pref_season_theme_force_title"
+            app:useSimpleSummaryProvider="true" />
+
+        <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreference
+            android:key="season_theme_winter"
+            android:layout="@layout/list_item_view"
+            android:title="@string/pref_season_winter_title" />
+
+        <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreference
+            android:key="season_theme_spring"
+            android:layout="@layout/list_item_view"
+            android:title="@string/pref_season_spring_title" />
+
+        <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreference
+            android:key="season_theme_summer"
+            android:layout="@layout/list_item_view"
+            android:title="@string/pref_season_summer_title" />
+
+        <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreference
+            android:key="season_theme_autumn"
+            android:layout="@layout/list_item_view"
+            android:title="@string/pref_season_autumn_title" />
+    </code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory>
 </androidx.preference.PreferenceScreen>

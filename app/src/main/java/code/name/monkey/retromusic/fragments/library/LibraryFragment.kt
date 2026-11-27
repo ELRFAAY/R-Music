@@ -95,11 +95,13 @@ class LibraryFragment : AbsMainActivityFragment(R.layout.fragment_library) {
             menu,
             getToolbarBackgroundColor(binding.toolbar)
         )
+        code.name.monkey.retromusic.util.IncognitoMode.applyState(menu, requireContext())
         //Setting up cast button
         requireContext().setUpMediaRouteButton(menu)
     }
 
     override fun onMenuItemSelected(item: MenuItem): Boolean {
+        if (code.name.monkey.retromusic.util.IncognitoMode.handle(item, requireActivity())) return true
         when (item.itemId) {
             R.id.action_settings -> findNavController().navigate(
                 R.id.settings_fragment,

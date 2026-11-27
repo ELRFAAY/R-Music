@@ -122,6 +122,12 @@ abstract class AbsMusicServiceActivity : AbsBaseActivity(), IMusicServiceEventLi
         for (listener in mMusicServiceEventListeners) {
             listener.onPlayingMetaChanged()
         }
+        // Incognito only hides the song from the home display list; everything else is recorded.
+        MusicPlayerRemote.currentSong.id.let { id ->
+            if (id >= 0) PreferenceUtil.incognitoHidden =
+                if (PreferenceUtil.incognito) PreferenceUtil.incognitoHidden + id
+                else PreferenceUtil.incognitoHidden - id
+        }
         lifecycleScope.launch(Dispatchers.IO) {
             if (!PreferenceUtil.pauseHistory) {
                 repository.upsertSongInHistory(MusicPlayerRemote.currentSong)

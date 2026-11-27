@@ -240,8 +240,8 @@ class PlayingNotification(
         if (!cobra) return false
         cobraProgress = progressMillis
         cobraDuration = durationMillis
-        // every 2 seconds: the head only moves a few pixels per second, and each re-post is costly
-        val sec = progressMillis / 2000
+        // every 4 seconds: the head only moves a few pixels per second, and each re-post is costly
+        val sec = progressMillis / 4000
         if (sec == lastBarSecond) return false
         lastBarSecond = sec
         refreshCobraViews()
@@ -313,16 +313,16 @@ class PlayingNotification(
 
     private val headScaled: Bitmap by lazy {
         val head = BitmapFactory.decodeResource(context.resources, R.drawable.notification_cobra_head)
-        val h = 80
+        val h = 56
         Bitmap.createScaledBitmap(head, head.width * h / head.height, h, true)
     }
 
     private fun roundedCover(src: Bitmap): Bitmap {
-        val size = 320
+        val size = 240
         val out = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val c = Canvas(out)
         val p = Paint(Paint.ANTI_ALIAS_FLAG)
-        c.drawRoundRect(RectF(0f, 0f, size.toFloat(), size.toFloat()), 36f, 36f, p)
+        c.drawRoundRect(RectF(0f, 0f, size.toFloat(), size.toFloat()), 27f, 27f, p)
         p.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
         val side = minOf(src.width, src.height)
         val srcRect = android.graphics.Rect(
@@ -334,8 +334,8 @@ class PlayingNotification(
     }
 
     private fun drawBar(): Bitmap {
-        val w = 900
-        val h = 96
+        val w = 640
+        val h = 68
         val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val c = Canvas(bmp)
         val head = headScaled
@@ -348,7 +348,7 @@ class PlayingNotification(
         val cy = h / 2f
         val p = Paint(Paint.ANTI_ALIAS_FLAG)
         p.strokeCap = Paint.Cap.ROUND
-        p.strokeWidth = 11f
+        p.strokeWidth = 8f
         p.color = 0xFF3A4246.toInt()
         c.drawLine(left, cy, right, cy, p)
         p.color = 0xFF22D398.toInt()

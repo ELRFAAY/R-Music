@@ -355,4 +355,12 @@
         <item>fast</item>
         <item>high</item>
     </string-array>
+    <string-array name="pref_app_icon_titles">
+        <item>@string/app_icon_new</item>
+        <item>@string/app_icon_old</item>
+    </string-array>
+    <string-array name="pref_app_icon_values" translatable="false">
+        <item>new</item>
+        <item>old</item>
+    </string-array>
 </resources>

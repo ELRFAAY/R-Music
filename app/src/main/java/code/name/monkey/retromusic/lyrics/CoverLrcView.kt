@@ -154,7 +154,17 @@ class CoverLrcView @JvmOverloads constructor(
                 return super.onFling(e1, e2, velocityX, velocityY)
             }
 
+            /** No timed lyrics: the tap answers at once (waiting for a double tap only made it slow). */
+            override fun onSingleTapUp(e: MotionEvent): Boolean {
+                if (!hasLrc() && hasOnClickListeners()) {
+                    callOnClick()
+                    return true
+                }
+                return super.onSingleTapUp(e)
+            }
+
             override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+                if (!hasLrc() && hasOnClickListeners()) return true // already handled in onSingleTapUp
                 if (hasLrc()
                     && isShowTimeline
                     && mPlayDrawable!!.bounds.contains(e.x.toInt(), e.y.toInt())

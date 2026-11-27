@@ -25,6 +25,8 @@ import androidx.navigation.findNavController
 import code.name.monkey.retromusic.EXTRA_ALBUM_ID
 import code.name.monkey.retromusic.EXTRA_ARTIST_ID
 import code.name.monkey.retromusic.R
+import code.name.monkey.retromusic.util.PreferenceUtil
+import code.name.monkey.retromusic.extensions.showToast
 import code.name.monkey.retromusic.activities.tageditor.AbsTagEditorActivity
 import code.name.monkey.retromusic.activities.tageditor.SongTagEditorActivity
 import code.name.monkey.retromusic.dialogs.AddToPlaylistDialog
@@ -121,6 +123,12 @@ object SongMenuHelper : KoinComponent {
                     R.id.artistDetailsFragment,
                     bundleOf(EXTRA_ARTIST_ID to song.artistId)
                 )
+                return true
+            }
+            R.id.action_hide_from_songs -> {
+                PreferenceUtil.hiddenSongIds = PreferenceUtil.hiddenSongIds + song.id
+                libraryViewModel.forceReload(ReloadType.Songs)
+                activity.showToast(R.string.hidden_from_songs_toast)
                 return true
             }
             R.id.action_add_to_blacklist -> {

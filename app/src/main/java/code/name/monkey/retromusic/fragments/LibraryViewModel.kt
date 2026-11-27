@@ -49,6 +49,7 @@ class LibraryViewModel(
     private val home = MutableLiveData<List<Home>>()
     private val suggestions = MutableLiveData<List<Song>>()
     private val homeCovers = MutableLiveData<List<Song>>()
+    private val homeStacks = MutableLiveData<Map<Long, List<Song>>>(emptyMap())
     private val albums = MutableLiveData<List<Album>>()
     private val songs = MutableLiveData<List<Song>>()
     private val artists = MutableLiveData<List<Artist>>()
@@ -109,6 +110,9 @@ class LibraryViewModel(
 
     fun getHomeCovers(): LiveData<List<Song>> = homeCovers
 
+    /** Stacks on the wall: the song shown on top (its id) -> every song in that stack, top first. */
+    fun getHomeStacks(): LiveData<Map<Long, List<Song>>> = homeStacks
+
     /**
      * Picks the songs whose covers go on the home cover wall: one per album, from the last played
      * songs (source 0) or the most played ones (source 1). A fresh install with no history falls
@@ -123,18 +127,52 @@ class LibraryViewModel(
             }
             // Pinned songs always keep their cover on the wall, before the last / most played ones.
             val pinnedIds = PreferenceUtil.homeCoversPinned
-            val pinned: List<Song> = if (pinnedIds.isEmpty()) {
-                emptyList()
-            } else {
-                val byId = repository.allSongs().associateBy { it.id }
-                pinnedIds.mapNotNull { byId[it] }
+            val byId: Map<Long, Song> =
+                if (pinnedIds.isEmpty()) emptyMap() else repository.allSongs().associateBy { it.id }
+            val pinned: List<Song> = pinnedIds.mapNotNull { byId[it] }
+            // Stacks: several pinned songs piled on one cover; only the top one takes a place on the wall.
+            val pinnedSet = pinned.map { it.id }.toSet()
+            val stackLists = PreferenceUtil.homeCoversStacks
+                .map { g -> g.filter { it in pinnedSet }.distinct() }.filter { it.size >= 2 }
+            val stackOf = HashMap<Long, Int>()
+            stackLists.forEachIndexed { i, g -> g.forEach { stackOf[it] = i } }
+            val stacks = LinkedHashMap<Long, List<Song>>()
+            val emitted = HashSet<Int>()
+            val shown = ArrayList<Song>()
+            for (song in pinned) {
+                val si = stackOf[song.id]
+                if (si == null) shown.add(song)
+                else if (emitted.add(si)) {
+                    val members = stackLists[si].mapNotNull { byId[it] }
+                    stacks[members.first().id] = members
+                    shown.add(members.first())
+                }
             }
             val pinnedAlbums = pinned.map { it.albumId }.toSet()
-            val rest = primary.filter { it.albumId !in pinnedAlbums }.distinctBy { it.albumId }
-            var picked = pinned + rest.take((count - pinned.size).coerceAtLeast(0))
+            val hidden = PreferenceUtil.incognitoHidden
+            // covers the user removed stay away until the song was played more than twice since
+            val removed = PreferenceUtil.homeCoversRemoved
+            val stillRemoved = HashSet<Long>()
+            if (removed.isNotEmpty()) {
+                val dao = org.koin.java.KoinJavaComponent.get<code.name.monkey.retromusic.db.ListeningEventDao>(
+                    code.name.monkey.retromusic.db.ListeningEventDao::class.java
+                )
+                removed.forEach { (id, since) ->
+                    if (dao.playsSince(id, since) <= 2) stillRemoved.add(id)
+                }
+                if (stillRemoved.size != removed.size) {
+                    PreferenceUtil.homeCoversRemoved = removed.filterKeys { it in stillRemoved }
+                }
+            }
+            val rest = primary.filter {
+                it.albumId !in pinnedAlbums && it.id !in hidden && it.id !in stillRemoved
+            }
+                .distinctBy { it.albumId }
+            var picked = shown + rest.take((count - shown.size).coerceAtLeast(0))
             if (picked.isEmpty()) {
                 picked = repository.allSongs().distinctBy { it.albumId }.shuffled().take(count)
             }
+            homeStacks.postValue(stacks)
             homeCovers.postValue(picked)
         }
     }

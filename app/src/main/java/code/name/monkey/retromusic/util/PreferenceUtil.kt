@@ -24,7 +24,9 @@ import code.name.monkey.retromusic.ALBUM_SONG_SORT_ORDER
 import code.name.monkey.retromusic.ALBUM_SORT_ORDER
 import code.name.monkey.retromusic.APPBAR_MODE
 import code.name.monkey.retromusic.ARTIST_ALBUM_SORT_ORDER
+import code.name.monkey.retromusic.ARTIST_DETAIL_SONG_COLUMNS
 import code.name.monkey.retromusic.ARTIST_DETAIL_SONG_SORT_ORDER
+import code.name.monkey.retromusic.ARTIST_DETAIL_SONG_STYLE
 import code.name.monkey.retromusic.ARTIST_GRID_SIZE
 import code.name.monkey.retromusic.ARTIST_GRID_SIZE_LAND
 import code.name.monkey.retromusic.ARTIST_GRID_STYLE
@@ -71,6 +73,7 @@ import code.name.monkey.retromusic.MATERIAL_YOU
 import code.name.monkey.retromusic.NEW_BLUR_AMOUNT
 import code.name.monkey.retromusic.NEXT_SLEEP_TIMER_ELAPSED_REALTIME
 import code.name.monkey.retromusic.NOW_PLAYING_SCREEN_ID
+import code.name.monkey.retromusic.INCOGNITO_MODE
 import code.name.monkey.retromusic.PAUSE_HISTORY
 import code.name.monkey.retromusic.PAUSE_ON_ZERO_VOLUME
 import code.name.monkey.retromusic.PLAYBACK_PITCH
@@ -110,6 +113,7 @@ import code.name.monkey.retromusic.AUTO_BACKUP_KEEP
 import code.name.monkey.retromusic.BACKUP_FOLDER_URI
 import code.name.monkey.retromusic.HOME_COVERS_COUNT
 import code.name.monkey.retromusic.HOME_COVERS_PINNED
+import code.name.monkey.retromusic.HOME_COVERS_STACKS
 import code.name.monkey.retromusic.HOME_COVERS_DARKNESS
 import code.name.monkey.retromusic.HOME_COVERS_ENABLED
 import code.name.monkey.retromusic.HOME_COVERS_SOURCE
@@ -272,6 +276,16 @@ object PreferenceUtil {
             AlbumSongSortOrder.SONG_TRACK_LIST
         )
         set(value) = sharedPreferences.edit { putString(ALBUM_DETAIL_SONG_SORT_ORDER, value) }
+
+    /** Songs on an artist page: 0 list, 1 grid, 2 card, 3 coloured card, 4 circular. */
+    var artistDetailSongStyle: Int
+        get() = sharedPreferences.getInt(ARTIST_DETAIL_SONG_STYLE, 0).coerceIn(0, 4)
+        set(value) = sharedPreferences.edit { putInt(ARTIST_DETAIL_SONG_STYLE, value) }
+
+    /** Columns of the grid styles on an artist page (2..4). */
+    var artistDetailSongColumns: Int
+        get() = sharedPreferences.getInt(ARTIST_DETAIL_SONG_COLUMNS, 2).coerceIn(2, 4)
+        set(value) = sharedPreferences.edit { putInt(ARTIST_DETAIL_SONG_COLUMNS, value) }
 
     var artistDetailSongSortOrder
         get() = sharedPreferences.getStringOrDefault(
@@ -855,6 +869,18 @@ object PreferenceUtil {
             .split(',').mapNotNull { it.trim().toLongOrNull() }
         set(value) = sharedPreferences.edit { putString(HOME_COVERS_PINNED, value.joinToString(",")) }
 
+    /**
+     * Groups of pinned song ids shown as one stack of covers on the wall ("1,2,3;4,5").
+     * The first id of a group is the one shown on top.
+     */
+    var homeCoversStacks: List<List<Long>>
+        get() = sharedPreferences.getString(HOME_COVERS_STACKS, "").orEmpty()
+            .split(';').map { g -> g.split(',').mapNotNull { it.trim().toLongOrNull() } }
+            .filter { it.size >= 2 }
+        set(value) = sharedPreferences.edit {
+            putString(HOME_COVERS_STACKS, value.joinToString(";") { it.joinToString(",") })
+        }
+
     /** Folder (Storage Access Framework tree URI) where backups are written and listed from. */
     var backupFolderUri: String?
         get() = sharedPreferences.getString(BACKUP_FOLDER_URI, null)
@@ -873,6 +899,45 @@ object PreferenceUtil {
     var autoBackupKeep: Int
         get() = sharedPreferences.getInt(AUTO_BACKUP_KEEP, 5)
         set(value) = sharedPreferences.edit { putInt(AUTO_BACKUP_KEEP, value) }
+
+    /** Season background behind the player (a video or animated image per season, picked by the user). */
+    var seasonThemeEnabled: Boolean
+        get() = sharedPreferences.getBoolean(SeasonTheme.ENABLED, true)
+        set(value) = sharedPreferences.edit { putBoolean(SeasonTheme.ENABLED, value) }
+
+    /** [SeasonTheme.AUTO] (follow the month) or a [Season] name, to preview a season. */
+    var seasonThemeForce: String
+        get() = sharedPreferences.getString(SeasonTheme.FORCE, SeasonTheme.AUTO) ?: SeasonTheme.AUTO
+        set(value) = sharedPreferences.edit { putString(SeasonTheme.FORCE, value) }
+
+    fun seasonThemeUri(season: Season): String? =
+        sharedPreferences.getString(season.prefKey, null)?.takeIf { it.isNotEmpty() }
+
+    fun setSeasonThemeUri(season: Season, uri: String?) = sharedPreferences.edit {
+        if (uri == null) remove(season.prefKey) else putString(season.prefKey, uri)
+    }
+
+    /** Covers removed from the home wall: song id -> time of removal. They return after more than 2 plays. */
+    var homeCoversRemoved: Map<Long, Long>
+        get() = sharedPreferences.getString("home_covers_removed", "").orEmpty().split(",")
+            .mapNotNull { e -> e.split(":").takeIf { it.size == 2 }?.let { (a, t) ->
+                val id = a.toLongOrNull(); val ts = t.toLongOrNull()
+                if (id != null && ts != null) id to ts else null
+            } }.toMap()
+        set(v) = sharedPreferences.edit {
+            putString("home_covers_removed", v.entries.joinToString(",") { "${it.key}:${it.value}" })
+        }
+
+    /** Songs played while incognito: they are left out of the home display list until played normally. */
+    var incognitoHidden: Set<Long>
+        get() = sharedPreferences.getString("incognito_hidden_ids", "").orEmpty()
+            .split(",").mapNotNull { it.toLongOrNull() }.toSet()
+        set(v) = sharedPreferences.edit { putString("incognito_hidden_ids", v.joinToString(",")) }
+
+    /** Incognito: songs played now are kept out of the home display list (everything else is recorded). */
+    var incognito: Boolean
+        get() = sharedPreferences.getBoolean(INCOGNITO_MODE, false)
+        set(v) = sharedPreferences.edit { putBoolean(INCOGNITO_MODE, v) }
 
     val pauseHistory: Boolean
         get() = sharedPreferences.getBoolean(
@@ -973,10 +1038,38 @@ object PreferenceUtil {
         set(v) = sharedPreferences.edit { putBoolean("mini_player_locked", v) }
 
     /** Names of artists pinned to the top of the artists list. */
+    /** Ids of songs hidden from the Songs tab only (still in folders, playlists, albums, artists). */
+    var hiddenSongIds: Set<Long>
+        get() = sharedPreferences.getString("hidden_song_ids", "").orEmpty()
+            .split(',').mapNotNull { it.toLongOrNull() }.toSet()
+        set(v) = sharedPreferences.edit { putString("hidden_song_ids", v.joinToString(",")) }
+
     var pinnedArtists: Set<String>
         get() = sharedPreferences.getString("pinned_artists", "").orEmpty()
             .split('\n').filter { it.isNotEmpty() }.toSet()
         set(v) = sharedPreferences.edit { putString("pinned_artists", v.joinToString("\n")) }
+
+    /** Look of the favorite-artists sheet (0 = follow the main list). */
+    var favSheetStyle: Int
+        get() = sharedPreferences.getInt("fav_sheet_style", 0)
+        set(v) = sharedPreferences.edit { putInt("fav_sheet_style", v) }
+    var favSheetColumns: Int
+        get() = sharedPreferences.getInt("fav_sheet_columns", 0)
+        set(v) = sharedPreferences.edit { putInt("fav_sheet_columns", v) }
+    var favSheetSortDesc: Boolean
+        get() = sharedPreferences.getBoolean("fav_sheet_sort_desc", false)
+        set(v) = sharedPreferences.edit { putBoolean("fav_sheet_sort_desc", v) }
+
+    /** True when the pinned artists of the main list are piled into one card (opt-in, via the long-press menu). */
+    var pinnedArtistsGrouped: Boolean
+        get() = sharedPreferences.getBoolean("pinned_artists_grouped", false)
+        set(v) = sharedPreferences.edit { putBoolean("pinned_artists_grouped", v) }
+
+    /** Pins made inside the favorite-artists sheet; kept apart from [pinnedArtists]. */
+    var pinnedFavoriteArtists: Set<String>
+        get() = sharedPreferences.getString("pinned_favorite_artists", "").orEmpty()
+            .split('\n').filter { it.isNotEmpty() }.toSet()
+        set(v) = sharedPreferences.edit { putString("pinned_favorite_artists", v.joinToString("\n")) }
 
     /** Names of the favorite artists (the heart on the artist page). Included in the backup. */
     var favoriteArtists: Set<String>

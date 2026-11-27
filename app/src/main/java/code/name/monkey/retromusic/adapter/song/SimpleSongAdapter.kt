@@ -28,6 +28,9 @@ class SimpleSongAdapter(
     private val showAlbumAsSubtitle: Boolean = false
 ) : SongAdapter(context, songs, layoutRes) {
 
+    // Artist page: many covers at once, a 256 px decode keeps scrolling and palette cheap.
+    override val coverSizePx: Int get() = if (showAlbumAsSubtitle) 256 else 0
+
     override fun swapDataSet(dataSet: List<Song>) {
         this.dataSet = dataSet.toMutableList()
         notifyDataSetChanged()
