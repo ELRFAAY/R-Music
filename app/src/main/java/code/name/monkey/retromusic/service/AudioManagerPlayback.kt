@@ -77,9 +77,21 @@ abstract class AudioManagerPlayback(val context: Context) : Playback {
             if (intent.action != null
                 && intent.action == AudioManager.ACTION_AUDIO_BECOMING_NOISY
             ) {
-                val serviceIntent = Intent(context, MusicService::class.java)
-                serviceIntent.action = MusicService.ACTION_PAUSE
-                context.startService(serviceIntent)
+                // The headphones came out while the app was in the background: on Android 12+
+                // startService() from here throws BackgroundServiceStartNotAllowedException and
+                // kills the app. The service owns this player, so pause it directly.
+                val service = this@AudioManagerPlayback.context as? MusicService
+                if (service != null) {
+                    service.pause()
+                } else {
+                    val serviceIntent = Intent(context, MusicService::class.java)
+                    serviceIntent.action = MusicService.ACTION_PAUSE
+                    try {
+                        context.startService(serviceIntent)
+                    } catch (e: IllegalStateException) {
+                        // background start not allowed; nothing more we can do from here
+                    }
+                }
             }
         }
     }
