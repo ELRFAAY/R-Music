@@ -29,6 +29,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Snow (Settings > Now playing > Snow fall effect): above the dark tint, under all controls -->
+    <com.jetradarmobile.snowfall.SnowfallView
+        android:id="@+id/muzioSnow"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:snowflakeSpeedMax="6"
+        app:snowflakeSpeedMin="2"
+        app:snowflakesNum="75" />
+
     <include layout="@layout/status_bar" />
 
     <!-- Vertical rhythm like the reference: ring high, title in the middle, controls low -->

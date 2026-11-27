@@ -92,6 +92,7 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentRingPlayerBinding.bind(view)
+        updateSnow()
 
         binding.playerToolbar.apply {
             inflateMenu(R.menu.menu_player)
@@ -705,8 +706,21 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         )
     }
 
+    /** Snow fall effect: same switch as the normal player (Settings > Now playing). */
+    private fun updateSnow() {
+        val snow = _binding?.muzioSnow ?: return
+        if (PreferenceUtil.isSnowFalling) {
+            snow.isVisible = true
+            snow.restartFalling()
+        } else {
+            snow.isVisible = false
+            snow.stopFalling()
+        }
+    }
+
     override fun onResume() {
         super.onResume()
+        updateSnow() // the switch may have changed in the settings
         progressViewUpdateHelper.start()
         updateSong()
         updatePlayPause()
@@ -718,6 +732,7 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         super.onPause()
         lastRequest = null
         progressViewUpdateHelper.stop()
+        _binding?.muzioSnow?.stopFalling() // no animation while the screen is not shown
     }
 
     override fun onServiceConnected() {
