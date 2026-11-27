@@ -37,7 +37,6 @@ import code.name.monkey.retromusic.helper.MusicPlayerRemote
 import code.name.monkey.retromusic.helper.SortOrder
 import code.name.monkey.retromusic.interfaces.IAlbumClickListener
 import code.name.monkey.retromusic.model.Artist
-import code.name.monkey.retromusic.model.Song
 import code.name.monkey.retromusic.network.Result
 import code.name.monkey.retromusic.network.model.LastFmArtist
 import code.name.monkey.retromusic.repository.RealRepository
@@ -254,8 +253,10 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
                 songAdapter.swapDataSet(allSongs)
             }
         } else {
-            showMore.isVisible = false
+            showAll.isVisible = false
+            songAdapter.swapDataSet(allSongs)
         }
+        albumAdapter.swapDataSet(artist.albums)
     }
 
     private fun loadBiography(
@@ -622,7 +623,7 @@ abstract class AbsArtistDetailsFragment : AbsMainActivityFragment(R.layout.fragm
 
     private fun setSaveSortOrder(sortOrder: String) {
         PreferenceUtil.artistDetailSongSortOrder = sortOrder
-        bindSongs(artist.sortedSongs)
+        songAdapter.swapDataSet(artist.sortedSongs)
     }
 
     private fun setupAlbumSortButton() {
