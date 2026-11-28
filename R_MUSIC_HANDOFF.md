@@ -536,3 +536,7 @@ Owner's decision: the Canvas scenes of Session 26 (`SeasonScene.kt`: cabin, suns
 - `ground_*.png` 1080x240, bottom aligned (heights 124..240, ground_autumn_4/5 and winter_1/3 fill 240).
 - `fx_<name>_keyed.png` = 256x256 single sprites (leaf, petal, snow, tumbleweed), ready for step 2.
 - NEXT: step 2 = 8-frame sprite sheets by rotating the keyed sprites 45 degrees per frame (petal/leaf/snow 512x64, tumbleweed 1024x128) -> `design/season_tree/processed/fx_*.png`; then step 3 (rain drawn in code), then step 4 (new "Style" choice Classic / Season tree in R settings > Seasons, default Classic).
+
+### Session 29 - STEP 2 DONE: 8-frame sprite sheets (not built, not tested on a phone)
+- `design/season_tree/tools/make_sheets.py` -> `processed/fx_petal.png`, `fx_leaf.png`, `fx_snow.png` (512x64, 8 frames of 64x64) and `fx_tumbleweed.png` (1024x128, 8 frames of 128x128). Frame k = sprite rotated 45*k degrees (frame 8 == frame 0, loop is seamless); petal and leaf also get a slight squash across the turn; all frames share one scale (diagonal fits the cell) so nothing pulses in size. Checked visually on a preview.
+- Known small thing: the tumbleweed keeps a thin yellow-green rim (green straw blends with the green screen); only visible if enlarged.
