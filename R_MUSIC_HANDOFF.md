@@ -527,3 +527,4 @@ Owner's decision: the Canvas scenes of Session 26 (`SeasonScene.kt`: cabin, suns
 - Conflicts resolved by taking the newer backup copies of: stats screen + layout, ArtistsFragment, AbsArtistDetailsFragment, ArtistAdapter, PreferenceUtil, MainModule, ListeningEventDao.
 - R settings (`RSettingsFragment` + `res/xml/pref_r_settings.xml`) now ALSO holds: app icon switch (moved from Personalize), season switch/force/4 files (moved from Now playing). Home covers, mini player, lyrics, Korean, vocal separation, notification were already there.
 - Not tested on a phone. If the launcher still shows the old icon after the update: open the app once, R settings > App icon > new.
+- Fix (Session 28): opening R settings crashed with "Preference already has a SummaryProvider set" (`season_theme_force` uses `useSimpleSummaryProvider`). `RSettingsFragment.invalidateSettings` now skips lists that already have a summary provider.

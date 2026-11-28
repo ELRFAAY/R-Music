@@ -103,14 +103,17 @@ class RSettingsFragment : AbsSettingsFragment() {
             setSummary(preference, newValue)
             true
         }
-        setSummary(appIcon)
+        if (appIcon != null && appIcon.summaryProvider == null) setSummary(appIcon)
         listOf(
             "mini_player_style", "mini_player_shape", "mini_player_size", "mini_player_background",
             "korean_pronunciation", "vocal_quality", "season_theme_force"
         ).forEach { key ->
             val pref = findPreference<Preference>(key) as? ATEListPreference
-            pref?.setOnPreferenceChangeListener { p, v -> setSummary(p, v); true }
-            setSummary(pref)
+            // a list that already has a built-in summary provider must not get a second summary
+            if (pref != null && pref.summaryProvider == null) {
+                pref.setOnPreferenceChangeListener { p, v -> setSummary(p, v); true }
+                setSummary(pref)
+            }
         }
     }
 
