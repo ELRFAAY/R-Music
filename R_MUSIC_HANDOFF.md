@@ -467,3 +467,9 @@ Owner's decision: the Canvas scenes of Session 26 (`SeasonScene.kt`: cabin, suns
   4. In the app: new `SeasonScene` implementation that draws ground + tree + particles + rain under the cover art in the centre, state picked from the date; keep the existing switch/preview in Settings > Now playing; PNGs in `res/drawable-nodpi/`. Reuse `SeasonSceneView`/`SeasonBackgroundView` hosting.
   5. Log every step here. No package rename / release build before he says "ابدأ".
 - Nothing built, nothing tested on a phone. Also: the "Hide songs from the Songs tab / lyrics refresh" work from the old unpushed patch is already on the branch (e3d7943), so it was not re-applied.
+
+### Session 27 update (2026-11-28 10:35): more tree art received (all in `design/season_tree/generated/`, green #00FF00 background)
+- Now have: tree_summer_2 (bare, 4-5 dry leaves), tree_autumn_1..5 (100/75/50/25/0%; autumn_5 = bare tree + leaf pile at the base). `tree_summer_2_portrait_alt.jpg` is a taller crop of the same drawing (ignore).
+- Frames are NOT uniform: spring/summer/autumn_2/autumn_4 are 1024x1024, but autumn_1/3/5 are 768x1376 portrait with the tree drawn smaller and the trunk off-centre. The cut-out script must NOT just centre by bounding box (the canopy changes size per state and the tree would jump between states). Align every image by the TRUNK BASE (lowest trunk point at the grass mound) and scale so the trunk width at the base is the same as in tree_spring_3; then crop to the common 768x768 box.
+- tree_autumn_2 has a few leaves drawn flying in the air around the canopy (not attached); they can stay (they look like falling leaves) or be erased.
+- Still missing: winter 1-3, 12 ground strips, 4 single sprites.
