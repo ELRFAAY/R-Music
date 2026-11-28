@@ -398,7 +398,12 @@ abstract class AbsPlayerFragment(@LayoutRes layout: Int) : AbsMusicServiceFragme
         }
         val bg = SeasonBackgroundView(requireContext())
         val file = SeasonTheme.currentUri()
-        if (file != null) bg.setSource(file) else bg.setScene(SeasonTheme.current())
+        if (file != null) {
+            bg.setSource(file)
+        } else {
+            val season = SeasonTheme.current()
+            if (SeasonTheme.useTree()) bg.setTreeScene(season, SeasonTheme.treeState(season)) else bg.setScene(season)
+        }
         val params: ViewGroup.LayoutParams = if (group is ConstraintLayout) {
             ConstraintLayout.LayoutParams(0, 0).apply {
                 topToTop = ConstraintLayout.LayoutParams.PARENT_ID

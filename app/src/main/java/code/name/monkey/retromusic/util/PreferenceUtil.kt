@@ -910,6 +910,11 @@ object PreferenceUtil {
         get() = sharedPreferences.getString(SeasonTheme.FORCE, SeasonTheme.AUTO) ?: SeasonTheme.AUTO
         set(value) = sharedPreferences.edit { putString(SeasonTheme.FORCE, value) }
 
+    /** [SeasonTheme.STYLE_CLASSIC] (the code-drawn scenes) or [SeasonTheme.STYLE_TREE] (the season tree). */
+    var seasonThemeStyle: String
+        get() = sharedPreferences.getString(SeasonTheme.STYLE, SeasonTheme.STYLE_CLASSIC) ?: SeasonTheme.STYLE_CLASSIC
+        set(value) = sharedPreferences.edit { putString(SeasonTheme.STYLE, value) }
+
     fun seasonThemeUri(season: Season): String? =
         sharedPreferences.getString(season.prefKey, null)?.takeIf { it.isNotEmpty() }
 

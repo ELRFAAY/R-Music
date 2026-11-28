@@ -102,6 +102,19 @@ class SeasonBackgroundView @JvmOverloads constructor(
         view.setRunning(wantPlaying)
     }
 
+    /** The season-tree scene for [season] in its look for [state] (see [code.name.monkey.retromusic.util.SeasonTheme.treeState]). */
+    fun setTreeScene(season: Season, state: Int) {
+        val newKey = "tree:${season.name}:$state"
+        if (newKey == key) return
+        clearMedia()
+        source = null
+        key = newKey
+        val view = SeasonSceneView(context, season, state)
+        scene = view
+        addView(view, 0, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+        view.setRunning(wantPlaying)
+    }
+
     private fun showImage(uri: Uri) {
         val iv = ImageView(context).apply { scaleType = ImageView.ScaleType.CENTER_CROP }
         addView(iv, 0, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))

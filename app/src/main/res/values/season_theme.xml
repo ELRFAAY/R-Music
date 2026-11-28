@@ -8,6 +8,9 @@
     <string name="pref_season_spring_title">Spring scene</string>
     <string name="pref_season_summer_title">Summer scene</string>
     <string name="pref_season_autumn_title">Autumn scene</string>
+    <string name="pref_season_theme_style_title">Scene style</string>
+    <string name="season_style_classic">Classic scenes</string>
+    <string name="season_style_tree">Season tree</string>
     <string name="season_file_not_set">Built-in scene</string>
     <string name="season_choose_file">Choose file</string>
     <string name="season_remove_file">Use the built-in scene</string>
@@ -30,5 +33,13 @@
         <item>SPRING</item>
         <item>SUMMER</item>
         <item>AUTUMN</item>
+    </string-array>
+    <string-array name="pref_season_style_titles">
+        <item>@string/season_style_classic</item>
+        <item>@string/season_style_tree</item>
+    </string-array>
+    <string-array name="pref_season_style_values" translatable="false">
+        <item>classic</item>
+        <item>tree</item>
     </string-array>
 </resources>

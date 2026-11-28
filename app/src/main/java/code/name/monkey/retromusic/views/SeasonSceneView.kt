@@ -9,9 +9,12 @@ import code.name.monkey.retromusic.util.Season
  * Hosts a [SeasonScene] and drives its animation at ~30 fps while [setRunning] is true.
  * When it is not running nothing is scheduled, so a hidden player costs no CPU.
  */
-internal class SeasonSceneView(context: Context, season: Season) : View(context) {
+internal class SeasonSceneView(context: Context, season: Season, treeState: Int? = null) : View(context) {
 
-    private val scene = SeasonScene(season)
+    /** The classic code-drawn scene, or (when [treeState] is given) the season-tree scene. */
+    private val scene: SeasonScene? = if (treeState == null) SeasonScene(season) else null
+    private val treeScene: SeasonTreeScene? =
+        if (treeState != null) SeasonTreeScene(context, season, treeState) else null
     private var running = false
     private var startNanos = 0L
     private var lastNanos = 0L
@@ -36,7 +39,8 @@ internal class SeasonSceneView(context: Context, season: Season) : View(context)
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        scene.resize(w, h)
+        scene?.resize(w, h)
+        treeScene?.resize(w, h)
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -44,11 +48,14 @@ internal class SeasonSceneView(context: Context, season: Season) : View(context)
         if (startNanos == 0L) startNanos = now
         val dt = if (lastNanos == 0L) 0f else ((now - lastNanos) / 1e9f).coerceAtMost(0.1f)
         lastNanos = now
-        scene.draw(canvas, (now - startNanos) / 1e9f, dt)
+        val t = (now - startNanos) / 1e9f
+        scene?.draw(canvas, t, dt)
+        treeScene?.draw(canvas, t, dt)
     }
 
     override fun onDetachedFromWindow() {
         removeCallbacks(ticker)
+        treeScene?.release()
         super.onDetachedFromWindow()
     }
 

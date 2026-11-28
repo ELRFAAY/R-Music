@@ -757,4 +757,7 @@
     <string name="hidden_from_songs_toast">اتخفت من قائمة الأغاني (لسه في الملفات وقوائم التشغيل)</string>
     <string name="hidden_songs">الأغاني المخفية</string>
     <string name="hidden_songs_apply">إظهار تاني</string>
+    <string name="pref_season_theme_style_title">شكل المشهد</string>
+    <string name="season_style_classic">المشاهد الكلاسيكية</string>
+    <string name="season_style_tree">شجرة المواسم</string>
 </resources>

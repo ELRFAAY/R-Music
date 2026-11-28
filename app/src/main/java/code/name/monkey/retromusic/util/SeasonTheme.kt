@@ -15,6 +15,45 @@ object SeasonTheme {
     const val ENABLED = "season_theme_enabled"
     const val FORCE = "season_theme_force"
     const val AUTO = "auto"
+    const val STYLE = "season_theme_style"
+    const val STYLE_CLASSIC = "classic"
+    const val STYLE_TREE = "tree"
+
+    fun useTree(): Boolean = PreferenceUtil.seasonThemeStyle == STYLE_TREE
+
+    /**
+     * Which look of the season tree to show (1-based): spring 1-3 (March, April, May), summer 1-2 (June, then
+     * July/August), autumn 1-5 (the leaves thin out over September-November), winter 1-3 (December, January,
+     * February). A forced season (preview) uses the middle of that season.
+     */
+    fun treeState(season: Season): Int {
+        val forced = Season.values().any { it.name == PreferenceUtil.seasonThemeForce }
+        val cal = Calendar.getInstance()
+        val month = if (forced) when (season) {
+            Season.SPRING -> Calendar.APRIL
+            Season.SUMMER -> Calendar.JULY
+            Season.AUTUMN -> Calendar.OCTOBER
+            Season.WINTER -> Calendar.JANUARY
+        } else cal.get(Calendar.MONTH)
+        val day = if (forced) 15 else cal.get(Calendar.DAY_OF_MONTH)
+        return when (season) {
+            Season.SPRING -> when (month) {
+                Calendar.MARCH -> 1
+                Calendar.APRIL -> 2
+                else -> 3
+            }
+            Season.SUMMER -> if (month == Calendar.JUNE) 1 else 2
+            Season.WINTER -> when (month) {
+                Calendar.DECEMBER -> 1
+                Calendar.JANUARY -> 2
+                else -> 3
+            }
+            Season.AUTUMN -> {
+                val idx = (month - Calendar.SEPTEMBER).coerceAtLeast(0) * 30 + day - 1
+                (1 + idx * 5 / 91).coerceIn(1, 5)
+            }
+        }
+    }
 
     /** Northern-hemisphere seasons from [Calendar.MONTH]. */
     fun fromMonth(month: Int): Season = when (month) {
@@ -39,10 +78,12 @@ object SeasonTheme {
 
     /**
      * What the player background should show right now: "file:<uri>" (the picked file wins) or
-     * "builtin:<season>" (the scene drawn by the app); null when the theme is switched off.
+     * "builtin:<season>" (the classic scene drawn by the app) or "tree:<season>:<state>" (the season tree); null when the theme is switched off.
      */
     fun currentKey(): String? {
         if (!PreferenceUtil.seasonThemeEnabled) return null
-        return currentUri()?.let { "file:$it" } ?: "builtin:${current().name}"
+        currentUri()?.let { return "file:$it" }
+        val season = current()
+        return if (useTree()) "tree:${season.name}:${treeState(season)}" else "builtin:${season.name}"
     }
 }
