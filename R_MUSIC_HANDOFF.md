@@ -473,3 +473,8 @@ Owner's decision: the Canvas scenes of Session 26 (`SeasonScene.kt`: cabin, suns
 - Frames are NOT uniform: spring/summer/autumn_2/autumn_4 are 1024x1024, but autumn_1/3/5 are 768x1376 portrait with the tree drawn smaller and the trunk off-centre. The cut-out script must NOT just centre by bounding box (the canopy changes size per state and the tree would jump between states). Align every image by the TRUNK BASE (lowest trunk point at the grass mound) and scale so the trunk width at the base is the same as in tree_spring_3; then crop to the common 768x768 box.
 - tree_autumn_2 has a few leaves drawn flying in the air around the canopy (not attached); they can stay (they look like falling leaves) or be erased.
 - Still missing: winter 1-3, 12 ground strips, 4 single sprites.
+
+### Session 27 update 2 (2026-11-28 10:40): winter art + first ground strips received (`design/season_tree/generated/`)
+- tree_winter_1 (thin snow on bare branches), tree_winter_3 (deep snow, big white mound hiding the trunk base: align it by the trunk where it leaves the mound, not the mound; a few small green leaf shapes poke out of the snow, harmless). Still missing: tree_winter_2 (medium snow).
+- ground_autumn_5 (leaf pile in the middle), ground_winter_2 (flat white band; the owner did not label them, I matched by look: flat band = winter_2), ground_winter_3 (snow mound). All 1024x1024 on green with the strip in the middle and SOFT feathered edges: the green-keying script must despill/defringe (remove the green tint on the semi-transparent edge pixels), then crop to the strip and resize to 1080x240.
+- Still missing: ground spring_1/2, summer_1/2, autumn_1-4, winter_1; 4 single sprites (petal, leaf, snowflake, tumbleweed).
