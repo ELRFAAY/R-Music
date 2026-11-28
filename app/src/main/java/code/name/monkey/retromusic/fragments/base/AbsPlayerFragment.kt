@@ -418,6 +418,8 @@ abstract class AbsPlayerFragment(@LayoutRes layout: Int) : AbsMusicServiceFragme
         }
         group.addView(bg, 0, params)
         seasonBackground = bg
+        root.addOnLayoutChangeListener(seasonLayoutListener)
+        root.post { updateSeasonCover() }
         val behavior = (activity as? AbsSlidingMusicPanelActivity)?.getBottomSheetBehavior()
         bg.setActive(behavior == null || isPanelOpen(behavior.state))
         if (behavior != null) {
@@ -432,7 +434,24 @@ abstract class AbsPlayerFragment(@LayoutRes layout: Int) : AbsMusicServiceFragme
         }
     }
 
+    /** The view the season tree wraps (the cover with its ring); null = a default place. */
+    protected open fun seasonCoverView(): View? = null
+
+    private val seasonLayoutListener = View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> updateSeasonCover() }
+
+    private fun updateSeasonCover() {
+        val bg = seasonBackground ?: return
+        val cv = seasonCoverView() ?: return
+        if (cv.width == 0 || bg.width == 0) return
+        val a = IntArray(2)
+        val b = IntArray(2)
+        cv.getLocationInWindow(a)
+        bg.getLocationInWindow(b)
+        bg.setCover(a[0] - b[0] + cv.width / 2f, a[1] - b[1] + cv.height / 2f, minOf(cv.width, cv.height) / 2f)
+    }
+
     private fun removeSeasonBackground() {
+        view?.removeOnLayoutChangeListener(seasonLayoutListener)
         seasonSheetCallback?.let { cb ->
             (activity as? AbsSlidingMusicPanelActivity)?.getBottomSheetBehavior()?.removeBottomSheetCallback(cb)
         }

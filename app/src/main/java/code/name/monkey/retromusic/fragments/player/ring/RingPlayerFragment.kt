@@ -729,6 +729,8 @@ class RingPlayerFragment : AbsPlayerFragment(R.layout.fragment_ring_player),
         }
     }
 
+    override fun seasonCoverView(): View? = _binding?.progressRing
+
     override fun onResume() {
         super.onResume()
         updateSnow() // the switch may have changed in the settings

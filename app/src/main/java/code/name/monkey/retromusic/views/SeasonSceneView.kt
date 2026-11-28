@@ -15,6 +15,17 @@ internal class SeasonSceneView(context: Context, season: Season, treeState: Int?
     private val scene: SeasonScene? = if (treeState == null) SeasonScene(season) else null
     private val treeScene: SeasonTreeScene? =
         if (treeState != null) SeasonTreeScene(context, season, treeState) else null
+    /** The tree around the player cover, merged into the classic scene (not used with a picked tree style). */
+    private val coverTree: SeasonCoverTree? = if (treeState == null) SeasonCoverTree(season) else null
+
+    init {
+        scene?.overlay = { c, t, dt -> coverTree?.draw(c, t, dt) }
+    }
+
+    fun setCover(cx: Float, cy: Float, r: Float) {
+        coverTree?.setCover(cx, cy, r)
+    }
+
     private var running = false
     private var startNanos = 0L
     private var lastNanos = 0L
@@ -40,6 +51,7 @@ internal class SeasonSceneView(context: Context, season: Season, treeState: Int?
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         scene?.resize(w, h)
+        coverTree?.resize(w, h)
         treeScene?.resize(w, h)
     }
 

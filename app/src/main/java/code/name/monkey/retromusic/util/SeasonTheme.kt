@@ -19,7 +19,8 @@ object SeasonTheme {
     const val STYLE_CLASSIC = "classic"
     const val STYLE_TREE = "tree"
 
-    fun useTree(): Boolean = PreferenceUtil.seasonThemeStyle == STYLE_TREE
+    /** One merged theme now (classic scene + tree around the cover); the separate tree style is no longer offered. */
+    fun useTree(): Boolean = false
 
     /**
      * Which look of the season tree to show (1-based): spring 1-3 (March, April, May), summer 1-2 (June, then

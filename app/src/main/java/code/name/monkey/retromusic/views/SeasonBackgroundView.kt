@@ -35,6 +35,15 @@ class SeasonBackgroundView @JvmOverloads constructor(
         private set
 
     private var scene: SeasonSceneView? = null
+    private var coverCx = 0f
+    private var coverCy = 0f
+    private var coverR = 0f
+
+    /** Where the player cover is (in this view's coordinates): the season tree grows around it. */
+    fun setCover(cx: Float, cy: Float, r: Float) {
+        coverCx = cx; coverCy = cy; coverR = r
+        scene?.setCover(cx, cy, r)
+    }
 
     private var texture: TextureView? = null
     private var surface: Surface? = null
@@ -97,6 +106,7 @@ class SeasonBackgroundView @JvmOverloads constructor(
         source = null
         key = newKey
         val view = SeasonSceneView(context, season)
+        if (coverR > 0f) view.setCover(coverCx, coverCy, coverR)
         scene = view
         addView(view, 0, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
         view.setRunning(wantPlaying)

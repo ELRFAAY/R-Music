@@ -164,8 +164,12 @@ internal class SeasonScene(private val season: Season) {
             Season.SPRING -> spring(c, t)
             Season.SUMMER -> summer(c, t)
         }
+        overlay?.invoke(c, t, dt)
         drawParticles(c, t, dt)
     }
+
+    /** Drawn between the scene and its falling particles (the cover tree). */
+    var overlay: ((Canvas, Float, Float) -> Unit)? = null
 
     // ---------------------------------------------------------------- shared helpers
 
