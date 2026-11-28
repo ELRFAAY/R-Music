@@ -495,3 +495,6 @@ Owner's decision: the Canvas scenes of Session 26 (`SeasonScene.kt`: cabin, suns
 ### Session 27 update 6 (2026-11-28 11:00): ground_winter_1 received
 - `ground_winter_1.jpg`: thin snow patches with dark grass and moss showing through (strip shape, same framing as the other strips). `ground_winter_1_alt_thicker_block.jpg` is a taller, whiter block (not a strip: unused); `extra_winter_ground_variants/` has two near copies of winter_1 (unused).
 - ONLY `tree_winter_2` is still missing (fallback: winter_1 tree for the first half of winter, winter_3 for the second half). All other art listed in the spec is now in `generated/`; the only remaining art-free work is code.
+
+### Session 27 update 7 (2026-11-28 11:05)
+- `generated/extra_snow_with_leaves/`: 3 trees that keep their foliage under snow (pink blossoms + snow, red maple leaves + snow, a pine-needle version). They are NOT the missing `tree_winter_2` (that one must be BARE branches with medium snow). Unused; possible use: a short "first snow" transition on the autumn/spring state if the owner asks. `tree_winter_2` is still missing (fallback in the earlier note).
