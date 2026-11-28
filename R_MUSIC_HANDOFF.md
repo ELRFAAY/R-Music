@@ -509,3 +509,9 @@ Owner's decision: the Canvas scenes of Session 26 (`SeasonScene.kt`: cabin, suns
 2. Right after the push, send the owner a short message in Egyptian Arabic: "خلصت الخطوة كذا على الفرع كذا" (what step, which branch, which commit). That message is also the handoff: the next account continues from the last logged step instead of starting over (credits can run out at any moment).
 3. Always fetch and fast-forward before starting, and read the last entries of this file first. Do not redo a step that is already logged.
 4. No build unless the owner says so; no package rename / release build before he says "ابدأ". Nothing is tested on a phone unless he confirms.
+
+## DECISION CHANGE (owner, 2026-11-28 10:55) — READ BEFORE Session 27's job list
+- Do NOT remove or replace the old built-in season scenes (`SeasonScene.kt`, `SeasonSceneView`, `SeasonBackgroundView`, the Settings > Now playing > Season themes entries). They stay exactly as they are. Session 27's wording "replace" is WRONG.
+- The one-tree scene is ADDED as a new option next to them: the owner only wants new choices/settings for it. Suggested shape: in Settings > Now playing > Season themes add a "Style" choice (Classic scenes / Season tree), default = Classic so nothing changes until he picks the tree; the existing switch, preview-a-season list and own-file entries keep working for both. Put the new setting key in `PreferenceUtil`, strings in `values` and `values-ar-rSA`.
+- The owner's wording was ambiguous ("نترجم الخيارات والاعدادات"): if unsure what he means by the options/settings, implement the safe version above and ask him one short question.
+- Steps 1-3 of Session 27 (key script, sprite sheets, rain in code) are unchanged. Step 4 becomes "add the tree as a new style next to the classic scenes".
