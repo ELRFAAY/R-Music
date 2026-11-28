@@ -498,3 +498,8 @@ Owner's decision: the Canvas scenes of Session 26 (`SeasonScene.kt`: cabin, suns
 
 ### Session 27 update 7 (2026-11-28 11:05)
 - `generated/extra_snow_with_leaves/`: 3 trees that keep their foliage under snow (pink blossoms + snow, red maple leaves + snow, a pine-needle version). They are NOT the missing `tree_winter_2` (that one must be BARE branches with medium snow). Unused; possible use: a short "first snow" transition on the autumn/spring state if the owner asks. `tree_winter_2` is still missing (fallback in the earlier note).
+
+### Session 27 update 8 (2026-11-28 11:10): ALL ART RECEIVED
+- `generated/tree_winter_2.jpg` (bare branches, medium snow, icicles, snow mound at the base with a few red leaves/petals on it) arrived. IGNORE every "tree_winter_2 is still missing / fallback" note above. All 13 trees, 12 ground strips and 4 single sprites are now in `design/season_tree/generated/` (names as in the spec; unlabelled ones were matched by look, double-check the autumn grounds 3/4 and winter_2/3 once keyed).
+- Note: tree_winter_2 and tree_winter_3 have a snow mound at the base (not a grass mound like the others): align by the trunk where it leaves the mound, and they carry their own ground, so draw them above the winter ground strip with the mound covering it.
+- What is left is only code: step 1 (key script), 2 (sprite sheets), 3 (rain in code), 4 (layers in the player screen, state from the date), 5 (log). No build until the owner says so.
