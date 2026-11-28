@@ -503,3 +503,9 @@ Owner's decision: the Canvas scenes of Session 26 (`SeasonScene.kt`: cabin, suns
 - `generated/tree_winter_2.jpg` (bare branches, medium snow, icicles, snow mound at the base with a few red leaves/petals on it) arrived. IGNORE every "tree_winter_2 is still missing / fallback" note above. All 13 trees, 12 ground strips and 4 single sprites are now in `design/season_tree/generated/` (names as in the spec; unlabelled ones were matched by look, double-check the autumn grounds 3/4 and winter_2/3 once keyed).
 - Note: tree_winter_2 and tree_winter_3 have a snow mound at the base (not a grass mound like the others): align by the trunk where it leaves the mound, and they carry their own ground, so draw them above the winter ground strip with the mound covering it.
 - What is left is only code: step 1 (key script), 2 (sprite sheets), 3 (rain in code), 4 (layers in the player screen, state from the date), 5 (log). No build until the owner says so.
+
+## WORKING RULES (owner, 2026-11-28) — read before anything else
+1. After EVERY finished step: commit it and push to `claude/backup-listening-data`, then log it in this file (what was done, which files, what is next). Never keep a finished step only in the working tree.
+2. Right after the push, send the owner a short message in Egyptian Arabic: "خلصت الخطوة كذا على الفرع كذا" (what step, which branch, which commit). That message is also the handoff: the next account continues from the last logged step instead of starting over (credits can run out at any moment).
+3. Always fetch and fast-forward before starting, and read the last entries of this file first. Do not redo a step that is already logged.
+4. No build unless the owner says so; no package rename / release build before he says "ابدأ". Nothing is tested on a phone unless he confirms.
