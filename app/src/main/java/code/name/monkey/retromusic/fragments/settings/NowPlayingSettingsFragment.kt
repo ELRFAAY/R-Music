@@ -35,86 +35,8 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 class NowPlayingSettingsFragment : AbsSettingsFragment(),
     SharedPreferences.OnSharedPreferenceChangeListener {
 
-    private var pickingSeason: Season? = null
-
-    private val pickSeasonFile =
-        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
-            val season = pickingSeason
-            pickingSeason = null
-            if (season != null && uri != null) {
-                try {
-                    // keep access to the file after the app restarts
-                    requireContext().contentResolver
-                        .takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                } catch (e: Exception) {
-                    // not every provider allows it; the file still works until the next restart
-                }
-                PreferenceUtil.setSeasonThemeUri(season, uri.toString())
-                updateSeasonSummaries()
-            }
-        }
-
-    private fun pickFor(season: Season) {
-        pickingSeason = season
-        pickSeasonFile.launch(arrayOf("video/*", "image/*"))
-    }
-
-    private fun fileName(uri: Uri): String {
-        try {
-            requireContext().contentResolver.query(uri, null, null, null, null)?.use { c ->
-                val i = c.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                if (i >= 0 && c.moveToFirst()) return c.getString(i)
-            }
-        } catch (e: Exception) {
-            // fall through
-        }
-        return uri.lastPathSegment ?: uri.toString()
-    }
-
-    private fun updateSeasonSummaries() {
-        Season.values().forEach { season ->
-            val pref: Preference? = findPreference(season.prefKey)
-            val uri = PreferenceUtil.seasonThemeUri(season)
-            pref?.summary = if (uri == null) {
-                getString(R.string.season_file_not_set)
-            } else {
-                fileName(Uri.parse(uri))
-            }
-        }
-    }
-
-    private fun setupSeasonPreferences() {
-        updateSeasonSummaries()
-        Season.values().forEach { season ->
-            val pref: Preference? = findPreference(season.prefKey)
-            pref?.setOnPreferenceClickListener {
-                if (PreferenceUtil.seasonThemeUri(season) == null) {
-                    pickFor(season)
-                } else {
-                    MaterialAlertDialogBuilder(requireContext())
-                        .setItems(
-                            arrayOf(
-                                getString(R.string.season_choose_file),
-                                getString(R.string.season_remove_file)
-                            )
-                        ) { _, which ->
-                            if (which == 0) {
-                                pickFor(season)
-                            } else {
-                                PreferenceUtil.setSeasonThemeUri(season, null)
-                                updateSeasonSummaries()
-                            }
-                        }
-                        .show()
-                }
-                true
-            }
-        }
-    }
-
     override fun invalidateSettings() {
         updateNowPlayingScreenSummary()
-        setupSeasonPreferences()
         updateAlbumCoverStyleSummary()
 
         val carouselEffect: TwoStatePreference? = findPreference(CAROUSEL_EFFECT)

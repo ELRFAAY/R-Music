@@ -521,3 +521,9 @@ Owner's decision: the Canvas scenes of Session 26 (`SeasonScene.kt`: cabin, suns
 - The one-tree scene is ADDED as a new option next to them: the owner only wants new choices/settings for it. Suggested shape: in Settings > Now playing > Season themes add a "Style" choice (Classic scenes / Season tree), default = Classic so nothing changes until he picks the tree; the existing switch, preview-a-season list and own-file entries keep working for both. Put the new setting key in `PreferenceUtil`, strings in `values` and `values-ar-rSA`.
 - The owner's wording was ambiguous ("نترجم الخيارات والاعدادات"): if unsure what he means by the options/settings, implement the safe version above and ask him one short question.
 - Steps 1-3 of Session 27 (key script, sprite sheets, rain in code) are unchanged. Step 4 becomes "add the tree as a new style next to the classic scenes".
+
+### Session 28 (2026-11-28): integration branch `claude/merged` (code-review + backup-listening-data) + R settings unified
+- Branch `claude/merged` = `claude/code-review` (R settings screen, snow, headphone crash fix) merged with `claude/backup-listening-data` (seasons, favorites, stats, hidden songs, app icon switch), plus `applicationId = "com.elrfaay.rmusic"` (the code-review branch had `applicationId = namespace`, so its APKs installed as a NEW app instead of updating).
+- Conflicts resolved by taking the newer backup copies of: stats screen + layout, ArtistsFragment, AbsArtistDetailsFragment, ArtistAdapter, PreferenceUtil, MainModule, ListeningEventDao.
+- R settings (`RSettingsFragment` + `res/xml/pref_r_settings.xml`) now ALSO holds: app icon switch (moved from Personalize), season switch/force/4 files (moved from Now playing). Home covers, mini player, lyrics, Korean, vocal separation, notification were already there.
+- Not tested on a phone. If the launcher still shows the old icon after the update: open the app once, R settings > App icon > new.
