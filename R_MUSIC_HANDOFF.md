@@ -488,3 +488,6 @@ Owner's decision: the Canvas scenes of Session 26 (`SeasonScene.kt`: cabin, suns
 ### Session 27 update 4 (2026-11-28 10:50): spring ground strips received
 - ground_spring_1 (mossy grass with flat stones, clean), ground_spring_2 (same with purple flowers and pebbles); `ground_spring_2_alt_more_pebbles` is a denser variant (unused). The owner did not label them, matched by look. Different from the spec (which asked for pink petals on the grass): the falling petals come from the `fx_petal` particles anyway, so this is fine.
 - STILL MISSING: tree_winter_2 (medium snow) and ground_winter_1 (thin snow, grass tips showing). If tree_winter_2 never arrives, use tree_winter_1 for the first half of winter and tree_winter_3 for the second half.
+
+### Session 27 update 5 (2026-11-28 10:55)
+- `design/season_tree/generated/extra_spring_ground_variants/` holds 5 more denser variants of the purple-flower spring ground strip (the owner's image tool kept returning them while he tried to make `ground_winter_1`). Not winter art; unused unless he asks. STILL MISSING: tree_winter_2, ground_winter_1 (use the fallbacks above).
