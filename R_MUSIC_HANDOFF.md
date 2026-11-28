@@ -484,3 +484,7 @@ Owner's decision: the Canvas scenes of Session 26 (`SeasonScene.kt`: cabin, suns
 - Ground strips: ground_summer_1 (cracked sand), ground_summer_2 (dunes), ground_autumn_1 (mossy grass), ground_autumn_2 (grass + few leaves), ground_autumn_3 (leaves + stones + twigs), ground_autumn_4 (leaf layer with a pile in the middle). The owner did not label them: matched by look, in order of sending. Extra variants kept: `ground_autumn_3_alt_more_leaves`, `ground_autumn_3_alt_branches` (big dry branches lying on the leaves), unused unless he asks.
 - The strips have a whitish soft glow at the left/right ends and around the edges: after keying, defringe the white too (or crop a few percent off both ends) so there is no white halo on the player screen.
 - STILL MISSING: tree_winter_2, ground_spring_1, ground_spring_2, ground_winter_1.
+
+### Session 27 update 4 (2026-11-28 10:50): spring ground strips received
+- ground_spring_1 (mossy grass with flat stones, clean), ground_spring_2 (same with purple flowers and pebbles); `ground_spring_2_alt_more_pebbles` is a denser variant (unused). The owner did not label them, matched by look. Different from the spec (which asked for pink petals on the grass): the falling petals come from the `fx_petal` particles anyway, so this is fine.
+- STILL MISSING: tree_winter_2 (medium snow) and ground_winter_1 (thin snow, grass tips showing). If tree_winter_2 never arrives, use tree_winter_1 for the first half of winter and tree_winter_3 for the second half.
