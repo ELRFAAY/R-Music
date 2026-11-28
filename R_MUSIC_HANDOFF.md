@@ -461,3 +461,63 @@ The user has no videos to pick, so the app now draws its own scenes: `views/Seas
 - `SeasonBackgroundView.setScene(season)`; `SeasonTheme.currentKey()` = "file:<uri>" (a picked file wins) or "builtin:<season>"; `AbsPlayerFragment.refreshSeasonBackground()` compares keys.
 - The season switch is now ON by default (`seasonThemeEnabled` default true, XML default true). Settings > Now playing > Season themes: switch, "Preview a season", and one entry per season to pick your own video/image or go back to the built-in scene.
 - A Pillow mock (not shipped) was used to check the composition; the real animation was NOT seen on a phone. Tune sizes in `SeasonScene.kt` if something looks off (cabin size `s` in `winter()`, particle counts in `resize()`).
+
+## Session 27 (2026-11-28): NEW DIRECTION for the seasons — ONE seasonal tree (art specs only, NO code yet) — TASK FOR THE NEXT ACCOUNT
+Owner's decision: the Canvas scenes of Session 26 (`SeasonScene.kt`: cabin, sunset, sea...) are to be replaced by a SINGLE sakura/plum tree in the centre, under the cover art, that changes by season. He generates the art himself; specs and his received images are in `design/season_tree/` (read `R_MUSIC_SEASON_TREE_PROMPTS.md`, then `R_MUSIC_REMAINING_PROMPTS.md`).
+- Behaviour: Spring = buds -> half bloom -> full bloom, petals fall. Summer = sparse dry leaves -> bare, desert sand ground, a tumbleweed rolls along the bottom. Autumn = 5 states, leaves thin out gradually 100% -> 0%, fall and pile up under the tree (state chosen from the date inside the season). Winter = snow falls and piles on tree/ground (3 states). Rain = a weather layer over spring/autumn (light and rare in summer); in winter snow replaces rain.
+- Received (`design/season_tree/generated/`, 1024x1024 JPG on solid green #00FF00): tree_spring_1 (buds), tree_spring_2 (half), tree_spring_3 (full, the reference), tree_summer_1 (sparse). `REJECTED_autumn_grid_4trees.jpg` is unusable (4 trees in one image, other trunk, fake checkerboard); he will regenerate autumn. Still missing: tree_summer_2, autumn 1-5, winter 1-3, 12 ground strips, 4 single sprites (petal, leaf, snowflake, tumbleweed). He will send them in the next chats.
+- YOUR JOB, in order:
+  1. Python/Pillow script in `design/season_tree/tools/` that removes the green background (the grass/moss at the trunk base is green too: tight tolerance, feather the edge), scales to 768x768 with the trunk centred and base on the bottom edge, writes PNG with alpha. Run it on every image he sends.
+  2. Build 8-frame sheets by rotating the single sprites 45 degrees per frame (petal/leaf/snow 512x64, tumbleweed 1024x128).
+  3. Draw the rain in code (two seamless vertical tiles 512x512 tilted 10 degrees right, splash 6 frames 384x32, ripple 6 frames 768x32, puddles overlay 1080x240). No image from him needed.
+  4. In the app: new `SeasonScene` implementation that draws ground + tree + particles + rain under the cover art in the centre, state picked from the date; keep the existing switch/preview in Settings > Now playing; PNGs in `res/drawable-nodpi/`. Reuse `SeasonSceneView`/`SeasonBackgroundView` hosting.
+  5. Log every step here. No package rename / release build before he says "ابدأ".
+- Nothing built, nothing tested on a phone. Also: the "Hide songs from the Songs tab / lyrics refresh" work from the old unpushed patch is already on the branch (e3d7943), so it was not re-applied.
+
+### Session 27 update (2026-11-28 10:35): more tree art received (all in `design/season_tree/generated/`, green #00FF00 background)
+- Now have: tree_summer_2 (bare, 4-5 dry leaves), tree_autumn_1..5 (100/75/50/25/0%; autumn_5 = bare tree + leaf pile at the base). `tree_summer_2_portrait_alt.jpg` is a taller crop of the same drawing (ignore).
+- Frames are NOT uniform: spring/summer/autumn_2/autumn_4 are 1024x1024, but autumn_1/3/5 are 768x1376 portrait with the tree drawn smaller and the trunk off-centre. The cut-out script must NOT just centre by bounding box (the canopy changes size per state and the tree would jump between states). Align every image by the TRUNK BASE (lowest trunk point at the grass mound) and scale so the trunk width at the base is the same as in tree_spring_3; then crop to the common 768x768 box.
+- tree_autumn_2 has a few leaves drawn flying in the air around the canopy (not attached); they can stay (they look like falling leaves) or be erased.
+- Still missing: winter 1-3, 12 ground strips, 4 single sprites.
+
+### Session 27 update 2 (2026-11-28 10:40): winter art + first ground strips received (`design/season_tree/generated/`)
+- tree_winter_1 (thin snow on bare branches), tree_winter_3 (deep snow, big white mound hiding the trunk base: align it by the trunk where it leaves the mound, not the mound; a few small green leaf shapes poke out of the snow, harmless). Still missing: tree_winter_2 (medium snow).
+- ground_autumn_5 (leaf pile in the middle), ground_winter_2 (flat white band; the owner did not label them, I matched by look: flat band = winter_2), ground_winter_3 (snow mound). All 1024x1024 on green with the strip in the middle and SOFT feathered edges: the green-keying script must despill/defringe (remove the green tint on the semi-transparent edge pixels), then crop to the strip and resize to 1080x240.
+- Still missing: ground spring_1/2, summer_1/2, autumn_1-4, winter_1; 4 single sprites (petal, leaf, snowflake, tumbleweed).
+
+### Session 27 update 3 (2026-11-28 10:45): single sprites + more ground strips received (`design/season_tree/generated/`)
+- Single sprites (1024x1024, centred, green): fx_petal, fx_leaf (maple, orange-red), fx_snow (blue-white flake), fx_tumbleweed. Build the 8-frame sheets from these by rotation (see the spec). Scale each to fit its cell with a small margin; the petal is big and almost fills the frame, the tumbleweed has real gaps (green shows through the straw: key them out so the gaps are transparent).
+- Ground strips: ground_summer_1 (cracked sand), ground_summer_2 (dunes), ground_autumn_1 (mossy grass), ground_autumn_2 (grass + few leaves), ground_autumn_3 (leaves + stones + twigs), ground_autumn_4 (leaf layer with a pile in the middle). The owner did not label them: matched by look, in order of sending. Extra variants kept: `ground_autumn_3_alt_more_leaves`, `ground_autumn_3_alt_branches` (big dry branches lying on the leaves), unused unless he asks.
+- The strips have a whitish soft glow at the left/right ends and around the edges: after keying, defringe the white too (or crop a few percent off both ends) so there is no white halo on the player screen.
+- STILL MISSING: tree_winter_2, ground_spring_1, ground_spring_2, ground_winter_1.
+
+### Session 27 update 4 (2026-11-28 10:50): spring ground strips received
+- ground_spring_1 (mossy grass with flat stones, clean), ground_spring_2 (same with purple flowers and pebbles); `ground_spring_2_alt_more_pebbles` is a denser variant (unused). The owner did not label them, matched by look. Different from the spec (which asked for pink petals on the grass): the falling petals come from the `fx_petal` particles anyway, so this is fine.
+- STILL MISSING: tree_winter_2 (medium snow) and ground_winter_1 (thin snow, grass tips showing). If tree_winter_2 never arrives, use tree_winter_1 for the first half of winter and tree_winter_3 for the second half.
+
+### Session 27 update 5 (2026-11-28 10:55)
+- `design/season_tree/generated/extra_spring_ground_variants/` holds 5 more denser variants of the purple-flower spring ground strip (the owner's image tool kept returning them while he tried to make `ground_winter_1`). Not winter art; unused unless he asks. STILL MISSING: tree_winter_2, ground_winter_1 (use the fallbacks above).
+
+### Session 27 update 6 (2026-11-28 11:00): ground_winter_1 received
+- `ground_winter_1.jpg`: thin snow patches with dark grass and moss showing through (strip shape, same framing as the other strips). `ground_winter_1_alt_thicker_block.jpg` is a taller, whiter block (not a strip: unused); `extra_winter_ground_variants/` has two near copies of winter_1 (unused).
+- ONLY `tree_winter_2` is still missing (fallback: winter_1 tree for the first half of winter, winter_3 for the second half). All other art listed in the spec is now in `generated/`; the only remaining art-free work is code.
+
+### Session 27 update 7 (2026-11-28 11:05)
+- `generated/extra_snow_with_leaves/`: 3 trees that keep their foliage under snow (pink blossoms + snow, red maple leaves + snow, a pine-needle version). They are NOT the missing `tree_winter_2` (that one must be BARE branches with medium snow). Unused; possible use: a short "first snow" transition on the autumn/spring state if the owner asks. `tree_winter_2` is still missing (fallback in the earlier note).
+
+### Session 27 update 8 (2026-11-28 11:10): ALL ART RECEIVED
+- `generated/tree_winter_2.jpg` (bare branches, medium snow, icicles, snow mound at the base with a few red leaves/petals on it) arrived. IGNORE every "tree_winter_2 is still missing / fallback" note above. All 13 trees, 12 ground strips and 4 single sprites are now in `design/season_tree/generated/` (names as in the spec; unlabelled ones were matched by look, double-check the autumn grounds 3/4 and winter_2/3 once keyed).
+- Note: tree_winter_2 and tree_winter_3 have a snow mound at the base (not a grass mound like the others): align by the trunk where it leaves the mound, and they carry their own ground, so draw them above the winter ground strip with the mound covering it.
+- What is left is only code: step 1 (key script), 2 (sprite sheets), 3 (rain in code), 4 (layers in the player screen, state from the date), 5 (log). No build until the owner says so.
+
+## WORKING RULES (owner, 2026-11-28) — read before anything else
+1. After EVERY finished step: commit it and push to `claude/backup-listening-data`, then log it in this file (what was done, which files, what is next). Never keep a finished step only in the working tree.
+2. Right after the push, send the owner a short message in Egyptian Arabic: "خلصت الخطوة كذا على الفرع كذا" (what step, which branch, which commit). That message is also the handoff: the next account continues from the last logged step instead of starting over (credits can run out at any moment).
+3. Always fetch and fast-forward before starting, and read the last entries of this file first. Do not redo a step that is already logged.
+4. No build unless the owner says so; no package rename / release build before he says "ابدأ". Nothing is tested on a phone unless he confirms.
+
+## DECISION CHANGE (owner, 2026-11-28 10:55) — READ BEFORE Session 27's job list
+- Do NOT remove or replace the old built-in season scenes (`SeasonScene.kt`, `SeasonSceneView`, `SeasonBackgroundView`, the Settings > Now playing > Season themes entries). They stay exactly as they are. Session 27's wording "replace" is WRONG.
+- The one-tree scene is ADDED as a new option next to them: the owner only wants new choices/settings for it. Suggested shape: in Settings > Now playing > Season themes add a "Style" choice (Classic scenes / Season tree), default = Classic so nothing changes until he picks the tree; the existing switch, preview-a-season list and own-file entries keep working for both. Put the new setting key in `PreferenceUtil`, strings in `values` and `values-ar-rSA`.
+- The owner's wording was ambiguous ("نترجم الخيارات والاعدادات"): if unsure what he means by the options/settings, implement the safe version above and ask him one short question.
+- Steps 1-3 of Session 27 (key script, sprite sheets, rain in code) are unchanged. Step 4 becomes "add the tree as a new style next to the classic scenes".

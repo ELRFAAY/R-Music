@@ -363,6 +363,7 @@ abstract class AbsPlayerFragment(@LayoutRes layout: Int) : AbsMusicServiceFragme
     }
 
     private var seasonBackground: SeasonBackgroundView? = null
+    private val hiddenCoverViews = ArrayList<View>()
     private var seasonSheetCallback: BottomSheetBehavior.BottomSheetCallback? = null
 
     private fun isPanelOpen(state: Int) =
@@ -378,8 +379,23 @@ abstract class AbsPlayerFragment(@LayoutRes layout: Int) : AbsMusicServiceFragme
         val key = SeasonTheme.currentKey()
         if (key == seasonBackground?.key) return
         removeSeasonBackground()
-        val group = view as? ViewGroup ?: return
+        val root = view as? ViewGroup ?: return
         if (key == null) return
+        // Many player styles paint a full-size layer (blurred cover, colour gradient) over everything
+        // behind the controls. Leaf layers are hidden while a scene is on; a container layer (gradient
+        // style) becomes the host so the scene sits inside it, under the controls.
+        var group: ViewGroup = root
+        for (name in SEASON_COVER_IDS) {
+            val id = resources.getIdentifier(name, "id", requireContext().packageName)
+            val v = if (id != 0) root.findViewById<View>(id) else null
+            if (v == null || v.parent == null) continue
+            if (v is ViewGroup) {
+                if (v.parent === root && v.childCount > 0) group = v
+            } else if (v.visibility != View.INVISIBLE) {
+                v.visibility = View.INVISIBLE
+                hiddenCoverViews.add(v)
+            }
+        }
         val bg = SeasonBackgroundView(requireContext())
         val file = SeasonTheme.currentUri()
         if (file != null) bg.setSource(file) else bg.setScene(SeasonTheme.current())
@@ -421,6 +437,8 @@ abstract class AbsPlayerFragment(@LayoutRes layout: Int) : AbsMusicServiceFragme
             (it.parent as? ViewGroup)?.removeView(it)
         }
         seasonBackground = null
+        hiddenCoverViews.forEach { it.visibility = View.VISIBLE }
+        hiddenCoverViews.clear()
     }
 
     override fun onPause() {
@@ -561,3 +579,7 @@ fun goToLyrics(activity: Activity) {
         )
     }
 }
+
+private val SEASON_COVER_IDS = listOf(
+    "colorBackground", "colorGradientBackground", "ringBackground", "ringTint", "mask"
+)
