@@ -491,3 +491,7 @@ Owner's decision: the Canvas scenes of Session 26 (`SeasonScene.kt`: cabin, suns
 
 ### Session 27 update 5 (2026-11-28 10:55)
 - `design/season_tree/generated/extra_spring_ground_variants/` holds 5 more denser variants of the purple-flower spring ground strip (the owner's image tool kept returning them while he tried to make `ground_winter_1`). Not winter art; unused unless he asks. STILL MISSING: tree_winter_2, ground_winter_1 (use the fallbacks above).
+
+### Session 27 update 6 (2026-11-28 11:00): ground_winter_1 received
+- `ground_winter_1.jpg`: thin snow patches with dark grass and moss showing through (strip shape, same framing as the other strips). `ground_winter_1_alt_thicker_block.jpg` is a taller, whiter block (not a strip: unused); `extra_winter_ground_variants/` has two near copies of winter_1 (unused).
+- ONLY `tree_winter_2` is still missing (fallback: winter_1 tree for the first half of winter, winter_3 for the second half). All other art listed in the spec is now in `generated/`; the only remaining art-free work is code.
